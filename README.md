@@ -118,9 +118,11 @@ P6 adds:
 ### Remaining external activation
 
 The repository is deployable, but live activation still requires:
-1. a Vercel account/team scope visible to the connected Vercel plugin;
+1. Vercel connector authorization for the account's default scope;
 2. production environment variables;
 3. a Google OAuth client whose authorized redirect includes `/api/integrations/google-drive/callback`;
 4. signing in to StudyOS and selecting the dedicated Study Google account.
+
+Dependency resolution is now deterministic: `package-lock.json` is committed and CI uses `npm ci`.
 
 Full end-to-end material certification intentionally remains pending until a real lecture/source exists.
