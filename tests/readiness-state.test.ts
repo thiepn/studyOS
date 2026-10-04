@@ -11,6 +11,8 @@ const server = {
   hasGoogleDriveClientSecret: true,
   hasDriveTokenKey: true,
   googleDriveConfigured: true,
+  authCallbackUrl: "https://study.example.com/auth/callback",
+  googleDriveCallbackUrl: "https://study.example.com/api/integrations/google-drive/callback",
   buildSha: "abc",
 };
 
