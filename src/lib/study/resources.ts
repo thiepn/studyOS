@@ -52,19 +52,19 @@ export async function getResourcesData():Promise<ResourcesData>{
 
 export async function registerResource(input:ResourceRegistrationInput){
   const supabase=await createClient();
-  const {data,error}=await supabase.rpc("study_register_resource",{p_course_id:input.courseId,p_resource_type:input.resourceType,p_title:input.title,p_drive_file_id:input.driveFileId??null,p_drive_url:input.driveUrl??null,p_original_filename:input.originalFilename??null,p_mime_type:input.mimeType??null,p_week_no:input.weekNo??null,p_source_authority:input.sourceAuthority??"unknown",p_published_at:input.publishedAt??null,p_content_sha256:input.contentSha256??null,p_logical_key:input.logicalKey??null});
+  const {data,error}=await supabase.rpc("study_register_resource",{p_course_id:input.courseId,p_resource_type:input.resourceType,p_title:input.title,p_drive_file_id:input.driveFileId??undefined,p_drive_url:input.driveUrl??undefined,p_original_filename:input.originalFilename??undefined,p_mime_type:input.mimeType??undefined,p_week_no:input.weekNo??undefined,p_source_authority:input.sourceAuthority??"unknown",p_published_at:input.publishedAt??undefined,p_content_sha256:input.contentSha256??undefined,p_logical_key:input.logicalKey??undefined});
   if(error)throw new StudyServiceError("Could not register resource",error.code||"resource_register_failed",error); return data;
 }
 export async function submitIngestionCandidate(runId:string,input:IngestionCandidateInput){
   if(!UUID.test(runId))throw new StudyServiceError("Invalid ingestion run","invalid_candidate");
   const supabase=await createClient();
-  const {data,error}=await supabase.rpc("study_submit_ingestion_candidate",{p_run_id:runId,p_payload:input.payload,p_processor:input.processor??null,p_processor_version:input.processorVersion??null,p_extraction_confidence:input.extractionConfidence??null,p_validation_issues:input.validationIssues??[]});
+  const {data,error}=await supabase.rpc("study_submit_ingestion_candidate",{p_run_id:runId,p_payload:input.payload,p_processor:input.processor??undefined,p_processor_version:input.processorVersion??undefined,p_extraction_confidence:input.extractionConfidence??undefined,p_validation_issues:input.validationIssues??[]});
   if(error)throw new StudyServiceError("Could not store ingestion candidate",error.code||"candidate_submit_failed",error); return data;
 }
 export async function decideIngestion(runId:string,action:"accept"|"reject",reason?:string){
   if(!UUID.test(runId))throw new StudyServiceError("Invalid ingestion run","invalid_candidate");
   const supabase=await createClient();
-  const result=action==="accept"?await supabase.rpc("study_accept_ingestion_run",{p_run_id:runId}):await supabase.rpc("study_reject_ingestion_run",{p_run_id:runId,p_reason:reason??null});
+  const result=action==="accept"?await supabase.rpc("study_accept_ingestion_run",{p_run_id:runId}):await supabase.rpc("study_reject_ingestion_run",{p_run_id:runId,p_reason:reason??undefined});
   if(result.error)throw new StudyServiceError(`Could not ${action} ingestion`,result.error.code||"ingestion_decision_failed",result.error);
   return result.data;
 }

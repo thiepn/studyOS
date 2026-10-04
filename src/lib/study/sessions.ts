@@ -47,7 +47,7 @@ export async function startReviewSession(input: ReviewSessionStartInput) {
 export async function finishReviewSession(input: ReviewSessionFinishInput) {
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("study_finish_review_session", {
-    p_session_id: input.sessionId, p_ended_at: input.endedAt, p_note: input.note ?? null,
+    p_session_id: input.sessionId, p_ended_at: input.endedAt, p_note: input.note ?? undefined,
   });
   if (error) throw new StudyServiceError("Could not finish study session", error.code || "session_finish_failed", error);
   return data;
