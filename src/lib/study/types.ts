@@ -1,6 +1,6 @@
 import type {
   Database, Json, StudyAttemptResult, StudyErrorType, StudyEvidenceDimension, StudyIndependence,
-  StudyResourceType, StudySourceAuthority,
+  StudyResourceType, StudySourceAuthority, StudySessionType,
 } from "@/lib/supabase/database.types";
 
 export type CourseProgress = Database["public"]["Views"]["study_course_progress"]["Row"];
@@ -22,7 +22,7 @@ export type AttemptInput = {
   result: StudyAttemptResult; independence: StudyIndependence; durationSeconds?: number;
   responseText?: string; selfConfidence?: number; errorTypes?: StudyErrorType[]; completedAt?: string;
 };
-export type ReviewSessionStartInput = { sessionId: string; plannedMinutes: number; startedAt: string };
+export type ReviewSessionStartInput = { sessionId: string; plannedMinutes: number; startedAt: string; sessionType?: StudySessionType; courseId?: string };
 export type ReviewSessionFinishInput = { sessionId: string; endedAt: string; note?: string };
 export type ResourceRegistrationInput = {
   courseId: string; resourceType: StudyResourceType; title: string; driveUrl?: string; driveFileId?: string;

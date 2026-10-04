@@ -2,7 +2,7 @@
 
 StudyOS is the WS26/27 retention and exam-readiness system for the THIEPN ecosystem. The application keeps raw university material in a dedicated Google Drive account, structured academic state in Supabase, and daily review/exam-readiness workflows in a Next.js frontend.
 
-## Current phase: P7
+## Current phase: P8
 
 Implemented through P4:
 
@@ -144,3 +144,19 @@ queued source
 ```
 
 P7 also retires questions generated from superseded source versions and requires source anchors for every extracted skill/question.
+
+
+## P8 longitudinal semester control
+
+StudyOS now diagnoses retention and course danger over time instead of only showing current mastery.
+
+- one 45–60 minute cumulative checkpoint rotates across the four major courses: DGL → Stochastik → TheoInf → AMP;
+- per-course weekly checkpoints are no longer demanded, preventing checkpoint workload from multiplying by course count;
+- checkpoint selection favors older material while allowing weak, lapsed, prerequisite-heavy, and exam-important skills to override age;
+- retention diagnostics distinguish untested, maintained, due, overdue, lapsed, and relearning skills;
+- course risk is an explainable 0–100 heuristic composed from retention, overdue reviews, recent lapses, workflow backlog, unresolved errors, and exam-readiness gap;
+- exam dates automatically switch a course from semester mode → transition mode → exam mode;
+- exam mode uses the intended 65% exam practice / 25% weakness repair / 10% pure recall mix;
+- ordinary daily retention remains capped rather than expanding with backlog.
+
+Live Vercel/Study Drive activation from P6 remains deferred independently of this development work.

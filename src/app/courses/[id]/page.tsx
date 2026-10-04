@@ -42,7 +42,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
 
       <section className="workflow-heading">
         <div><p className="eyebrow">Weekly operating loop</p><h2>What needs to happen next</h2></div>
-        <p>Material → retrieval → independent sheet attempt → official-solution reconciliation → repair → checkpoint.</p>
+        <p>Material → retrieval → independent sheet attempt → official-solution reconciliation → repair → maintenance. The cumulative checkpoint rotates across the four major courses from Today.</p>
       </section>
 
       <WeekWorkflowPanel

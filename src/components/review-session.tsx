@@ -25,7 +25,7 @@ function formatSeconds(seconds: number) {
   return `${min}:${String(sec).padStart(2, "0")}`;
 }
 
-export function ReviewSession({ queue, plannedMinutes }: { queue: QueueItem[]; plannedMinutes: number }) {
+export function ReviewSession({ queue, plannedMinutes, sessionType = "review", courseId, eyebrow = "Daily retrieval", intro }: { queue: QueueItem[]; plannedMinutes: number; sessionType?: "review"|"checkpoint"|"exam_simulation"|"relearning"|"coursework"; courseId?: string; eyebrow?: string; intro?: string }) {
   const [phase, setPhase] = useState<Phase>("ready");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionStartedAt, setSessionStartedAt] = useState<string | null>(null);
@@ -78,7 +78,7 @@ export function ReviewSession({ queue, plannedMinutes }: { queue: QueueItem[]; p
     const id = crypto.randomUUID();
     const startedAt = new Date().toISOString();
     setError(null); setSessionId(id); setSessionStartedAt(startedAt);
-    const sync = await startSessionWithFallback({ sessionId: id, plannedMinutes: Math.max(1, plannedMinutes), startedAt });
+    const sync = await startSessionWithFallback({ sessionId: id, plannedMinutes: Math.max(1, plannedMinutes), startedAt, sessionType, courseId });
     resetQuestion(0);
     if (sync.queued) setNotice("Session start is saved locally and will sync when the connection returns.");
   }
@@ -135,16 +135,16 @@ export function ReviewSession({ queue, plannedMinutes }: { queue: QueueItem[]; p
 
   if (phase === "ready") return (
     <section className="panel review-start">
-      <p className="eyebrow">Daily retrieval</p>
+      <p className="eyebrow">{eyebrow}</p>
       <h2>{queue.length} questions · {plannedMinutes} planned minutes</h2>
-      <p>Work from memory first. Hints lower evidentiary strength. If you give up and reveal the solution before locking an answer, the attempt receives no mastery credit and becomes a repair item.</p>
+      <p>{intro ?? "Work from memory first. Hints lower evidentiary strength. If you give up and reveal the solution before locking an answer, the attempt receives no mastery credit and becomes a repair item."}</p>
       <button className="primary-button button-reset" type="button" onClick={() => void start()}>Start review</button>
     </section>
   );
 
   if (phase === "complete") return (
     <section className="panel review-complete">
-      <p className="eyebrow">Session complete</p><h2>{summary.attempted} attempts completed</h2>
+      <p className="eyebrow">{sessionType === "checkpoint" ? "Checkpoint complete" : "Session complete"}</p><h2>{summary.attempted} attempts completed</h2>
       <div className="summary-grid"><div><strong>{summary.correct}</strong><span>correct</span></div><div><strong>{summary.partial}</strong><span>partial</span></div><div><strong>{summary.incorrect}</strong><span>incorrect</span></div><div><strong>{summary.skipped}</strong><span>skipped</span></div></div>
       <p>{formatSeconds(summary.seconds)} active solving time{summary.queued ? ` · ${summary.queued} attempt(s) waiting for sync` : ""}.</p>
       <div className="button-row"><Link className="primary-button" href="/">Back to Today</Link><Link className="secondary-button" href="/progress">View progress</Link></div>
