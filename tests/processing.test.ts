@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildProcessingBrief, parseCandidateJsonText, processingProfile, type ProcessingPacket } from "../src/lib/study/processing.ts";
+import { buildProcessingBrief, parseCandidateJsonText, processingProfile, type ProcessingPacket } from "../src/lib/study/processing-policy.ts";
 
 const packet: ProcessingPacket = {
   schema_version: "studyos-processing-v1",
