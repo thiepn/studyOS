@@ -7,6 +7,8 @@ export type ServerReadiness = {
   hasGoogleDriveClientSecret: boolean;
   hasDriveTokenKey: boolean;
   googleDriveConfigured: boolean;
+  authCallbackUrl: string;
+  googleDriveCallbackUrl: string;
   buildSha: string | null;
 };
 

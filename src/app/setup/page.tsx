@@ -40,6 +40,10 @@ export default async function SetupPage() {
             <Check ok={server.secureOrigin} title="Stable HTTPS origin" detail={server.appOrigin} />
             <Check ok={server.googleDriveConfigured} title="Google Drive OAuth" detail="Client ID, client secret, and encrypted-token key are configured." />
           </div>
+          <div className="callback-list">
+            <div><span>Supabase auth redirect</span><code>{server.authCallbackUrl}</code></div>
+            <div><span>Study Drive OAuth redirect</span><code>{server.googleDriveCallbackUrl}</code></div>
+          </div>
           <p className="muted tiny">{server.deploymentEnv} · {server.buildSha ? server.buildSha.slice(0, 12) : "local/unversioned runtime"}</p>
         </div>
 

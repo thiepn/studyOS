@@ -69,6 +69,8 @@ export function serverConfigurationStatus() {
     hasGoogleDriveClientSecret: Boolean(env.googleDriveClientSecret),
     hasDriveTokenKey: Boolean(env.driveTokenKey),
     googleDriveConfigured: Boolean(env.googleDriveClientId && env.googleDriveClientSecret && env.driveTokenKey),
+    authCallbackUrl: `${env.appOrigin}/auth/callback`,
+    googleDriveCallbackUrl: `${env.appOrigin}/api/integrations/google-drive/callback`,
     buildSha: env.buildSha ?? null,
   };
 }

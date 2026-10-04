@@ -2,11 +2,12 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { authorizationUrl, createOAuthState } from "@/lib/google-drive/oauth";
+import { env } from "@/lib/env";
 
 export async function GET() {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
-  if (!data?.claims?.sub) return NextResponse.redirect(new URL("/login", process.env.APP_ORIGIN ?? "http://localhost:3000"));
+  if (!data?.claims?.sub) return NextResponse.redirect(new URL("/login", env.appOrigin));
   const { state, verifier, challenge } = createOAuthState();
   const store = await cookies();
   const options = { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax" as const, path: "/", maxAge: 600 };
