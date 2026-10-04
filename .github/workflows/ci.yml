@@ -1,0 +1,37 @@
+name: StudyOS CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  qualify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder-publishable-key
+      APP_ORIGIN: http://localhost:3000
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install pinned dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Pure behavior tests
+        run: npm test
+
+      - name: TypeScript
+        run: npm run typecheck
+
+      - name: Next.js production build
+        run: npm run build
