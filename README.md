@@ -110,7 +110,7 @@ P6 adds:
 - an authenticated `/setup` readiness center;
 - a public, non-sensitive `/api/health` liveness endpoint;
 - explicit separation between infrastructure readiness and first-material end-to-end readiness;
-- preferred Vercel compute region `fra1` to keep dynamic work in Europe near the shared Supabase project;
+- preferred Vercel compute region `dub1` to keep dynamic work in Europe near the shared Supabase project;
 - modern `SUPABASE_SECRET_KEY` support with legacy `SUPABASE_SERVICE_ROLE_KEY` fallback;
 - noindex/nofollow metadata for this private personal application;
 - the first repository-captured StudyOS Supabase migration.
