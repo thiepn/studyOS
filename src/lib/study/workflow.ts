@@ -82,6 +82,17 @@ export type ReconciliationFinding = {
 };
 
 export type SkillOption = { id: string; title: string; stable_key: string };
+export type CourseMasterMapRow = {
+  topic_id: string; topic_key: string; topic_title: string; topic_description: string | null;
+  first_week_no: number | null; latest_source_week: number | null; skill_count: number;
+  new_skills: number; learning_skills: number; fragile_skills: number; stable_skills: number; exam_ready_skills: number;
+  unresolved_errors: number; durable_percent: number; source_resource_count: number; source_titles: string[];
+  skills: Array<{
+    id: string; stable_key: string; title: string; kind: string; required_dimensions: string[];
+    mastery_state: string; next_review_at: string | null; exam_importance: number; prerequisite_importance: number;
+    unresolved_errors: number; evidence?: Record<string, number>;
+  }>;
+};
 export type WeekResource = {
   id: string;
   teaching_week_id: string | null;
@@ -97,14 +108,15 @@ export async function getCourseWorkflow(courseId: string) {
   const { semesterId } = await ensureStudyWorkspace(supabase);
   const db = supabase as any;
 
-  const [configuration, weeks, findings, skills, resources] = await Promise.all([
+  const [configuration, weeks, findings, skills, resources, masterMap] = await Promise.all([
     db.from("study_course_configuration").select("*").eq("semester_id", semesterId).eq("course_id", courseId).single(),
     db.from("study_week_actions").select("*").eq("semester_id", semesterId).eq("course_id", courseId).order("week_no", { ascending: false }),
     db.from("study_reconciliation_findings").select("id,teaching_week_id,course_id,skill_id,error_type,title,detail,severity,status,repair_scheduled_at,created_at").eq("course_id", courseId).in("status", ["open","repair_scheduled"]).order("created_at", { ascending: false }),
     db.from("study_skills").select("id,title,stable_key").eq("course_id", courseId).eq("active", true).order("title"),
     db.from("study_resources").select("id,teaching_week_id,resource_type,title,drive_url,processing_status").eq("course_id", courseId).eq("active", true).order("created_at", { ascending: false }),
+    db.from("study_course_master_map").select("*").eq("semester_id", semesterId).eq("course_id", courseId).order("first_week_no", { ascending: true, nullsFirst: false }).order("topic_title"),
   ]);
-  const error = configuration.error || weeks.error || findings.error || skills.error || resources.error;
+  const error = configuration.error || weeks.error || findings.error || skills.error || resources.error || masterMap.error;
   if (error) throw new StudyServiceError("Could not load course workflow", error.code || "course_workflow_read_failed", error);
 
   return {
@@ -113,6 +125,7 @@ export async function getCourseWorkflow(courseId: string) {
     findings: (findings.data ?? []) as ReconciliationFinding[],
     skills: (skills.data ?? []) as SkillOption[],
     resources: (resources.data ?? []) as WeekResource[],
+    masterMap: (masterMap.data ?? []) as CourseMasterMapRow[],
   };
 }
 

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Nav } from "@/components/nav";
 import { CourseConfigForm } from "@/components/course-config-form";
 import { WeekWorkflowPanel } from "@/components/week-workflow-panel";
+import { CourseMasterMap } from "@/components/course-master-map";
 import { getCourseWorkflow } from "@/lib/study/workflow";
 
 export const dynamic = "force-dynamic";
@@ -36,6 +37,8 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
         <p className="muted">Set the real course identity, exam information, and weekly release pattern. The stable internal key remains unchanged.</p>
         <CourseConfigForm configuration={c} />
       </section>
+
+      <CourseMasterMap topics={data.masterMap} />
 
       <section className="workflow-heading">
         <div><p className="eyebrow">Weekly operating loop</p><h2>What needs to happen next</h2></div>

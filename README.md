@@ -2,7 +2,7 @@
 
 StudyOS is the WS26/27 retention and exam-readiness system for the THIEPN ecosystem. The application keeps raw university material in a dedicated Google Drive account, structured academic state in Supabase, and daily review/exam-readiness workflows in a Next.js frontend.
 
-## Current phase: P6
+## Current phase: P7
 
 Implemented through P4:
 
@@ -126,3 +126,21 @@ The repository is deployable, but live activation still requires:
 Dependency resolution is now deterministic: `package-lock.json` is committed and CI uses `npm ci`.
 
 Full end-to-end material certification intentionally remains pending until a real lecture/source exists.
+
+
+## P7 source-grounded processing
+
+StudyOS now has a no-paid-API semantic processing path:
+
+```text
+queued source
+→ copy course-specific processing brief
+→ process the PDF in ChatGPT
+→ paste candidate JSON
+→ provenance/quality validation
+→ explicit acceptance
+→ Course Master Map
+→ review engine
+```
+
+P7 also retires questions generated from superseded source versions and requires source anchors for every extracted skill/question.
