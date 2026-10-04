@@ -2,7 +2,7 @@
 
 StudyOS is the WS26/27 retention and exam-readiness system for the THIEPN ecosystem. The application keeps raw university material in a dedicated Google Drive account, structured academic state in Supabase, and daily review/exam-readiness workflows in a Next.js frontend.
 
-## Current phase: P4
+## Current phase: P5
 
 Implemented through P4:
 
@@ -18,6 +18,11 @@ Implemented through P4:
 - deduplicated Drive intake ledger
 - candidate validation/conflict detection before material can enter the active study map
 - derived weekly course-health states: `empty`, `needs_processing`, `source_only`, `learning`, `fragile`, `retained`
+- editable real course/exam/workload configuration without changing stable course IDs
+- an enforced weekly loop: lecture retrieval → independent exercise attempt → solution reconciliation → repair → checkpoint
+- solution-reconciliation findings that can schedule mapped skills into immediate repair review
+- resource-count snapshots that automatically reopen a milestone when additional material is released
+- GitHub Actions qualification: tests → TypeScript → Next.js production build
 
 ## Google Drive account model
 
@@ -78,3 +83,21 @@ npm run dev
 ## Repository
 
 Canonical repository: `thiepn/studyOS`.
+
+
+## P5 weekly operating rule
+
+Do not treat reading or solution comparison as mastery. A normal week should move through:
+
+```text
+source approved
+→ reconstruct lecture from memory
+→ solve sheet before solution
+→ compare against official solution
+→ record discrepancies
+→ independently repair them
+→ short mixed checkpoint
+→ scheduled retention reviews
+```
+
+Open `Courses` to configure the real course names and use each course page as the operational weekly view.
