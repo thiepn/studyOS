@@ -2,7 +2,7 @@
 
 StudyOS is the WS26/27 retention and exam-readiness system for the THIEPN ecosystem. The application keeps raw university material in a dedicated Google Drive account, structured academic state in Supabase, and daily review/exam-readiness workflows in a Next.js frontend.
 
-## Current phase: P5
+## Current phase: P6
 
 Implemented through P4:
 
@@ -101,3 +101,26 @@ source approved
 ```
 
 Open `Courses` to configure the real course names and use each course page as the operational weekly view.
+
+
+## P6 production readiness
+
+P6 adds:
+- the six real WS26/27 course names at first-run initialization;
+- an authenticated `/setup` readiness center;
+- a public, non-sensitive `/api/health` liveness endpoint;
+- explicit separation between infrastructure readiness and first-material end-to-end readiness;
+- preferred Vercel compute region `fra1` to keep dynamic work in Europe near the shared Supabase project;
+- modern `SUPABASE_SECRET_KEY` support with legacy `SUPABASE_SERVICE_ROLE_KEY` fallback;
+- noindex/nofollow metadata for this private personal application;
+- the first repository-captured StudyOS Supabase migration.
+
+### Remaining external activation
+
+The repository is deployable, but live activation still requires:
+1. a Vercel account/team scope visible to the connected Vercel plugin;
+2. production environment variables;
+3. a Google OAuth client whose authorized redirect includes `/api/integrations/google-drive/callback`;
+4. signing in to StudyOS and selecting the dedicated Study Google account.
+
+Full end-to-end material certification intentionally remains pending until a real lecture/source exists.
