@@ -75,3 +75,12 @@ test("pending transfer evidence blocks a second method experiment",()=>{
   assert.equal(rec.awaitingEvidence,true);
   assert.match(rec.reason,/follow-up evidence/i);
 });
+
+
+test("closed inconclusive evidence does not deadlock the method portfolio",()=>{
+  const rec=recommendStrategy(signal({difficultySignal:"structural"}),[
+    {key:"concept_reconstruction",experiments:1,evaluated:0,effective:0,pending:1,effectivenessRate:null,latestOutcome:"insufficient_evidence"},
+  ]);
+  assert.equal(rec.awaitingEvidence,false);
+  assert.ok(rec.recommended);
+});
