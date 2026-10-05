@@ -54,6 +54,28 @@ export default async function PracticePage({ searchParams }: { searchParams: Pro
     );
   }
 
+  if(mode==="drift"){
+    const data=await getCalibrationPractice(course);
+    return (
+      <main className="shell practice-shell">
+        <header className="header"><div><p className="eyebrow">P14 → P15 · drift repair</p><h1>{data.course?.displayName ?? "Drift repair"}</h1></div><Nav /></header>
+        {data.profile ? <section className="panel calibration-session-context">
+          <div><p className="eyebrow">bounded intervention</p><h2>{data.profile.status} calibration · {data.profile.independentAttempts} independent attempts</h2></div>
+          <p>{data.profile.recommendation}</p>
+        </section> : null}
+        <ReviewSession
+          queue={data.queue}
+          plannedMinutes={Math.max(1,data.queueMinutes)}
+          sessionType="relearning"
+          courseId={data.course?.courseId}
+          eyebrow="P14 targeted drift repair"
+          intro="This is a bounded correction inside your existing daily capacity. Work independently and closed-book. P15 will judge the intervention only from later independent evidence, not from performance inside this repair session itself."
+          completionNote="P14 drift repair intervention"
+        />
+      </main>
+    );
+  }
+
   const [data,papers,calibration] = await Promise.all([getTodayData(),getAvailableExamPapers(),getSemesterCalibration()]);
   return (
     <main className="shell practice-shell">
