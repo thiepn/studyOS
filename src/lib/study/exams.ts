@@ -63,7 +63,7 @@ export async function getCourseExamIntelligence(courseId:string){
   return {papers:(papers.data??[]) as ExamPaper[],blueprint:(blueprint.data??[]) as ExamBlueprintRow[],strategy:(strategy.data??null) as ExamStrategy|null};
 }
 
-export async function getAvailableExamPapers(){
+export async function getAvailableExamPapers():Promise<Array<ExamPaper & {course:{id:string;display_name:string;short_name:string|null}}>>{
   const supabase=await createClient(); const {semesterId}=await ensureStudyWorkspace(supabase); const db=supabase as any;
   const coursesResult=await db.from("study_courses").select("id,display_name,short_name").eq("semester_id",semesterId).eq("active",true);
   if(coursesResult.error) throw new StudyServiceError("Could not load courses",coursesResult.error.code||"exam_catalog_failed",coursesResult.error);

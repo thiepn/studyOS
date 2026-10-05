@@ -95,7 +95,15 @@ export function ExamSimulation({data}:{data:ExamSimulationPage}){
     catch(error){setMessage(error instanceof Error?error.message:"Could not abandon paper");}finally{setBusy(false);}
   }
 
-  if(!sim||status==="completed"||status==="abandoned") return <section className="panel exam-sim-start">
+  if(!sim) return <section className="panel exam-sim-start">
+    <p className="eyebrow">{data.paper.course_short_name??data.paper.course_name} · timed Altklausur</p><h2>{data.paper.title}</h2>
+    <div className="exam-sim-facts"><span><strong>{data.paper.duration_minutes??"?"}</strong> minutes</span><span><strong>{data.paper.total_points??data.paper.question_points}</strong> points</span><span><strong>{data.paper.question_count}</strong> questions</span></div>
+    <p>Closed-book simulation. Solutions stay hidden until the paper is submitted. A score based on an unverified rubric remains provisional and cannot create mastery evidence.</p>
+    <div className="button-row"><button className="primary-button button-reset" disabled={busy||!data.paper.simulatable} onClick={()=>void start()}>Start timed paper</button>{data.paper.source_url?<a className="secondary-button" href={data.paper.source_url} target="_blank" rel="noreferrer">Open original PDF</a>:null}<Link className="secondary-button" href={"/courses/"+data.paper.course_id}>Back to course</Link></div>
+    {message?<p className="form-message">{message}</p>:null}
+  </section>;
+
+  if(status==="completed"||status==="abandoned") return <section className="panel exam-sim-start">
     <p className="eyebrow">{data.paper.course_short_name??data.paper.course_name} · timed Altklausur</p><h2>{data.paper.title}</h2>
     <div className="exam-sim-facts"><span><strong>{data.paper.duration_minutes??"?"}</strong> minutes</span><span><strong>{data.paper.total_points??data.paper.question_points}</strong> points</span><span><strong>{data.paper.question_count}</strong> questions</span></div>
     {status==="completed"?<div className="exam-result-summary">
