@@ -1,5 +1,5 @@
 import type { StudyAttemptResult, StudyIndependence } from "@/lib/supabase/database.types";
-import { evaluateCourseDrift, type DriftAttempt, type DriftProfile, type DriftWeek } from "./drift";
+import { evaluateCourseDrift, type DriftAttempt, type DriftProfile, type DriftWeek } from "./drift.ts";
 
 export type InterventionOutcome="pending"|"insufficient_evidence"|"effective"|"unchanged"|"regressed";
 export type DifficultySignal="insufficient_evidence"|"transient"|"responsive"|"persistent"|"structural";
