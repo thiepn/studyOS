@@ -173,7 +173,7 @@ export async function getDailyOrchestration(){
       id:"drift-repair:"+course.courseId,kind:"drift_repair",courseId:course.courseId,courseName:course.displayName,
       title:"Targeted drift repair · "+(course.shortName??course.displayName),
       reason:course.profile.recommendation,
-      href:"/practice?mode=calibration&course="+course.courseId,
+      href:"/practice?mode=drift&course="+course.courseId,
       estimatedMinutes:course.profile.correctionMinutes,priority:70,
       heavy:false,splittable:false,allowedInRecovery:false,
       metadata:{driftBand:course.profile.band,workloadFeedback:course.profile.workloadFeedback},
