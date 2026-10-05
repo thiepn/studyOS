@@ -105,10 +105,14 @@ function courseHistory(state:StrategyState,courseId:string){
     const evaluated=rows.filter((row)=>["effective","unchanged","regressed"].includes(row.evaluation.outcome));
     const effective=evaluated.filter((row)=>row.evaluation.outcome==="effective").length;
     const pending=rows.filter((row)=>row.evaluation.outcome==="pending"||row.evaluation.outcome==="insufficient_evidence").length;
+    const latest=rows.length?rows[rows.length-1].evaluation:null;
+    const latestOutcome=latest?.outcome==="insufficient_evidence"&&state.currentWeek<=latest.interventionWeek+2
+      ?"pending"
+      :latest?.outcome??null;
     return {
       key:strategy.key,experiments:rows.length,evaluated:evaluated.length,effective,pending,
       effectivenessRate:evaluated.length?Math.round(effective/evaluated.length*100):null,
-      latestOutcome:rows.length?rows[rows.length-1].evaluation.outcome:null,
+      latestOutcome,
     };
   });
 
