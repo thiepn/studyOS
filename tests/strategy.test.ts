@@ -45,9 +45,9 @@ test("all retired methods force external support instead of endless practice",()
 
 function question(id:string,skill:string,dimension:"recall"|"recognition"|"execution"|"transfer"|"exam",difficulty=3,minutes=4):StudyQuestion{
   return {
-    id,user_id:"u",course_id:"c",primary_skill_id:skill,question_type:"short_answer",evidence_dimension:dimension,
+    id,user_id:"u",course_id:"c",primary_skill_id:skill,question_type:"problem",evidence_dimension:dimension,
     prompt:id,expected_minutes:minutes,difficulty,answer_key_or_rubric:"ok",hint_1:null,hint_2:null,active:true,
-    source_resource_id:null,source_locator:null,source_authority:"ai_generated",created_at:"2026-01-01",updated_at:"2026-01-01",
+    ingestion_run_id:null,origin:"generated",source_confidence:null,version:1,created_at:"2026-01-01",updated_at:"2026-01-01",
   };
 }
 
