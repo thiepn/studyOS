@@ -176,12 +176,12 @@ export async function getDailyOrchestration(){
     const failedPattern=learning?.difficultySignal==="persistent"||learning?.difficultySignal==="structural";
     candidates.push({
       id:"drift-repair:"+course.courseId,kind:"drift_repair",courseId:course.courseId,courseName:course.displayName,
-      title:(failedPattern?"Review failed intervention pattern · ":"Targeted drift repair · ")+(course.shortName??course.displayName),
+      title:(failedPattern?"Run strategy escalation · ":"Targeted drift repair · ")+(course.shortName??course.displayName),
       reason:failedPattern
         ? (learning?.recommendation ?? course.profile.recommendation)
         : course.profile.recommendation,
-      href:failedPattern?"/progress#course-"+course.courseId:"/practice?mode=drift&course="+course.courseId,
-      estimatedMinutes:failedPattern?15:course.profile.correctionMinutes,priority:failedPattern?74:70,
+      href:failedPattern?"/strategy?course="+course.courseId:"/practice?mode=drift&course="+course.courseId,
+      estimatedMinutes:failedPattern?20:course.profile.correctionMinutes,priority:failedPattern?74:70,
       heavy:false,splittable:false,allowedInRecovery:false,
       metadata:{
         driftBand:course.profile.band,workloadFeedback:course.profile.workloadFeedback,
