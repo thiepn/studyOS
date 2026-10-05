@@ -2,9 +2,9 @@
 
 StudyOS is the WS26/27 retention and exam-readiness system for the THIEPN ecosystem. The application keeps raw university material in a dedicated Google Drive account, structured academic state in Supabase, and daily review/exam-readiness workflows in a Next.js frontend.
 
-## Current phase: P14
+## Current phase: P15
 
-Implemented through P14; the foundation includes:
+Implemented through P15; the foundation includes:
 
 - Next.js 16 App Router + Supabase SSR authentication
 - THIEPN Account shared identity with isolated `study_*` application data
@@ -278,3 +278,21 @@ StudyOS now compares completed-week workload and performance instead of reacting
 - P14 creates no mastery evidence and adds no second persistence model.
 
 The next phase is **P15 — Semester-Level Learning Analytics & Intervention Validation**.
+
+
+## P15 semester learning analytics and intervention validation
+
+StudyOS now measures whether P14 corrections transfer into later independent performance instead of assuming that a completed repair worked.
+
+- P14 targeted repairs run through a tagged drift-repair session so P15 can identify real interventions;
+- intervention-session attempts are excluded from effectiveness scoring;
+- baseline teaching weeks are compared with later completed teaching weeks using independent attempts only;
+- interventions stay pending or insufficient until enough follow-up evidence exists;
+- courses are classified as insufficient evidence, transient, responsive, persistent, or structural;
+- structural difficulty requires repeated failed interventions plus continuing drift despite a non-underinvestment workload signal;
+- Progress shows semester and per-course intervention effectiveness;
+- Today surfaces persistent/structural cases;
+- the daily planner stops repeating the same failed targeted-repair pattern and substitutes a bounded strategy-review item;
+- P15 does not increase capacity and creates no new mastery model.
+
+The next phase is **P16 — Strategy Escalation, Intervention Portfolio & Method-Level Experimentation**.
