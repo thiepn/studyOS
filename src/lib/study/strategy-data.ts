@@ -28,6 +28,7 @@ export type CourseStrategyPortfolio={
   shortName:string|null;
   sortOrder:number;
   difficultySignal:string;
+  eligibleForExperiment:boolean;
   recommendation:StrategyRecommendation;
   experiments:StrategyExperimentRecord[];
 };
@@ -139,7 +140,9 @@ export async function getSemesterStrategyPortfolios(){
     },histories);
     return {
       courseId:course.id,displayName:course.display_name,shortName:course.short_name,sortOrder:Number(course.sort_order),
-      difficultySignal:learned?.difficultySignal??"insufficient_evidence",recommendation,experiments,
+      difficultySignal:learned?.difficultySignal??"insufficient_evidence",
+      eligibleForExperiment:learned?.difficultySignal==="persistent"||learned?.difficultySignal==="structural",
+      recommendation,experiments,
     };
   });
   return {courses};
@@ -158,7 +161,7 @@ export async function getStrategyPractice(courseId?:string|null,requestedStrateg
   const [portfolio,state]=await Promise.all([getCourseStrategyPortfolio(courseId),loadStrategyState()]);
   const course=portfolio.course;
   if(!course)return {course:null,strategy:null,queue:[],queueMinutes:0,completionNote:null};
-  if(course.recommendation.awaitingEvidence)return {course,strategy:null,queue:[],queueMinutes:0,completionNote:null};
+  if(!course.eligibleForExperiment||course.recommendation.awaitingEvidence)return {course,strategy:null,queue:[],queueMinutes:0,completionNote:null};
   const requested=isStrategyKey(requestedStrategy)?strategyDefinition(requestedStrategy):null;
   const selected=requested&&course.recommendation.statusByKey[requested.key]!=="retired"
     ?requested
