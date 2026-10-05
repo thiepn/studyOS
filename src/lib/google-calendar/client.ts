@@ -12,7 +12,7 @@ export type GoogleCalendarEvent={
 
 export async function refreshCalendarAccessToken(userId:string){
   const admin=createAdminClient();
-  const {data,error}=await admin.from("study_calendar_credentials" as any).select("encrypted_refresh_token").eq("user_id",userId).single();
+  const {data,error}=await admin.from("study_calendar_credentials").select("encrypted_refresh_token").eq("user_id",userId).single();
   if(error||!data?.encrypted_refresh_token) throw new Error("Google Calendar refresh token is unavailable");
   const {clientId,clientSecret}=requireCalendarServerEnv();
   const response=await fetch("https://oauth2.googleapis.com/token",{method:"POST",headers:{"content-type":"application/x-www-form-urlencoded"},
