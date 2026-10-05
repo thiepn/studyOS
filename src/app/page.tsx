@@ -22,6 +22,9 @@ export default async function TodayPage() {
     .filter((course)=>["watch","drifting","critical"].includes(course.profile.band))
     .sort((a,b)=>b.profile.score-a.profile.score);
   const topDrift=activeDrift[0]??null;
+  const interventionConcern=[...orchestration.learningAnalytics.courses]
+    .filter((course)=>course.analytics.difficultySignal==="structural"||course.analytics.difficultySignal==="persistent")
+    .sort((a,b)=>Number(b.analytics.difficultySignal==="structural")-Number(a.analytics.difficultySignal==="structural"))[0]??null;
   const configured=String(settings?.default_mode??"normal");
   const defaultMode=(configured==="light"||configured==="recovery"||configured==="intensive"?configured:"normal") as Exclude<PlanningMode,"custom">;
 
@@ -58,6 +61,12 @@ export default async function TodayPage() {
           <span><strong>+{topDrift.profile.priorityBoost}</strong> allocation priority</span>
         </div>
         <small>StudyOS is reallocating the existing daily capacity only. The {plan.budgetMinutes}-minute budget has not been increased.</small>
+      </section> : null}
+
+      {interventionConcern ? <section className={"panel intervention-alert difficulty-"+interventionConcern.analytics.difficultySignal}>
+        <div><p className="eyebrow">P15 · intervention validation</p><h2>{interventionConcern.shortName ?? interventionConcern.displayName}</h2></div>
+        <p>{interventionConcern.analytics.recommendation}</p>
+        <div className="button-row"><Link className="secondary-button" href={"/progress#course-"+interventionConcern.courseId}>Review intervention evidence</Link></div>
       </section> : null}
 
       <CalendarAutopilotPanel data={calendar} />
