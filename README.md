@@ -2,9 +2,9 @@
 
 StudyOS is the WS26/27 retention and exam-readiness system for the THIEPN ecosystem. The application keeps raw university material in a dedicated Google Drive account, structured academic state in Supabase, and daily review/exam-readiness workflows in a Next.js frontend.
 
-## Current phase: P8
+## Current phase: P13
 
-Implemented through P4:
+Implemented through P13; the foundation includes:
 
 - Next.js 16 App Router + Supabase SSR authentication
 - THIEPN Account shared identity with isolated `study_*` application data
@@ -247,3 +247,18 @@ The first-week operational contract is deliberately per-course:
 `Week-1 source in Study Drive → verified processing → skill/question map → closed-book attempt → P10/P11 planning`.
 
 One successful course cannot certify the other three.
+
+
+## P13 first-week evidence calibration
+
+StudyOS now turns the first real Week-1 attempts into a guarded calibration profile without inventing a second mastery model.
+
+- each major course tracks independent sample size, distinct skills, accuracy, confidence-vs-accuracy gap, pace, weakest repeated evidence dimension, and recurring error type;
+- calibration remains broad until the sample is usable, preventing a few early successes or failures from over-personalizing the course;
+- Practice exposes a bounded 20-minute / 5-question calibration set using existing verified questions;
+- early sets prefer unattempted questions, under-sampled skills, under-sampled dimensions, and medium difficulty;
+- once evidence is usable, adaptation is intentionally mild: one-step difficulty adjustment plus a preference for a weak dimension;
+- Progress surfaces calibration maturity and the current recommendation beside longitudinal risk diagnostics;
+- calibration itself never writes mastery evidence and never increases the daily workload budget.
+
+The next phase is **P14 — Multi-Week Drift Detection, Workload/Performance Feedback & Automatic Plan Correction**.
