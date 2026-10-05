@@ -129,7 +129,7 @@ export function recommendStrategy(signal:StrategySignal,histories:StrategyHistor
   const statusByKey={} as Record<StrategyKey,StrategyStatus>;
   for(const strategy of STRATEGIES)statusByKey[strategy.key]=historyStatus(historyMap.get(strategy.key));
 
-  const unresolved=histories.find((history)=>history.latestOutcome==="pending"||history.latestOutcome==="insufficient_evidence");
+  const unresolved=histories.find((history)=>history.latestOutcome==="pending");
   const available=STRATEGIES.filter((strategy)=>statusByKey[strategy.key]!=="retired");
   if(unresolved){
     return {
