@@ -8,6 +8,7 @@ import type { ExamStrategy } from "./exams";
 import { getSemesterDrift } from "./drift-data";
 import { driftPriorityAdjustment } from "./drift";
 import { getSemesterLearningAnalytics } from "./analytics-data";
+import { getSemesterStrategyPortfolios } from "./strategy-data";
 
 const ACTIONS=new Set(["process_material","retrieve_lecture","attempt_exercise","reconcile_solution","repair_findings"]);
 const MODE_SET=new Set<PlanningMode>(["normal","light","recovery","intensive","custom"]);
@@ -53,11 +54,12 @@ export async function getDailyOrchestration(){
   const {semesterId}=await ensureStudyWorkspace(supabase);
   const db=supabase as any;
 
-  const [today,pulse,drift,learningAnalytics,capacityResult,semesterResult,settingsResult,weekResult,commitmentResult,strategyResult,papersResult,coursesResult,baselineResult]=await Promise.all([
+  const [today,pulse,drift,learningAnalytics,strategyPortfolios,capacityResult,semesterResult,settingsResult,weekResult,commitmentResult,strategyResult,papersResult,coursesResult,baselineResult]=await Promise.all([
     getTodayData(),
     getSemesterPulse(),
     getSemesterDrift(),
     getSemesterLearningAnalytics(),
+    getSemesterStrategyPortfolios(),
     db.from("study_current_capacity").select("*").eq("semester_id",semesterId).maybeSingle(),
     db.from("study_semesters").select("starts_on,ends_on,timezone").eq("id",semesterId).single(),
     db.from("study_planning_settings").select("*").eq("semester_id",semesterId).maybeSingle(),
@@ -168,24 +170,39 @@ export async function getDailyOrchestration(){
 
   const driftMap=new Map(drift.courses.map((course)=>[course.courseId,course]));
   const learningMap=new Map(learningAnalytics.courses.map((course)=>[course.courseId,course.analytics]));
+  const strategyMap=new Map(strategyPortfolios.courses.map((course)=>[course.courseId,course]));
   for(const course of drift.courses){
     const mode=riskMap.get(course.courseId)?.operating_mode;
     if(course.profile.correctionKind!=="targeted_practice"||course.profile.correctionMinutes<=0||!course.hasPracticeQuestions)continue;
     if(mode==="transition"||mode==="exam"||mode==="post_exam")continue;
     const learning=learningMap.get(course.courseId);
     const failedPattern=learning?.difficultySignal==="persistent"||learning?.difficultySignal==="structural";
+    const portfolio=strategyMap.get(course.courseId);
+    if(failedPattern&&portfolio?.recommendation.awaitingEvidence)continue;
+
+    const recommended=failedPattern?portfolio?.recommendation.recommended:null;
+    const escalation=failedPattern?portfolio?.recommendation.escalation:"none";
+    const strategyHref=recommended&&escalation==="none"
+      ?"/practice?mode=strategy&course="+course.courseId+"&strategy="+recommended.key
+      :"/strategy?course="+course.courseId;
+    const strategyTitle=recommended
+      ?(escalation==="change_source"?"Change source + ":"Run ")+recommended.title
+      :escalation==="external_support"?"Escalate external support":"Review strategy portfolio";
+    const strategyMinutes=recommended?recommended.budgetMinutes:15;
+
     candidates.push({
       id:"drift-repair:"+course.courseId,kind:"drift_repair",courseId:course.courseId,courseName:course.displayName,
-      title:(failedPattern?"Run strategy escalation · ":"Targeted drift repair · ")+(course.shortName??course.displayName),
+      title:(failedPattern?strategyTitle:"Targeted drift repair")+" · "+(course.shortName??course.displayName),
       reason:failedPattern
-        ? (learning?.recommendation ?? course.profile.recommendation)
+        ? (portfolio?.recommendation.reason ?? learning?.recommendation ?? course.profile.recommendation)
         : course.profile.recommendation,
-      href:failedPattern?"/strategy?course="+course.courseId:"/practice?mode=drift&course="+course.courseId,
-      estimatedMinutes:failedPattern?20:course.profile.correctionMinutes,priority:failedPattern?74:70,
+      href:failedPattern?strategyHref:"/practice?mode=drift&course="+course.courseId,
+      estimatedMinutes:failedPattern?strategyMinutes:course.profile.correctionMinutes,priority:failedPattern?74:70,
       heavy:false,splittable:false,allowedInRecovery:false,
       metadata:{
         driftBand:course.profile.band,workloadFeedback:course.profile.workloadFeedback,
         difficultySignal:learning?.difficultySignal??"insufficient_evidence",
+        strategyKey:recommended?.key??null,strategyEscalation:escalation,
       },
     });
   }
