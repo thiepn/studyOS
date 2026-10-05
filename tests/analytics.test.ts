@@ -87,3 +87,15 @@ test("semester summary reports effectiveness and structural course counts",()=>{
   assert.equal(summary.effectivenessRate,20);
   assert.equal(summary.structuralCourses,1);
 });
+
+
+test("other repair sessions never count as transfer evidence",()=>{
+  const rows=[
+    attempt(1,"incorrect"),attempt(1,"partial"),attempt(2,"incorrect"),
+    attempt(3,"correct","i1"),
+    attempt(4,"correct","i2"),attempt(4,"correct","i2"),attempt(4,"correct","i2"),
+  ];
+  const result=evaluateIntervention(intervention(3,"i1"),rows,6,starts,new Set(["i1","i2"]));
+  assert.equal(result.followupAttempts,0);
+  assert.equal(result.outcome,"insufficient_evidence");
+});
