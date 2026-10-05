@@ -50,6 +50,7 @@ export type StrategyRecommendation={
   statusByKey:Record<StrategyKey,StrategyStatus>;
   escalation:StrategyEscalation;
   reason:string;
+  awaitingEvidence:boolean;
 };
 
 export type StrategySkill={id:string;title:string;prerequisiteImportance:number};
@@ -128,10 +129,17 @@ export function recommendStrategy(signal:StrategySignal,histories:StrategyHistor
   const statusByKey={} as Record<StrategyKey,StrategyStatus>;
   for(const strategy of STRATEGIES)statusByKey[strategy.key]=historyStatus(historyMap.get(strategy.key));
 
+  const unresolved=histories.find((history)=>history.latestOutcome==="pending"||history.latestOutcome==="insufficient_evidence");
   const available=STRATEGIES.filter((strategy)=>statusByKey[strategy.key]!=="retired");
+  if(unresolved){
+    return {
+      recommended:null,ranked:available,histories,statusByKey,escalation:"none",awaitingEvidence:true,
+      reason:"A method experiment is still awaiting clean follow-up evidence. Keep normal coursework/review running and do not start another method experiment yet.",
+    };
+  }
   if(!available.length){
     return {
-      recommended:null,ranked:[],histories,statusByKey,escalation:"external_support",
+      recommended:null,ranked:[],histories,statusByKey,escalation:"external_support",awaitingEvidence:false,
       reason:"All in-app method families have failed repeated transfer checks. Stop cycling practice formats and escalate to a lecturer, tutorial, office hour, tutor, or another qualified human source.",
     };
   }
@@ -156,7 +164,7 @@ export function recommendStrategy(signal:StrategySignal,histories:StrategyHistor
     reason+=" Multiple distinct methods have already failed, so pair this experiment with a different explanation/source rather than repeating the same material.";
   }
 
-  return {recommended,ranked,histories,statusByKey,escalation,reason};
+  return {recommended,ranked,histories,statusByKey,escalation,reason,awaitingEvidence:false};
 }
 
 function queueRank(
