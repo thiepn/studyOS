@@ -23,12 +23,12 @@ export default async function StrategyPage({searchParams}:{searchParams:Promise<
           <div><p className="eyebrow">{course.difficultySignal.replaceAll("_"," ")} signal</p><h2>{course.displayName}</h2></div>
           <span>{course.experiments.length} experiment{course.experiments.length===1?"":"s"}</span>
         </div>
-        <p>{course.recommendation.reason}</p>
+        <p>{course.eligibleForExperiment ? course.recommendation.reason : "P15 has not classified this course as persistent or structural. Keep the normal coursework/review loop; P16 method experiments are not active for this course."}</p>
         {course.recommendation.awaitingEvidence ? <div className="strategy-hold">
           <strong>Experiment hold</strong>
           <span>Collect normal independent coursework/review evidence before switching methods. A second experiment now would contaminate the comparison.</span>
         </div> : null}
-        {course.recommendation.recommended ? <div className="strategy-recommended">
+        {course.eligibleForExperiment&&course.recommendation.recommended ? <div className="strategy-recommended">
           <div>
             <p className="eyebrow">Recommended next method</p>
             <h3>{course.recommendation.recommended.title}</h3>
@@ -60,7 +60,7 @@ export default async function StrategyPage({searchParams}:{searchParams:Promise<
           {STRATEGIES.map((strategy)=>{
             const status=course.recommendation.statusByKey[strategy.key];
             const history=course.recommendation.histories.find((item)=>item.key===strategy.key);
-            const available=status!=="retired"&&!course.recommendation.awaitingEvidence;
+            const available=course.eligibleForExperiment&&status!=="retired"&&!course.recommendation.awaitingEvidence;
             return <article className={"strategy-card strategy-"+status} key={strategy.key}>
               <div className="strategy-card-head"><div><strong>{strategy.title}</strong><span>{status}</span></div><b>{history?.evaluated??0} eval.</b></div>
               <p>{strategy.purpose}</p>
