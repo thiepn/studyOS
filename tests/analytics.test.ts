@@ -5,8 +5,8 @@ import type { DriftAttempt, DriftWeek } from "../src/lib/study/drift.ts";
 
 const starts="2026-09-01";
 const at=(week:number,day=2)=>new Date(Date.parse(starts+"T12:00:00Z")+(week-1)*7*86400000+day*86400000).toISOString();
-const attempt=(week:number,result:"correct"|"partial"|"incorrect",sessionId:string|null=null):AnalyticsAttempt=>({
-  sessionId,result,independence:"independent",durationSeconds:240,completedAt:at(week),
+const attempt=(week:number,result:"correct"|"partial"|"incorrect",sessionId:string|null=null,minutes=4):AnalyticsAttempt=>({
+  sessionId,result,independence:"independent",durationSeconds:minutes*60,completedAt:at(week),
 });
 const intervention=(week:number,id="i1"):InterventionSession=>({
   id,startedAt:at(week),endedAt:at(week,3),plannedMinutes:20,actualMinutes:18,
@@ -46,8 +46,8 @@ test("repeated failed corrections with sustained drift can become structural",()
     attempt(5,"incorrect","i2"),
     attempt(6,"incorrect"),attempt(6,"partial"),attempt(6,"incorrect"),
     attempt(7,"incorrect","i3"),
-    attempt(8,"incorrect"),attempt(8,"partial"),attempt(8,"incorrect"),
-    attempt(9,"incorrect"),attempt(9,"partial"),attempt(9,"incorrect"),
+    attempt(8,"incorrect",null,6),attempt(8,"partial",null,6),attempt(8,"incorrect",null,6),
+    attempt(9,"incorrect",null,6),attempt(9,"partial",null,6),attempt(9,"incorrect",null,6),
   ];
   const course=buildCourseLearningAnalytics({
     currentWeek:10,semesterStartsOn:starts,attempts:rows,
