@@ -44,7 +44,7 @@ export async function syncStudyCalendar(userId:string){
         const timezone=String(source.timezone??connectionResult.data.timezone??semesterResult.data?.timezone??"Europe/Berlin");
         const bounds=eventBounds(event,timezone); if(!bounds)continue;
         ids.push(event.id); const c=classify(event.summary??"",courses);
-        rows.push({user_id:userId,calendar_id:source.calendar_id,event_id:event.id,course_id:c.courseId,summary:event.summary??null,...bounds,status:event.status??null,transparency:event.transparency??null,
+        rows.push({user_id:userId,calendar_id:source.calendar_id,event_id:event.id,course_id:c.courseId,summary:event.summary??null,start_at:bounds.startAt,end_at:bounds.endAt,all_day:bounds.allDay,status:event.status??null,transparency:event.transparency??null,
           event_type:event.eventType??null,event_role:c.role,location:event.location??null,event_url:event.htmlLink??null,recurring_event_id:event.recurringEventId??null,study_owned:c.role==="study_block",
           source_updated_at:event.updated??null,synced_at:new Date().toISOString(),updated_at:new Date().toISOString()});
 
