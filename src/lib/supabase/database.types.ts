@@ -4291,6 +4291,20 @@ export type Database = {
             foreignKeyName: "study_attempts_course_owner_fk"
             columns: ["course_id", "user_id"]
             isOneToOne: false
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_attempts_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_attempts_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
             referencedRelation: "study_course_configuration"
             referencedColumns: ["course_id", "user_id"]
           },
@@ -4363,6 +4377,272 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "study_skills"
             referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      study_baseline_diagnostics: {
+        Row: {
+          completed_at: string | null
+          course_id: string
+          created_at: string
+          id: string
+          note: string | null
+          semester_id: string
+          started_at: string | null
+          status: Database["public"]["Enums"]["study_baseline_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          course_id: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          semester_id: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["study_baseline_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          course_id?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          semester_id?: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["study_baseline_status"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_baseline_diagnostics_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_baseline_diagnostics_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_baseline_diagnostics_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_configuration"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_baseline_diagnostics_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_operating_mode"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_baseline_diagnostics_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_progress"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_baseline_diagnostics_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_risk"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_baseline_diagnostics_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_baseline_diagnostics_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_baseline_diagnostics_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_baseline_diagnostics_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_semester_checkpoint_rotation"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_baseline_diagnostics_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "study_activation_snapshot"
+            referencedColumns: ["semester_id"]
+          },
+          {
+            foreignKeyName: "study_baseline_diagnostics_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "study_current_capacity"
+            referencedColumns: ["semester_id"]
+          },
+          {
+            foreignKeyName: "study_baseline_diagnostics_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "study_semester_checkpoint_rotation"
+            referencedColumns: ["semester_id"]
+          },
+          {
+            foreignKeyName: "study_baseline_diagnostics_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "study_semesters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      study_baseline_results: {
+        Row: {
+          classification: Database["public"]["Enums"]["study_baseline_classification"]
+          classified_at: string
+          confidence: number | null
+          course_id: string
+          diagnostic_id: string
+          note: string | null
+          skill_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          classification: Database["public"]["Enums"]["study_baseline_classification"]
+          classified_at?: string
+          confidence?: number | null
+          course_id: string
+          diagnostic_id: string
+          note?: string | null
+          skill_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          classification?: Database["public"]["Enums"]["study_baseline_classification"]
+          classified_at?: string
+          confidence?: number | null
+          course_id?: string
+          diagnostic_id?: string
+          note?: string | null
+          skill_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_baseline_results_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_baseline_results_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_baseline_results_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_configuration"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_baseline_results_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_operating_mode"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_baseline_results_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_progress"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_baseline_results_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_risk"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_baseline_results_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_baseline_results_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_baseline_results_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_baseline_results_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_semester_checkpoint_rotation"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_baseline_results_diagnostic_id_fkey"
+            columns: ["diagnostic_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_diagnostics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_baseline_results_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "study_skill_retention_diagnostics"
+            referencedColumns: ["skill_id"]
+          },
+          {
+            foreignKeyName: "study_baseline_results_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "study_skills"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -4510,6 +4790,20 @@ export type Database = {
             foreignKeyName: "study_calendar_events_course_id_fkey"
             columns: ["course_id"]
             isOneToOne: false
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_calendar_events_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_calendar_events_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
             referencedRelation: "study_course_configuration"
             referencedColumns: ["course_id"]
           },
@@ -4611,6 +4905,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "study_calendar_planning_settings_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "study_activation_snapshot"
+            referencedColumns: ["semester_id"]
+          },
           {
             foreignKeyName: "study_calendar_planning_settings_semester_id_fkey"
             columns: ["semester_id"]
@@ -4751,6 +5052,20 @@ export type Database = {
             foreignKeyName: "study_commitments_course_id_fkey"
             columns: ["course_id"]
             isOneToOne: false
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_commitments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_commitments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
             referencedRelation: "study_course_configuration"
             referencedColumns: ["course_id"]
           },
@@ -4809,6 +5124,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "study_resources"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_commitments_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "study_activation_snapshot"
+            referencedColumns: ["semester_id"]
           },
           {
             foreignKeyName: "study_commitments_semester_id_fkey"
@@ -4880,6 +5202,20 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "study_course_workflow_settings_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: true
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_course_workflow_settings_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: true
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
           {
             foreignKeyName: "study_course_workflow_settings_course_owner_fk"
             columns: ["course_id", "user_id"]
@@ -5003,6 +5339,13 @@ export type Database = {
             foreignKeyName: "study_courses_semester_owner_fk"
             columns: ["semester_id", "user_id"]
             isOneToOne: false
+            referencedRelation: "study_activation_snapshot"
+            referencedColumns: ["semester_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_courses_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
             referencedRelation: "study_current_capacity"
             referencedColumns: ["semester_id", "user_id"]
           },
@@ -5054,6 +5397,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "study_daily_capacity_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "study_activation_snapshot"
+            referencedColumns: ["semester_id"]
+          },
           {
             foreignKeyName: "study_daily_capacity_semester_id_fkey"
             columns: ["semester_id"]
@@ -5211,6 +5561,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "study_attempts"
             referencedColumns: ["id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_errors_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_errors_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id", "user_id"]
           },
           {
             foreignKeyName: "study_errors_course_owner_fk"
@@ -5534,6 +5898,20 @@ export type Database = {
             foreignKeyName: "study_exam_simulation_items_course_id_fkey"
             columns: ["course_id"]
             isOneToOne: false
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_exam_simulation_items_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_exam_simulation_items_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
             referencedRelation: "study_course_configuration"
             referencedColumns: ["course_id"]
           },
@@ -5695,6 +6073,20 @@ export type Database = {
             foreignKeyName: "study_exam_simulations_course_id_fkey"
             columns: ["course_id"]
             isOneToOne: false
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_exam_simulations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_exam_simulations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
             referencedRelation: "study_course_configuration"
             referencedColumns: ["course_id"]
           },
@@ -5826,6 +6218,20 @@ export type Database = {
             foreignKeyName: "study_exams_course_owner_fk"
             columns: ["course_id", "user_id"]
             isOneToOne: false
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_exams_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_exams_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
             referencedRelation: "study_course_configuration"
             referencedColumns: ["course_id", "user_id"]
           },
@@ -5937,6 +6343,20 @@ export type Database = {
           validation_issues?: Json
         }
         Relationships: [
+          {
+            foreignKeyName: "study_ingestion_runs_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_ingestion_runs_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
           {
             foreignKeyName: "study_ingestion_runs_course_owner_fk"
             columns: ["course_id", "user_id"]
@@ -6085,6 +6505,20 @@ export type Database = {
             foreignKeyName: "study_intake_items_course_owner_fk"
             columns: ["course_id", "user_id"]
             isOneToOne: false
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_intake_items_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_intake_items_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
             referencedRelation: "study_course_configuration"
             referencedColumns: ["course_id", "user_id"]
           },
@@ -6143,6 +6577,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "study_ingestion_runs"
             referencedColumns: ["id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_intake_items_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_activation_snapshot"
+            referencedColumns: ["semester_id", "user_id"]
           },
           {
             foreignKeyName: "study_intake_items_semester_owner_fk"
@@ -6214,6 +6655,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "study_planning_settings_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "study_activation_snapshot"
+            referencedColumns: ["semester_id"]
+          },
           {
             foreignKeyName: "study_planning_settings_semester_id_fkey"
             columns: ["semester_id"]
@@ -6357,6 +6805,20 @@ export type Database = {
             foreignKeyName: "study_questions_course_owner_fk"
             columns: ["course_id", "user_id"]
             isOneToOne: false
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_questions_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_questions_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
             referencedRelation: "study_course_configuration"
             referencedColumns: ["course_id", "user_id"]
           },
@@ -6484,6 +6946,20 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "study_reconciliation_findings_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_reconciliation_findings_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
           {
             foreignKeyName: "study_reconciliation_findings_course_owner_fk"
             columns: ["course_id", "user_id"]
@@ -6773,6 +7249,20 @@ export type Database = {
             foreignKeyName: "study_resources_course_owner_fk"
             columns: ["course_id", "user_id"]
             isOneToOne: false
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_resources_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_resources_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
             referencedRelation: "study_course_configuration"
             referencedColumns: ["course_id", "user_id"]
           },
@@ -6925,6 +7415,20 @@ export type Database = {
             foreignKeyName: "study_review_state_course_owner_fk"
             columns: ["course_id", "user_id"]
             isOneToOne: false
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_review_state_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_review_state_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
             referencedRelation: "study_course_configuration"
             referencedColumns: ["course_id", "user_id"]
           },
@@ -7058,6 +7562,20 @@ export type Database = {
             foreignKeyName: "study_scheduled_blocks_course_id_fkey"
             columns: ["course_id"]
             isOneToOne: false
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_scheduled_blocks_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_scheduled_blocks_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
             referencedRelation: "study_course_configuration"
             referencedColumns: ["course_id"]
           },
@@ -7109,6 +7627,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "study_semester_checkpoint_rotation"
             referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_scheduled_blocks_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "study_activation_snapshot"
+            referencedColumns: ["semester_id"]
           },
           {
             foreignKeyName: "study_scheduled_blocks_semester_id_fkey"
@@ -7241,6 +7766,20 @@ export type Database = {
             foreignKeyName: "study_sessions_course_owner_fk"
             columns: ["course_id", "user_id"]
             isOneToOne: false
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_sessions_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_sessions_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
             referencedRelation: "study_course_configuration"
             referencedColumns: ["course_id", "user_id"]
           },
@@ -7339,6 +7878,20 @@ export type Database = {
             foreignKeyName: "study_skills_course_owner_fk"
             columns: ["course_id", "user_id"]
             isOneToOne: false
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_skills_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_skills_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
             referencedRelation: "study_course_configuration"
             referencedColumns: ["course_id", "user_id"]
           },
@@ -7424,6 +7977,20 @@ export type Database = {
           week_no?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "study_weeks_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_weeks_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
           {
             foreignKeyName: "study_weeks_course_owner_fk"
             columns: ["course_id", "user_id"]
@@ -7563,6 +8130,20 @@ export type Database = {
             foreignKeyName: "study_topics_course_owner_fk"
             columns: ["course_id", "user_id"]
             isOneToOne: false
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_topics_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_topics_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
             referencedRelation: "study_course_configuration"
             referencedColumns: ["course_id", "user_id"]
           },
@@ -7669,6 +8250,20 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "study_week_workflow_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_week_workflow_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
           {
             foreignKeyName: "study_week_workflow_course_owner_fk"
             columns: ["course_id", "user_id"]
@@ -8079,6 +8674,221 @@ export type Database = {
       }
     }
     Views: {
+      study_activation_course_status: {
+        Row: {
+          attempt_count: number | null
+          baseline_classified_count: number | null
+          baseline_skill_count: number | null
+          baseline_status:
+            | Database["public"]["Enums"]["study_baseline_status"]
+            | null
+          course_id: string | null
+          course_kind: Database["public"]["Enums"]["study_course_kind"] | null
+          display_name: string | null
+          drive_folder_ready: boolean | null
+          exam_date_configured: boolean | null
+          question_count: number | null
+          resource_count: number | null
+          semester_id: string | null
+          short_name: string | null
+          skill_count: number | null
+          sort_order: number | null
+          stable_key: string | null
+          timetable_event_count: number | null
+          topic_count: number | null
+          user_id: string | null
+          week1_resource_count: number | null
+          week1_verified_resource_count: number | null
+        }
+        Insert: {
+          attempt_count?: never
+          baseline_classified_count?: never
+          baseline_skill_count?: never
+          baseline_status?: never
+          course_id?: string | null
+          course_kind?: Database["public"]["Enums"]["study_course_kind"] | null
+          display_name?: string | null
+          drive_folder_ready?: never
+          exam_date_configured?: never
+          question_count?: never
+          resource_count?: never
+          semester_id?: string | null
+          short_name?: string | null
+          skill_count?: never
+          sort_order?: number | null
+          stable_key?: string | null
+          timetable_event_count?: never
+          topic_count?: never
+          user_id?: string | null
+          week1_resource_count?: never
+          week1_verified_resource_count?: never
+        }
+        Update: {
+          attempt_count?: never
+          baseline_classified_count?: never
+          baseline_skill_count?: never
+          baseline_status?: never
+          course_id?: string | null
+          course_kind?: Database["public"]["Enums"]["study_course_kind"] | null
+          display_name?: string | null
+          drive_folder_ready?: never
+          exam_date_configured?: never
+          question_count?: never
+          resource_count?: never
+          semester_id?: string | null
+          short_name?: string | null
+          skill_count?: never
+          sort_order?: number | null
+          stable_key?: string | null
+          timetable_event_count?: never
+          topic_count?: never
+          user_id?: string | null
+          week1_resource_count?: never
+          week1_verified_resource_count?: never
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_courses_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_activation_snapshot"
+            referencedColumns: ["semester_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_courses_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_current_capacity"
+            referencedColumns: ["semester_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_courses_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_semester_checkpoint_rotation"
+            referencedColumns: ["semester_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_courses_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_semesters"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      study_activation_snapshot: {
+        Row: {
+          calendar_connected: boolean | null
+          calendar_synced: boolean | null
+          course_count: number | null
+          drive_connected: boolean | null
+          drive_tree_ready: boolean | null
+          ends_on: string | null
+          major_course_count: number | null
+          majors_with_attempts: number | null
+          majors_with_study_map: number | null
+          majors_with_timetable: number | null
+          majors_with_week1_material: number | null
+          retake_baselines_completed: number | null
+          retake_course_count: number | null
+          semester_id: string | null
+          stable_key: string | null
+          starts_on: string | null
+          timezone: string | null
+          user_id: string | null
+        }
+        Insert: {
+          calendar_connected?: never
+          calendar_synced?: never
+          course_count?: never
+          drive_connected?: never
+          drive_tree_ready?: never
+          ends_on?: string | null
+          major_course_count?: never
+          majors_with_attempts?: never
+          majors_with_study_map?: never
+          majors_with_timetable?: never
+          majors_with_week1_material?: never
+          retake_baselines_completed?: never
+          retake_course_count?: never
+          semester_id?: string | null
+          stable_key?: string | null
+          starts_on?: string | null
+          timezone?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          calendar_connected?: never
+          calendar_synced?: never
+          course_count?: never
+          drive_connected?: never
+          drive_tree_ready?: never
+          ends_on?: string | null
+          major_course_count?: never
+          majors_with_attempts?: never
+          majors_with_study_map?: never
+          majors_with_timetable?: never
+          majors_with_week1_material?: never
+          retake_baselines_completed?: never
+          retake_course_count?: never
+          semester_id?: string | null
+          stable_key?: string | null
+          starts_on?: string | null
+          timezone?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      study_baseline_summary: {
+        Row: {
+          classified_count: number | null
+          completed_at: string | null
+          course_id: string | null
+          display_name: string | null
+          never_mastered_count: number | null
+          retained_count: number | null
+          rusty_count: number | null
+          semester_id: string | null
+          short_name: string | null
+          skill_count: number | null
+          stable_key: string | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["study_baseline_status"] | null
+          user_id: string | null
+          weak_count: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_courses_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_activation_snapshot"
+            referencedColumns: ["semester_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_courses_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_current_capacity"
+            referencedColumns: ["semester_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_courses_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_semester_checkpoint_rotation"
+            referencedColumns: ["semester_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_courses_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_semesters"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
       study_course_configuration: {
         Row: {
           active: boolean | null
@@ -8107,6 +8917,13 @@ export type Database = {
           user_id: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "study_courses_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_activation_snapshot"
+            referencedColumns: ["semester_id", "user_id"]
+          },
           {
             foreignKeyName: "study_courses_semester_owner_fk"
             columns: ["semester_id", "user_id"]
@@ -8177,6 +8994,13 @@ export type Database = {
             foreignKeyName: "study_courses_semester_owner_fk"
             columns: ["semester_id", "user_id"]
             isOneToOne: false
+            referencedRelation: "study_activation_snapshot"
+            referencedColumns: ["semester_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_courses_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
             referencedRelation: "study_current_capacity"
             referencedColumns: ["semester_id", "user_id"]
           },
@@ -8224,6 +9048,13 @@ export type Database = {
             foreignKeyName: "study_courses_semester_owner_fk"
             columns: ["semester_id", "user_id"]
             isOneToOne: false
+            referencedRelation: "study_activation_snapshot"
+            referencedColumns: ["semester_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_courses_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
             referencedRelation: "study_current_capacity"
             referencedColumns: ["semester_id", "user_id"]
           },
@@ -8262,6 +9093,20 @@ export type Database = {
           user_id: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "study_skills_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_skills_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
           {
             foreignKeyName: "study_skills_course_owner_fk"
             columns: ["course_id", "user_id"]
@@ -8355,6 +9200,13 @@ export type Database = {
             foreignKeyName: "study_courses_semester_owner_fk"
             columns: ["semester_id", "user_id"]
             isOneToOne: false
+            referencedRelation: "study_activation_snapshot"
+            referencedColumns: ["semester_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_courses_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
             referencedRelation: "study_current_capacity"
             referencedColumns: ["semester_id", "user_id"]
           },
@@ -8432,6 +9284,20 @@ export type Database = {
           user_id: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "study_review_state_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_review_state_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
           {
             foreignKeyName: "study_review_state_course_owner_fk"
             columns: ["course_id", "user_id"]
@@ -8555,6 +9421,13 @@ export type Database = {
             foreignKeyName: "study_courses_semester_owner_fk"
             columns: ["semester_id", "user_id"]
             isOneToOne: false
+            referencedRelation: "study_activation_snapshot"
+            referencedColumns: ["semester_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_courses_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
             referencedRelation: "study_current_capacity"
             referencedColumns: ["semester_id", "user_id"]
           },
@@ -8619,6 +9492,20 @@ export type Database = {
           year_label: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "study_exams_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_exams_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
           {
             foreignKeyName: "study_exams_course_owner_fk"
             columns: ["course_id", "user_id"]
@@ -8720,6 +9607,13 @@ export type Database = {
           working_minutes_per_point: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "study_courses_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_activation_snapshot"
+            referencedColumns: ["semester_id", "user_id"]
+          },
           {
             foreignKeyName: "study_courses_semester_owner_fk"
             columns: ["semester_id", "user_id"]
@@ -8826,6 +9720,20 @@ export type Database = {
             foreignKeyName: "study_skills_course_owner_fk"
             columns: ["course_id", "user_id"]
             isOneToOne: false
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_skills_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_skills_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
             referencedRelation: "study_course_configuration"
             referencedColumns: ["course_id", "user_id"]
           },
@@ -8926,6 +9834,20 @@ export type Database = {
             foreignKeyName: "study_weeks_course_owner_fk"
             columns: ["course_id", "user_id"]
             isOneToOne: false
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_weeks_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_weeks_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
             referencedRelation: "study_course_configuration"
             referencedColumns: ["course_id", "user_id"]
           },
@@ -9007,6 +9929,20 @@ export type Database = {
           week_no: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "study_weeks_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_weeks_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
           {
             foreignKeyName: "study_weeks_course_owner_fk"
             columns: ["course_id", "user_id"]
@@ -10238,6 +11174,17 @@ export type Database = {
         Returns: Json
       }
       study_candidate_has_anchor: { Args: { p_source: Json }; Returns: boolean }
+      study_classify_baseline_skill: {
+        Args: {
+          p_classification: Database["public"]["Enums"]["study_baseline_classification"]
+          p_confidence?: number
+          p_course_id: string
+          p_note?: string
+          p_skill_id: string
+        }
+        Returns: Json
+      }
+      study_complete_baseline: { Args: { p_course_id: string }; Returns: Json }
       study_create_commitment: {
         Args: {
           p_course_id?: string
@@ -10448,6 +11395,7 @@ export type Database = {
         }
         Returns: Json
       }
+      study_start_baseline: { Args: { p_course_id: string }; Returns: string }
       study_start_exam_simulation: {
         Args: { p_exam_id: string; p_session_id: string; p_started_at?: string }
         Returns: Json
@@ -10624,6 +11572,16 @@ export type Database = {
     }
     Enums: {
       study_attempt_result: "incorrect" | "partial" | "correct"
+      study_baseline_classification:
+        | "retained"
+        | "rusty"
+        | "weak"
+        | "never_mastered"
+      study_baseline_status:
+        | "not_started"
+        | "in_progress"
+        | "completed"
+        | "skipped"
       study_calendar_event_role:
         | "busy"
         | "lecture"
@@ -10886,6 +11844,18 @@ export const Constants = {
   public: {
     Enums: {
       study_attempt_result: ["incorrect", "partial", "correct"],
+      study_baseline_classification: [
+        "retained",
+        "rusty",
+        "weak",
+        "never_mastered",
+      ],
+      study_baseline_status: [
+        "not_started",
+        "in_progress",
+        "completed",
+        "skipped",
+      ],
       study_calendar_event_role: [
         "busy",
         "lecture",
@@ -11063,5 +12033,7 @@ export type StudyCommitmentKind = Database["public"]["Enums"]["study_commitment_
 export type StudyCommitmentStatus = Database["public"]["Enums"]["study_commitment_status"];
 export type StudyCalendarEventRole = Database["public"]["Enums"]["study_calendar_event_role"];
 export type StudyScheduledBlockStatus = Database["public"]["Enums"]["study_scheduled_block_status"];
+export type StudyBaselineStatus = Database["public"]["Enums"]["study_baseline_status"];
+export type StudyBaselineClassification = Database["public"]["Enums"]["study_baseline_classification"];
 export type StudyWeekHealthStatus = "empty" | "needs_processing" | "source_only" | "learning" | "fragile" | "retained";
 export type StudyIntakeStatus = "discovered" | "classified" | "candidate" | "registered" | "needs_review" | "ignored" | "failed";

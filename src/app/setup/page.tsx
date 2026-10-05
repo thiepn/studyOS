@@ -1,87 +1,80 @@
 import Link from "next/link";
 import { Nav } from "@/components/nav";
-import { getReadinessData } from "@/lib/study/readiness";
-import { WS2627_COURSES, WS2627_START_DATE } from "@/lib/study/semester-config";
+import { getActivationData } from "@/lib/study/activation";
+import { WS2627_START_DATE } from "@/lib/study/semester-config";
 
-export const dynamic = "force-dynamic";
+export const dynamic="force-dynamic";
 
-function Check({ ok, title, detail }: { ok: boolean; title: string; detail: string }) {
-  return (
-    <article className={`readiness-check ${ok ? "ready" : "blocked"}`}>
-      <span aria-hidden="true">{ok ? "✓" : "!"}</span>
-      <div><strong>{title}</strong><p>{detail}</p></div>
-    </article>
-  );
+function Gate({title,percent,ready,blockers}:{title:string;percent:number;ready:boolean;blockers:string[]}){
+  return <article className={"panel activation-gate "+(ready?"ready":"blocked")}>
+    <div className="activation-gate-head"><div><p className="eyebrow">{ready?"Certified":"Incomplete"}</p><h2>{title}</h2></div><strong>{percent}%</strong></div>
+    <div className="bar"><i style={{width:percent+"%"}}/></div>
+    {blockers.length?<ul>{blockers.map((item)=><li key={item}>{item}</li>)}</ul>:<p>All requirements for this layer are satisfied.</p>}
+  </article>;
 }
 
-export default async function SetupPage() {
-  const data = await getReadinessData();
-  const { server, backend, evaluation } = data;
-  return (
-    <main className="shell">
-      <header className="header">
-        <div><p className="eyebrow">P6 · Production readiness</p><h1>Semester setup</h1></div>
-        <Nav />
-      </header>
+export default async function SetupPage(){
+  const data=await getActivationData();const {evaluation,snapshot,courses,server}=data;
+  return <main className="shell">
+    <header className="header"><div><p className="eyebrow">P12 · Live semester activation</p><h1>Activation Center</h1></div><Nav /></header>
 
-      <section className={`panel readiness-hero ${evaluation.infrastructureReady ? "ready" : "blocked"}`}>
-        <p className="eyebrow">Infrastructure</p>
-        <h2>{evaluation.infrastructureReady ? "Ready for semester operation" : "Setup still required"}</h2>
-        <p>WS26/27 begins {new Date(`${WS2627_START_DATE}T12:00:00+02:00`).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}. Code readiness and account readiness are tracked separately.</p>
-        {evaluation.blockers.length ? <ul>{evaluation.blockers.map((item) => <li key={item}>{item}</li>)}</ul> : null}
-      </section>
+    <section className="panel activation-hero">
+      <div><p className="eyebrow">WS26/27 · begins {new Date(WS2627_START_DATE+"T12:00:00+02:00").toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})}</p>
+        <h2>{evaluation.firstWeekCertified?"First-week operationally certified":evaluation.preSemesterReady?"Pre-semester activation complete":"Personal activation still required"}</h2>
+        <p>Platform readiness, your personal integrations, and real learning evidence are deliberately certified separately. Code passing CI does not make the semester operational.</p>
+      </div>
+      <div className="activation-hero-stats"><span><strong>{snapshot.course_count}/6</strong> courses</span><span><strong>{snapshot.majors_with_timetable}/4</strong> timetables</span><span><strong>{snapshot.retake_baselines_completed}/2</strong> retake baselines</span></div>
+    </section>
 
-      <section className="readiness-grid">
-        <div className="panel">
-          <p className="eyebrow">Deployment environment</p>
-          <h2>Server configuration</h2>
-          <div className="readiness-list">
-            <Check ok={server.hasSupabaseSecret} title="Supabase server secret" detail="Required for server-only Drive credential operations." />
-            <Check ok={server.secureOrigin} title="Stable HTTPS origin" detail={server.appOrigin} />
-            <Check ok={server.googleDriveConfigured} title="Google Drive OAuth" detail="Client ID, client secret, and encrypted-token key are configured." />
-            <Check ok={server.googleCalendarConfigured} title="Google Calendar OAuth" detail="Separate Study Calendar credentials are available (or securely reuse the Study Drive OAuth app)." />
-          </div>
-          <div className="callback-list">
-            <div><span>Supabase auth redirect</span><code>{server.authCallbackUrl}</code></div>
-            <div><span>Study Drive OAuth redirect</span><code>{server.googleDriveCallbackUrl}</code></div>
-            <div><span>Study Calendar OAuth redirect</span><code>{server.googleCalendarCallbackUrl}</code></div>
-          </div>
-          <p className="muted tiny">{server.deploymentEnv} · {server.buildSha ? server.buildSha.slice(0, 12) : "local/unversioned runtime"}</p>
-        </div>
+    <section className="activation-gates">
+      <Gate title="1 · Platform certification" percent={evaluation.platformPercent} ready={evaluation.platformReady} blockers={evaluation.platformBlockers}/>
+      <Gate title="2 · Pre-semester activation" percent={evaluation.activationPercent} ready={evaluation.preSemesterReady} blockers={evaluation.activationBlockers}/>
+      <Gate title="3 · First-week certification" percent={evaluation.firstWeekPercent} ready={evaluation.firstWeekCertified} blockers={evaluation.firstWeekBlockers}/>
+    </section>
 
-        <div className="panel">
-          <p className="eyebrow">Workspace</p>
-          <h2>Live semester state</h2>
-          <div className="readiness-list">
-            <Check ok={Boolean(backend.workspace_initialized)} title="Semester workspace" detail="WS26/27 exists in the THIEPN Account database." />
-            <Check ok={Boolean(backend.courses_ready)} title="Six real courses" detail={`${backend.named_course_count ?? 0} / 6 named and active`} />
-            <Check ok={Boolean(backend.drive_connected)} title="Study Google account" detail="Independent from the Google account connected to ChatGPT." />
-            <Check ok={Boolean(backend.drive_tree_ready)} title="Drive tree" detail="Semester root, inbox, and all six course folders exist." />
-            <Check ok={data.calendarConnection?.status === "connected"} title="Study Calendar account" detail={data.calendarConnection?.google_account_email ?? "Independent calendar account not connected yet."} />
-          </div>
-          <div className="button-row"><Link className="primary-button" href="/resources">Connect / inspect Drive</Link><Link className="secondary-button" href="/courses">Inspect courses</Link></div>
-        </div>
-      </section>
+    <section className="grid activation-integrations">
+      <article className="panel">
+        <div className="section-heading"><div><p className="eyebrow">Study Drive</p><h2>{snapshot.drive_connected?"Connected":"Not connected"}</h2></div><span>{snapshot.drive_tree_ready?"tree ready":"tree pending"}</span></div>
+        <p>The intended academic Google Drive account must be connected inside StudyOS. ChatGPT&apos;s connected Google account is irrelevant here.</p>
+        <div className="button-row"><Link className="primary-button" href="/resources">{snapshot.drive_connected?"Inspect Study Drive":"Connect Study Drive"}</Link></div>
+      </article>
+      <article className="panel">
+        <div className="section-heading"><div><p className="eyebrow">Study Calendar</p><h2>{snapshot.calendar_connected?"Connected":"Not connected"}</h2></div><span>{snapshot.calendar_synced?"synced":"sync pending"}</span></div>
+        <p>Connect the Google Calendar account containing the real university timetable, then sync enough events to map all four major courses.</p>
+        <div className="button-row">{snapshot.calendar_connected?<Link className="primary-button" href="/">Open calendar controls</Link>:<a className="primary-button" href="/api/integrations/google-calendar/start">Connect Study Calendar</a>}</div>
+      </article>
+    </section>
 
-      <section className="panel readiness-courses">
-        <div className="section-heading"><div><p className="eyebrow">Course onboarding</p><h2>WS26/27 course contract</h2></div><span>{backend.course_count ?? 0}/6</span></div>
-        <div className="onboarding-course-list">
-          {WS2627_COURSES.map((course) => <div key={course.stableKey}><strong>{course.displayName}</strong><span>{course.kind === "retake" ? "retake" : course.shortName}</span></div>)}
-        </div>
-      </section>
+    <section className="panel activation-courses">
+      <div className="section-heading"><div><p className="eyebrow">Real-course onboarding</p><h2>Six-course activation matrix</h2></div><span>{courses.length}/6</span></div>
+      <div className="activation-course-list">{courses.map((course)=>{
+        const major=course.course_kind==="major";
+        return <article key={course.course_id}>
+          <div className="activation-course-title"><div><strong>{course.display_name}</strong><span>{course.short_name??course.stable_key} · {course.course_kind}</span></div><Link href={"/courses/"+course.course_id}>Configure</Link></div>
+          {major?<div className="activation-check-grid">
+            <span className={course.drive_folder_ready?"ok":""}>Drive folder</span>
+            <span className={course.timetable_event_count>0?"ok":""}>Timetable {course.timetable_event_count||"—"}</span>
+            <span className={course.week1_verified_resource_count>0?"ok":""}>W1 source {course.week1_verified_resource_count||"—"}</span>
+            <span className={course.skill_count>0&&course.question_count>0?"ok":""}>Map {course.skill_count}/{course.question_count}</span>
+            <span className={course.attempt_count>0?"ok":""}>Attempt {course.attempt_count||"—"}</span>
+          </div>:<div className="retake-activation">
+            <div className="activation-check-grid"><span className={course.skill_count>0?"ok":""}>Skills {course.skill_count||"—"}</span><span className={course.question_count>0?"ok":""}>Questions {course.question_count||"—"}</span><span className={course.baseline_status==="completed"?"ok":""}>Baseline {course.baseline_classified_count}/{course.baseline_skill_count}</span></div>
+            <Link className="secondary-button" href={"/diagnostics/"+course.course_id}>{course.baseline_status==="completed"?"Review baseline":"Run baseline"}</Link>
+          </div>}
+        </article>;
+      })}</div>
+    </section>
 
-      <section className="panel first-material-card">
-        <div className="section-heading"><div><p className="eyebrow">End-to-end proof</p><h2>First real material</h2></div><span>{evaluation.firstWeekOperational ? "ready" : "pending"}</span></div>
-        <p>
-          Infrastructure can be ready before lectures begin. Full end-to-end certification additionally requires one real verified source to produce at least one skill and one review question.
-        </p>
-        <div className="readiness-stats">
-          <span><strong>{backend.verified_resource_count ?? 0}</strong> verified resources</span>
-          <span><strong>{backend.skill_count ?? 0}</strong> skills</span>
-          <span><strong>{backend.question_count ?? 0}</strong> questions</span>
-        </div>
-        <div className="button-row"><Link className="secondary-button" href="/resources">Open material intake</Link><Link className="secondary-button" href="/practice">Open practice</Link></div>
-      </section>
-    </main>
-  );
+    <section className="panel first-week-proof">
+      <div className="section-heading"><div><p className="eyebrow">End-to-end proof</p><h2>First-week operational contract</h2></div><span>{evaluation.firstWeekCertified?"CERTIFIED":"PENDING"}</span></div>
+      <p>Every major course must independently prove the real path below. One successful course does not certify the other three.</p>
+      <pre>Week-1 source in Study Drive → verified processing → skill/question map → closed-book attempt → P10/P11 planning</pre>
+      <div className="readiness-stats"><span><strong>{snapshot.majors_with_week1_material}/4</strong> verified W1 material</span><span><strong>{snapshot.majors_with_study_map}/4</strong> study maps</span><span><strong>{snapshot.majors_with_attempts}/4</strong> real attempts</span></div>
+      <div className="button-row"><Link className="secondary-button" href="/resources">Material intake</Link><Link className="secondary-button" href="/practice">Practice</Link><Link className="secondary-button" href="/">Today</Link></div>
+    </section>
+
+    <section className="panel activation-platform-detail">
+      <details><summary>Platform details</summary><div className="callback-list"><div><span>Runtime</span><code>{server.deploymentEnv}</code></div><div><span>Origin</span><code>{server.appOrigin}</code></div><div><span>Build</span><code>{server.buildSha?.slice(0,12)??"unversioned"}</code></div><div><span>Drive callback</span><code>{server.googleDriveCallbackUrl}</code></div><div><span>Calendar callback</span><code>{server.googleCalendarCallbackUrl}</code></div></div></details>
+    </section>
+  </main>;
 }

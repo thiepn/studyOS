@@ -29,6 +29,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
       <div className="button-row course-back-row">
         <Link className="secondary-button" href="/courses">← All courses</Link>
         {c.drive_folder_url ? <a className="secondary-button" href={c.drive_folder_url} target="_blank" rel="noreferrer">Open course Drive</a> : null}
+        {c.course_kind === "retake" ? <Link className="secondary-button" href={"/diagnostics/" + c.course_id}>Baseline diagnostic</Link> : null}
       </div>
 
       <section className="panel config-panel">

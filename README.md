@@ -220,3 +220,30 @@ StudyOS can now place P10's bounded plan into real free time without turning the
 - calendar events explicitly classified as deadline / Abgabe / due are mirrored into P10 commitments with Google-event provenance;
 - calendar-synced commitments preserve a user's completed status and existing estimate/priority on later syncs;
 - detected lecture/exercise/exam/deadline events are surfaced in Today; exam events never silently replace the official course exam date.
+
+
+## P12 live semester activation and first-week certification
+
+P12 separates three states that must never be conflated:
+
+1. **Platform certification** — deployment secrets, secure origin, Drive OAuth, Calendar OAuth.
+2. **Pre-semester activation** — six-course workspace, intended Study Drive + folder tree, intended Study Calendar + successful sync, timetable coverage for all four major courses, and completed EiP/Mikro retake baselines.
+3. **First-week certification** — every major course has verified Week-1 material, at least one source-grounded skill/question map, and at least one real attempt.
+
+The Setup page is now the Activation Center and exposes the exact blocker for each layer.
+
+Retake baselines are built from the user’s actual mapped old-course skills. StudyOS does not invent a generic syllabus when no prior material has been processed. Each skill is classified as Retained, Rusty, Weak, or Never mastered after a closed-book check. These labels affect only reactivation timing:
+
+- Retained → low-frequency revisit (~21 days);
+- Rusty → near-term revisit (~3 days);
+- Weak / Never mastered → due immediately.
+
+Baseline classification never creates mastery evidence and cannot make a skill Stable or Exam-ready.
+
+If new skills are imported after a completed baseline, its effective status automatically reopens until the new skills are classified.
+
+The first-week operational contract is deliberately per-course:
+
+`Week-1 source in Study Drive → verified processing → skill/question map → closed-book attempt → P10/P11 planning`.
+
+One successful course cannot certify the other three.

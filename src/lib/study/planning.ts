@@ -50,7 +50,7 @@ export async function getDailyOrchestration(){
   const {semesterId}=await ensureStudyWorkspace(supabase);
   const db=supabase as any;
 
-  const [today,pulse,capacityResult,semesterResult,settingsResult,weekResult,commitmentResult,strategyResult,papersResult,coursesResult]=await Promise.all([
+  const [today,pulse,capacityResult,semesterResult,settingsResult,weekResult,commitmentResult,strategyResult,papersResult,coursesResult,baselineResult]=await Promise.all([
     getTodayData(),
     getSemesterPulse(),
     db.from("study_current_capacity").select("*").eq("semester_id",semesterId).maybeSingle(),
@@ -61,8 +61,9 @@ export async function getDailyOrchestration(){
     db.from("study_exam_strategy").select("*").eq("semester_id",semesterId),
     db.from("study_exam_paper_catalog").select("exam_id,course_id,exam_at,year_label,effective_weight,simulatable").eq("active",true).eq("simulatable",true).order("exam_at",{ascending:false,nullsFirst:false}),
     db.from("study_courses").select("id,display_name,short_name,sort_order").eq("semester_id",semesterId).eq("active",true).order("sort_order"),
+    db.from("study_baseline_summary").select("*").eq("semester_id",semesterId),
   ]);
-  const error=capacityResult.error||semesterResult.error||settingsResult.error||weekResult.error||commitmentResult.error||strategyResult.error||papersResult.error||coursesResult.error;
+  const error=capacityResult.error||semesterResult.error||settingsResult.error||weekResult.error||commitmentResult.error||strategyResult.error||papersResult.error||coursesResult.error||baselineResult.error;
   if(error) throw new StudyServiceError("Could not build daily study plan",error.code||"daily_plan_failed",error);
 
   const capacity=(capacityResult.data??{
@@ -117,6 +118,19 @@ export async function getDailyOrchestration(){
       estimatedMinutes:Number(commitment.estimated_minutes),priority:52+pressure.score+Number(commitment.priority)*4,
       urgent:pressure.urgent,heavy:Number(commitment.estimated_minutes)>=90,splittable:true,allowedInRecovery:true,dueAt:commitment.due_at,
       metadata:{commitmentId:commitment.id,kind:commitment.kind},
+    });
+  }
+
+  for(const baseline of baselineResult.data??[]){
+    const skills=Number(baseline.skill_count??0),classified=Number(baseline.classified_count??0);
+    if(skills<=0||String(baseline.status)==="completed"&&classified>=skills)continue;
+    const remaining=Math.max(1,skills-classified);
+    candidates.push({
+      id:"baseline:"+baseline.course_id,kind:"workflow",courseId:baseline.course_id,
+      courseName:baseline.display_name,title:"Retake baseline · "+(baseline.short_name??baseline.display_name),
+      reason:classified+"/"+skills+" skills classified · distinguish retained, rusty, weak, and never mastered",
+      href:"/diagnostics/"+baseline.course_id,estimatedMinutes:Math.min(45,Math.max(15,remaining*5)),priority:82,
+      splittable:true,allowedInRecovery:true,
     });
   }
 
