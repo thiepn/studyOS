@@ -18,6 +18,10 @@ export default async function TodayPage() {
   const topRisk=pulse.risks[0] ?? null;
   const checkpoint=pulse.checkpoint;
   const examCourses=pulse.risks.filter((course)=>course.operating_mode==="exam"||course.operating_mode==="transition");
+  const activeDrift=[...orchestration.drift.courses]
+    .filter((course)=>["watch","drifting","critical"].includes(course.profile.band))
+    .sort((a,b)=>b.profile.score-a.profile.score);
+  const topDrift=activeDrift[0]??null;
   const configured=String(settings?.default_mode??"normal");
   const defaultMode=(configured==="light"||configured==="recovery"||configured==="intensive"?configured:"normal") as Exclude<PlanningMode,"custom">;
 
@@ -40,6 +44,22 @@ export default async function TodayPage() {
       </section>
 
       <DailyPlan plan={plan} />
+
+      {topDrift ? <section className={"panel drift-correction drift-"+topDrift.profile.band}>
+        <div className="drift-correction-head">
+          <div><p className="eyebrow">P14 · automatic plan correction</p><h2>{topDrift.shortName ?? topDrift.displayName}</h2></div>
+          <span>{topDrift.profile.band.replace("_"," ")} · {topDrift.profile.score}/100</span>
+        </div>
+        <p>{topDrift.profile.recommendation}</p>
+        <div className="drift-correction-metrics">
+          <span><strong>{topDrift.profile.workloadFeedback.replace("_"," ")}</strong> workload signal</span>
+          <span><strong>{topDrift.profile.accuracyDelta==null?"—":(topDrift.profile.accuracyDelta>0?"+":"")+topDrift.profile.accuracyDelta+" pp"}</strong> accuracy change</span>
+          <span><strong>{topDrift.profile.recentPracticeMinutes} / {topDrift.profile.priorPracticeMinutes} min</strong> recent / prior practice</span>
+          <span><strong>+{topDrift.profile.priorityBoost}</strong> allocation priority</span>
+        </div>
+        <small>StudyOS is reallocating the existing daily capacity only. The {plan.budgetMinutes}-minute budget has not been increased.</small>
+      </section> : null}
+
       <CalendarAutopilotPanel data={calendar} />
       <CapacityControls capacity={capacity} defaultMode={defaultMode} />
 
