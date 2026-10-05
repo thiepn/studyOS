@@ -10,6 +10,7 @@ type Props={
     timezone:string;today:string;stale:boolean;
     proposal:{blocks:Array<{candidateId:string;title:string;startAt:string;endAt:string;minutes:number;partial:boolean}>;unscheduled:Array<{id:string;title:string;scheduledMinutes:number}>};
     weekly:Array<{date:string;weekday:string;freeMinutes:number;busyEvents:number;commitmentsDue:number;commitmentMinutes:number}>;
+    courseEvents:Array<{calendar_id:string;event_id:string;course_id:string|null;summary:string|null;start_at:string;end_at:string;event_role:string;event_url:string|null}>;
     scheduledBlocks:Array<{id:string;title:string;start_at:string;end_at:string;status:string;event_url:string|null;scheduled_minutes:number;plan_date:string}>;
   }
 };
@@ -87,6 +88,11 @@ export function CalendarAutopilotPanel({data}:Props){
         </article>)}</div>
       </div>
     </div>
+
+    {data.courseEvents.length?<details className="calendar-course-events" open><summary>Synced course events ({data.courseEvents.length})</summary><div>{data.courseEvents.map(event=><article key={event.calendar_id+event.event_id}>
+      <div><strong>{event.summary??"Calendar event"}</strong><span>{event.event_role.replace("_"," ")} · {new Date(event.start_at).toLocaleDateString("en-GB",{timeZone:data.timezone,day:"2-digit",month:"short"})} · {time(event.start_at,data.timezone)}</span></div>
+      {event.event_url?<a href={event.event_url} target="_blank" rel="noreferrer">Open</a>:null}
+    </article>)}</div><small>Deadline-labelled events are mirrored into P10 commitments. Exam-labelled events remain informational until you confirm the official course exam date.</small></details>:null}
 
     {futureBlocks.length?<details className="calendar-scheduled"><summary>Committed StudyOS blocks ({futureBlocks.length})</summary><div>{futureBlocks.map(block=><article key={block.id}>
       <div><strong>{block.title}</strong><span>{dateLabel(block.plan_date,data.timezone)} · {time(block.start_at,data.timezone)}–{time(block.end_at,data.timezone)}</span></div>

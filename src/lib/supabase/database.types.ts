@@ -4681,6 +4681,9 @@ export type Database = {
       }
       study_commitments: {
         Row: {
+          calendar_event_id: string | null
+          calendar_id: string | null
+          calendar_synced: boolean
           completed_at: string | null
           course_id: string | null
           created_at: string
@@ -4692,6 +4695,7 @@ export type Database = {
           priority: number
           resource_id: string | null
           semester_id: string
+          source_updated_at: string | null
           source_url: string | null
           status: Database["public"]["Enums"]["study_commitment_status"]
           title: string
@@ -4699,6 +4703,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          calendar_event_id?: string | null
+          calendar_id?: string | null
+          calendar_synced?: boolean
           completed_at?: string | null
           course_id?: string | null
           created_at?: string
@@ -4710,6 +4717,7 @@ export type Database = {
           priority?: number
           resource_id?: string | null
           semester_id: string
+          source_updated_at?: string | null
           source_url?: string | null
           status?: Database["public"]["Enums"]["study_commitment_status"]
           title: string
@@ -4717,6 +4725,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          calendar_event_id?: string | null
+          calendar_id?: string | null
+          calendar_synced?: boolean
           completed_at?: string | null
           course_id?: string | null
           created_at?: string
@@ -4728,6 +4739,7 @@ export type Database = {
           priority?: number
           resource_id?: string | null
           semester_id?: string
+          source_updated_at?: string | null
           source_url?: string | null
           status?: Database["public"]["Enums"]["study_commitment_status"]
           title?: string

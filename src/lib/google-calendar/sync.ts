@@ -17,6 +17,10 @@ function eventBounds(event:any,timezone:string){
   if(event.start?.date&&event.end?.date)return {startAt:zonedDateTimeToUtc(event.start.date,"00:00",timezone).toISOString(),endAt:zonedDateTimeToUtc(event.end.date,"00:00",timezone).toISOString(),allDay:true};
   return null;
 }
+function deadlineDueAt(event:any,bounds:{startAt:string;allDay:boolean},timezone:string){
+  if(bounds.allDay&&event.start?.date)return zonedDateTimeToUtc(event.start.date,"23:59",timezone).toISOString();
+  return bounds.startAt;
+}
 export async function syncStudyCalendar(userId:string){
   const admin=createAdminClient(); const now=new Date();
   const [connectionResult,sourcesResult,semesterResult,coursesResult]=await Promise.all([
@@ -37,11 +41,33 @@ export async function syncStudyCalendar(userId:string){
       const events=await listGoogleCalendarEvents(token,String(source.calendar_id),timeMin,timeMax); const ids:string[]=[];
       const rows=[];
       for(const event of events){
-        const bounds=eventBounds(event,String(source.timezone??connectionResult.data.timezone??semesterResult.data?.timezone??"Europe/Berlin")); if(!bounds)continue;
+        const timezone=String(source.timezone??connectionResult.data.timezone??semesterResult.data?.timezone??"Europe/Berlin");
+        const bounds=eventBounds(event,timezone); if(!bounds)continue;
         ids.push(event.id); const c=classify(event.summary??"",courses);
         rows.push({user_id:userId,calendar_id:source.calendar_id,event_id:event.id,course_id:c.courseId,summary:event.summary??null,...bounds,status:event.status??null,transparency:event.transparency??null,
           event_type:event.eventType??null,event_role:c.role,location:event.location??null,event_url:event.htmlLink??null,recurring_event_id:event.recurringEventId??null,study_owned:c.role==="study_block",
           source_updated_at:event.updated??null,synced_at:new Date().toISOString(),updated_at:new Date().toISOString()});
+
+        if(c.role==="deadline"&&semesterResult.data?.id){
+          const existing=await admin.from("study_commitments").select("id,status,estimated_minutes,priority,note").eq("user_id",userId).eq("calendar_id",source.calendar_id).eq("calendar_event_id",event.id).maybeSingle();
+          if(existing.error)throw new Error(existing.error.message);
+          if(event.status==="cancelled"){
+            if(existing.data?.id&&existing.data.status==="open"){
+              const cancelled=await admin.from("study_commitments").update({status:"cancelled",updated_at:new Date().toISOString(),source_updated_at:event.updated??null}).eq("id",existing.data.id).eq("user_id",userId);
+              if(cancelled.error)throw new Error(cancelled.error.message);
+            }
+          }else{
+            const row={
+              user_id:userId,semester_id:semesterResult.data.id,course_id:c.courseId,kind:"deadline" as const,title:event.summary||"Calendar deadline",
+              due_at:deadlineDueAt(event,bounds,timezone),estimated_minutes:Number(existing.data?.estimated_minutes??45),priority:Number(existing.data?.priority??3),
+              status:existing.data?.status==="completed"?"completed":"open",source_url:event.htmlLink??null,
+              note:existing.data?.note??"Synced from Study Calendar. Review the 45-minute default estimate if needed.",
+              calendar_id:source.calendar_id,calendar_event_id:event.id,calendar_synced:true,source_updated_at:event.updated??null,updated_at:new Date().toISOString(),
+            };
+            const saved=await admin.from("study_commitments").upsert(row,{onConflict:"user_id,calendar_id,calendar_event_id"});
+            if(saved.error)throw new Error(saved.error.message);
+          }
+        }
       }
       if(rows.length){const {error}=await admin.from("study_calendar_events" as any).upsert(rows,{onConflict:"user_id,calendar_id,event_id"});if(error)throw new Error(error.message);}
       let stale=admin.from("study_calendar_events" as any).delete().eq("user_id",userId).eq("calendar_id",source.calendar_id).gte("start_at",timeMin).lt("start_at",timeMax);

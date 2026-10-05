@@ -68,7 +68,8 @@ export async function getCalendarAutopilot(orchestration?:Orchestration){
     weekly.push({date,weekday:weekday(date,timezone),freeMinutes:freeMinutes(windows),busyEvents:busy(date).filter(e=>e.status!=="cancelled"&&e.transparency!=="transparent").length,commitmentsDue:due.length,commitmentMinutes:due.reduce((sum,c)=>sum+Number(c.estimated_minutes),0)});
   }
 
-  return {connection,sources,settings,timezone,today,todayWindows,proposal,weekly,scheduledBlocks:blocksResult.data??[],stale:Boolean(connection?.last_sync_at&&Date.now()-Date.parse(connection.last_sync_at)>6*3600_000)};
+  const courseEvents=events.filter(event=>["lecture","exercise","exam","deadline"].includes(String(event.event_role))&&event.status!=="cancelled").slice(0,16);
+  return {connection,sources,settings,timezone,today,todayWindows,proposal,weekly,courseEvents,scheduledBlocks:blocksResult.data??[],stale:Boolean(connection?.last_sync_at&&Date.now()-Date.parse(connection.last_sync_at)>6*3600_000)};
 }
 
 export async function updateCalendarSources(selectedIds:string[]){

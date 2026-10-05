@@ -216,3 +216,7 @@ StudyOS can now place P10's bounded plan into real free time without turning the
 - committing the proposal explicitly creates Google Calendar events with popup reminders;
 - cancelling a committed StudyOS block removes the corresponding Google Calendar event and records the cancellation locally;
 - StudyOS never silently imports or writes through the Google Calendar account connected to ChatGPT.
+
+- calendar events explicitly classified as deadline / Abgabe / due are mirrored into P10 commitments with Google-event provenance;
+- calendar-synced commitments preserve a user's completed status and existing estimate/priority on later syncs;
+- detected lecture/exercise/exam/deadline events are surfaced in Today; exam events never silently replace the official course exam date.

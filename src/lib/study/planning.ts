@@ -22,6 +22,7 @@ export type CurrentCapacity = {
 export type CommitmentRow = {
   id:string;course_id:string|null;resource_id:string|null;kind:string;title:string;due_at:string;estimated_minutes:number;
   priority:number;status:string;source_url:string|null;note:string|null;completed_at:string|null;created_at:string;updated_at:string;
+  calendar_id?:string|null;calendar_event_id?:string|null;calendar_synced?:boolean;source_updated_at?:string|null;
   course_name?:string|null;course_short_name?:string|null;
 };
 

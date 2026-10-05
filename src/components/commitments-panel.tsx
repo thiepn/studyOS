@@ -33,7 +33,7 @@ export function CommitmentsPanel({commitments,courses}:{commitments:CommitmentRo
       const due=new Date(item.due_at); const overdue=due.getTime()<Date.now();
       return <article key={item.id} className={overdue?"commitment overdue":"commitment"}>
         <div><strong>{item.title}</strong><span>{item.course_short_name??item.course_name??"Semester"} · {due.toLocaleString([], {dateStyle:"medium",timeStyle:"short"})}</span></div>
-        <div className="commitment-meta"><span>{item.estimated_minutes} min</span><span>P{item.priority}</span>{overdue?<span className="urgent-tag">overdue</span>:null}</div>
+        <div className="commitment-meta"><span>{item.estimated_minutes} min</span><span>P{item.priority}</span>{item.calendar_synced?<span>calendar</span>:null}{overdue?<span className="urgent-tag">overdue</span>:null}</div>
         <div className="commitment-actions">{item.source_url?<a href={item.source_url} target="_blank" rel="noreferrer">source</a>:null}<button type="button" disabled={busy} onClick={()=>void status(item.id,"completed")}>Done</button><button type="button" disabled={busy} onClick={()=>void status(item.id,"cancelled")}>Cancel</button></div>
       </article>;
     })}</div>:<p className="muted">No open deadlines are registered.</p>}
