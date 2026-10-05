@@ -120,7 +120,7 @@ export function evaluateCourseDrift(input:DriftInput):DriftProfile{
     workloadFeedback="underinvested";
     add("underinvestment","effective practice time fell while outcomes/workflow weakened",10);
   }else if(
-    workloadChange!=null&&workloadChange>=35&&recentMinutes>=45
+    workloadChange!=null&&workloadChange>=35&&recentMinutes>=30
     && (accuracyDelta==null||accuracyDelta<=5)
   ){
     workloadFeedback="low_yield";
