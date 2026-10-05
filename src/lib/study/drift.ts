@@ -138,7 +138,7 @@ export function evaluateCourseDrift(input:DriftInput):DriftProfile{
   if(sufficientData){
     if(score>=50)band="critical";
     else if(score>=30)band="drifting";
-    else if(score>=15)band="watch";
+    else if(score>=10)band="watch";
     else band="on_track";
   }
 
