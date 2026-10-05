@@ -61,3 +61,15 @@ test("deadline pressure is monotonic around urgent windows",()=>{
   assert.equal(deadlinePressure("2026-10-06T10:00:00Z",now).urgent,true);
   assert.ok(deadlinePressure("2026-10-06T10:00:00Z",now).score>deadlinePressure("2026-10-12T12:00:00Z",now).score);
 });
+
+
+test("drift repair can displace lower-value work but cannot expand capacity",()=>{
+  const plan=buildDailyPlan([
+    item("ordinary",{courseId:"c1",priority:68,estimatedMinutes:30}),
+    item("drift",{kind:"drift_repair",courseId:"c2",priority:82,estimatedMinutes:20,allowedInRecovery:false,splittable:false}),
+    item("other",{courseId:"c3",priority:65,estimatedMinutes:30}),
+  ],{mode:"normal",budgetMinutes:50,maxFocusItems:3});
+  assert.equal(plan.usedMinutes,50);
+  assert.equal(plan.selected[0].id,"drift");
+  assert.ok(plan.usedMinutes<=plan.budgetMinutes);
+});
