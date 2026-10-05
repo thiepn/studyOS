@@ -4257,6 +4257,20 @@ export type Database = {
             referencedColumns: ["id", "user_id"]
           },
           {
+            foreignKeyName: "study_attempts_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_attempts_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
             foreignKeyName: "study_attempts_question_owner_fk"
             columns: ["question_id", "user_id"]
             isOneToOne: false
@@ -4367,6 +4381,20 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "study_courses"
             referencedColumns: ["id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_course_workflow_settings_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: true
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_course_workflow_settings_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: true
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id", "user_id"]
           },
         ]
       }
@@ -4625,6 +4653,20 @@ export type Database = {
             referencedColumns: ["id", "user_id"]
           },
           {
+            foreignKeyName: "study_errors_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_errors_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
             foreignKeyName: "study_errors_question_owner_fk"
             columns: ["question_id", "user_id"]
             isOneToOne: false
@@ -4654,8 +4696,60 @@ export type Database = {
           },
         ]
       }
+      study_exam_question_skills: {
+        Row: {
+          created_at: string
+          exam_question_id: string
+          role: string
+          skill_id: string
+          user_id: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          exam_question_id: string
+          role?: string
+          skill_id: string
+          user_id: string
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          exam_question_id?: string
+          role?: string
+          skill_id?: string
+          user_id?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_exam_question_skills_exam_question_id_fkey"
+            columns: ["exam_question_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_exam_question_skills_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "study_skill_retention_diagnostics"
+            referencedColumns: ["skill_id"]
+          },
+          {
+            foreignKeyName: "study_exam_question_skills_skill_id_fkey"
+            columns: ["skill_id"]
+            isOneToOne: false
+            referencedRelation: "study_skills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       study_exam_questions: {
         Row: {
+          active: boolean
+          answer_key_or_rubric: string | null
+          answer_status: Database["public"]["Enums"]["study_exam_answer_status"]
           created_at: string
           difficulty: number | null
           exam_id: string
@@ -4663,11 +4757,24 @@ export type Database = {
           points: number | null
           primary_skill_id: string | null
           prompt_summary: string | null
+          prompt_text: string | null
           question_no: string
+          solution_page: number | null
+          solution_resource_id: string | null
+          solution_section: string | null
+          sort_order: number
+          source_confidence: number | null
           source_page: number | null
+          source_page_end: number | null
+          source_section: string | null
+          study_question_id: string | null
+          updated_at: string
           user_id: string
         }
         Insert: {
+          active?: boolean
+          answer_key_or_rubric?: string | null
+          answer_status?: Database["public"]["Enums"]["study_exam_answer_status"]
           created_at?: string
           difficulty?: number | null
           exam_id: string
@@ -4675,11 +4782,24 @@ export type Database = {
           points?: number | null
           primary_skill_id?: string | null
           prompt_summary?: string | null
+          prompt_text?: string | null
           question_no: string
+          solution_page?: number | null
+          solution_resource_id?: string | null
+          solution_section?: string | null
+          sort_order?: number
+          source_confidence?: number | null
           source_page?: number | null
+          source_page_end?: number | null
+          source_section?: string | null
+          study_question_id?: string | null
+          updated_at?: string
           user_id: string
         }
         Update: {
+          active?: boolean
+          answer_key_or_rubric?: string | null
+          answer_status?: Database["public"]["Enums"]["study_exam_answer_status"]
           created_at?: string
           difficulty?: number | null
           exam_id?: string
@@ -4687,11 +4807,28 @@ export type Database = {
           points?: number | null
           primary_skill_id?: string | null
           prompt_summary?: string | null
+          prompt_text?: string | null
           question_no?: string
+          solution_page?: number | null
+          solution_resource_id?: string | null
+          solution_section?: string | null
+          sort_order?: number
+          source_confidence?: number | null
           source_page?: number | null
+          source_page_end?: number | null
+          source_section?: string | null
+          study_question_id?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "study_exam_questions_exam_owner_fk"
+            columns: ["exam_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_paper_catalog"
+            referencedColumns: ["exam_id", "user_id"]
+          },
           {
             foreignKeyName: "study_exam_questions_exam_owner_fk"
             columns: ["exam_id", "user_id"]
@@ -4713,6 +4850,322 @@ export type Database = {
             referencedRelation: "study_skills"
             referencedColumns: ["id", "user_id"]
           },
+          {
+            foreignKeyName: "study_exam_questions_solution_resource_fk"
+            columns: ["solution_resource_id"]
+            isOneToOne: false
+            referencedRelation: "study_resources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_exam_questions_study_question_fk"
+            columns: ["study_question_id"]
+            isOneToOne: false
+            referencedRelation: "study_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      study_exam_simulation_items: {
+        Row: {
+          attempt_id: string | null
+          awarded_points: number | null
+          course_id: string
+          created_at: string
+          duration_seconds: number
+          error_types: Database["public"]["Enums"]["study_error_type"][]
+          exam_question_id: string
+          graded_at: string | null
+          grading_status: Database["public"]["Enums"]["study_exam_grading_status"]
+          max_points: number
+          question_no: string
+          response_text: string | null
+          self_confidence: number | null
+          simulation_id: string
+          sort_order: number
+          study_question_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          attempt_id?: string | null
+          awarded_points?: number | null
+          course_id: string
+          created_at?: string
+          duration_seconds?: number
+          error_types?: Database["public"]["Enums"]["study_error_type"][]
+          exam_question_id: string
+          graded_at?: string | null
+          grading_status?: Database["public"]["Enums"]["study_exam_grading_status"]
+          max_points: number
+          question_no: string
+          response_text?: string | null
+          self_confidence?: number | null
+          simulation_id: string
+          sort_order?: number
+          study_question_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          attempt_id?: string | null
+          awarded_points?: number | null
+          course_id?: string
+          created_at?: string
+          duration_seconds?: number
+          error_types?: Database["public"]["Enums"]["study_error_type"][]
+          exam_question_id?: string
+          graded_at?: string | null
+          grading_status?: Database["public"]["Enums"]["study_exam_grading_status"]
+          max_points?: number
+          question_no?: string
+          response_text?: string | null
+          self_confidence?: number | null
+          simulation_id?: string
+          sort_order?: number
+          study_question_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_exam_simulation_items_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: false
+            referencedRelation: "study_attempts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_exam_simulation_items_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_configuration"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_exam_simulation_items_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_operating_mode"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_exam_simulation_items_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_progress"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_exam_simulation_items_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_risk"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_exam_simulation_items_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_exam_simulation_items_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_exam_simulation_items_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_exam_simulation_items_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_semester_checkpoint_rotation"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_exam_simulation_items_exam_question_id_fkey"
+            columns: ["exam_question_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_exam_simulation_items_simulation_id_fkey"
+            columns: ["simulation_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["last_simulation_id"]
+          },
+          {
+            foreignKeyName: "study_exam_simulation_items_simulation_id_fkey"
+            columns: ["simulation_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_simulations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_exam_simulation_items_simulation_id_fkey"
+            columns: ["simulation_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["last_simulation_id"]
+          },
+          {
+            foreignKeyName: "study_exam_simulation_items_study_question_id_fkey"
+            columns: ["study_question_id"]
+            isOneToOne: false
+            referencedRelation: "study_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      study_exam_simulations: {
+        Row: {
+          awarded_points: number | null
+          completed_at: string | null
+          course_id: string
+          created_at: string
+          duration_minutes: number
+          exam_id: string
+          id: string
+          note: string | null
+          score_percent: number | null
+          started_at: string
+          status: Database["public"]["Enums"]["study_exam_simulation_status"]
+          submitted_at: string | null
+          time_used_seconds: number | null
+          total_points: number
+          updated_at: string
+          user_id: string
+          verified_awarded_points: number | null
+          verified_coverage_percent: number | null
+          verified_max_points: number | null
+          verified_score_percent: number | null
+        }
+        Insert: {
+          awarded_points?: number | null
+          completed_at?: string | null
+          course_id: string
+          created_at?: string
+          duration_minutes: number
+          exam_id: string
+          id: string
+          note?: string | null
+          score_percent?: number | null
+          started_at?: string
+          status?: Database["public"]["Enums"]["study_exam_simulation_status"]
+          submitted_at?: string | null
+          time_used_seconds?: number | null
+          total_points: number
+          updated_at?: string
+          user_id: string
+          verified_awarded_points?: number | null
+          verified_coverage_percent?: number | null
+          verified_max_points?: number | null
+          verified_score_percent?: number | null
+        }
+        Update: {
+          awarded_points?: number | null
+          completed_at?: string | null
+          course_id?: string
+          created_at?: string
+          duration_minutes?: number
+          exam_id?: string
+          id?: string
+          note?: string | null
+          score_percent?: number | null
+          started_at?: string
+          status?: Database["public"]["Enums"]["study_exam_simulation_status"]
+          submitted_at?: string | null
+          time_used_seconds?: number | null
+          total_points?: number
+          updated_at?: string
+          user_id?: string
+          verified_awarded_points?: number | null
+          verified_coverage_percent?: number | null
+          verified_max_points?: number | null
+          verified_score_percent?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_exam_simulations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_configuration"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_exam_simulations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_operating_mode"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_exam_simulations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_progress"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_exam_simulations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_risk"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_exam_simulations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_exam_simulations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_exam_simulations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_exam_simulations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_semester_checkpoint_rotation"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_exam_simulations_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_paper_catalog"
+            referencedColumns: ["exam_id"]
+          },
+          {
+            foreignKeyName: "study_exam_simulations_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "study_exams"
+            referencedColumns: ["id"]
+          },
         ]
       }
       study_exams: {
@@ -4723,9 +5176,12 @@ export type Database = {
           duration_minutes: number | null
           exam_at: string | null
           id: string
+          notes: string | null
           official: boolean
+          solution_resource_id: string | null
           source_resource_id: string | null
           stable_key: string | null
+          syllabus_relevance: number
           title: string
           total_points: number | null
           updated_at: string
@@ -4739,9 +5195,12 @@ export type Database = {
           duration_minutes?: number | null
           exam_at?: string | null
           id?: string
+          notes?: string | null
           official?: boolean
+          solution_resource_id?: string | null
           source_resource_id?: string | null
           stable_key?: string | null
+          syllabus_relevance?: number
           title: string
           total_points?: number | null
           updated_at?: string
@@ -4755,9 +5214,12 @@ export type Database = {
           duration_minutes?: number | null
           exam_at?: string | null
           id?: string
+          notes?: string | null
           official?: boolean
+          solution_resource_id?: string | null
           source_resource_id?: string | null
           stable_key?: string | null
+          syllabus_relevance?: number
           title?: string
           total_points?: number | null
           updated_at?: string
@@ -4801,11 +5263,32 @@ export type Database = {
             referencedColumns: ["id", "user_id"]
           },
           {
+            foreignKeyName: "study_exams_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_exams_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
             foreignKeyName: "study_exams_resource_owner_fk"
             columns: ["source_resource_id", "user_id"]
             isOneToOne: false
             referencedRelation: "study_resources"
             referencedColumns: ["id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_exams_solution_resource_fk"
+            columns: ["solution_resource_id"]
+            isOneToOne: false
+            referencedRelation: "study_resources"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -4893,6 +5376,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "study_courses"
             referencedColumns: ["id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_ingestion_runs_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_ingestion_runs_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id", "user_id"]
           },
           {
             foreignKeyName: "study_ingestion_runs_resource_owner_fk"
@@ -5023,6 +5520,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "study_courses"
             referencedColumns: ["id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_intake_items_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_intake_items_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id", "user_id"]
           },
           {
             foreignKeyName: "study_intake_items_resource_owner_fk"
@@ -5206,6 +5717,20 @@ export type Database = {
             referencedColumns: ["id", "user_id"]
           },
           {
+            foreignKeyName: "study_questions_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_questions_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
             foreignKeyName: "study_questions_ingestion_run_owner_fk"
             columns: ["ingestion_run_id", "user_id"]
             isOneToOne: false
@@ -5321,6 +5846,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "study_courses"
             referencedColumns: ["id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_reconciliation_findings_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_reconciliation_findings_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id", "user_id"]
           },
           {
             foreignKeyName: "study_reconciliation_findings_exercise_owner_fk"
@@ -5594,6 +6133,20 @@ export type Database = {
             referencedColumns: ["id", "user_id"]
           },
           {
+            foreignKeyName: "study_resources_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_resources_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
             foreignKeyName: "study_resources_week_owner_fk"
             columns: ["teaching_week_id", "user_id"]
             isOneToOne: false
@@ -5730,6 +6283,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "study_courses"
             referencedColumns: ["id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_review_state_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_review_state_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id", "user_id"]
           },
           {
             foreignKeyName: "study_review_state_skill_owner_fk"
@@ -5886,6 +6453,20 @@ export type Database = {
             referencedRelation: "study_courses"
             referencedColumns: ["id", "user_id"]
           },
+          {
+            foreignKeyName: "study_sessions_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_sessions_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id", "user_id"]
+          },
         ]
       }
       study_skills: {
@@ -5970,6 +6551,20 @@ export type Database = {
             referencedRelation: "study_courses"
             referencedColumns: ["id", "user_id"]
           },
+          {
+            foreignKeyName: "study_skills_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_skills_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id", "user_id"]
+          },
         ]
       }
       study_teaching_weeks: {
@@ -6044,6 +6639,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "study_courses"
             referencedColumns: ["id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_weeks_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_weeks_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id", "user_id"]
           },
         ]
       }
@@ -6166,6 +6775,20 @@ export type Database = {
             referencedRelation: "study_courses"
             referencedColumns: ["id", "user_id"]
           },
+          {
+            foreignKeyName: "study_topics_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_topics_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id", "user_id"]
+          },
         ]
       }
       study_week_workflow: {
@@ -6261,6 +6884,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "study_courses"
             referencedColumns: ["id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_week_workflow_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_week_workflow_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id", "user_id"]
           },
           {
             foreignKeyName: "study_week_workflow_week_owner_fk"
@@ -6820,6 +7457,20 @@ export type Database = {
             referencedRelation: "study_courses"
             referencedColumns: ["id", "user_id"]
           },
+          {
+            foreignKeyName: "study_skills_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_skills_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id", "user_id"]
+          },
         ]
       }
       study_course_risk: {
@@ -6946,6 +7597,20 @@ export type Database = {
             referencedColumns: ["id", "user_id"]
           },
           {
+            foreignKeyName: "study_review_state_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_review_state_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
             foreignKeyName: "study_review_state_skill_owner_fk"
             columns: ["skill_id", "user_id"]
             isOneToOne: true
@@ -6958,6 +7623,252 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "study_skills"
             referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      study_exam_blueprint: {
+        Row: {
+          active_exam_count: number | null
+          avg_exam_importance: number | null
+          certified_simulation_items: number | null
+          certified_simulation_score_percent: number | null
+          course_id: string | null
+          durable_percent: number | null
+          exam_ready_percent: number | null
+          exam_ready_skills: number | null
+          historical_confidence: string | null
+          history_component: number | null
+          observed_exam_count: number | null
+          observed_question_count: number | null
+          priority_score: number | null
+          readiness_gap_component: number | null
+          semester_id: string | null
+          simulation_gap_component: number | null
+          skill_count: number | null
+          syllabus_importance_component: number | null
+          topic_id: string | null
+          topic_key: string | null
+          topic_title: string | null
+          unseen_in_past_exams: boolean | null
+          user_id: string | null
+          weighted_occurrence_percent: number | null
+          weighted_points_share_percent: number | null
+        }
+        Relationships: []
+      }
+      study_exam_intelligence_summary: {
+        Row: {
+          blueprint_confidence: string | null
+          course_id: string | null
+          display_name: string | null
+          effective_exam_weight: number | null
+          exam_questions: number | null
+          last_score_percent: number | null
+          last_simulation_at: string | null
+          last_simulation_exam_id: string | null
+          last_simulation_id: string | null
+          last_time_used_seconds: number | null
+          last_verified_coverage_percent: number | null
+          last_verified_score_percent: number | null
+          processed_exams: number | null
+          semester_id: string | null
+          short_name: string | null
+          simulatable_exams: number | null
+          typical_duration_minutes: number | null
+          typical_total_points: number | null
+          user_id: string | null
+          verified_solution_coverage_percent: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_courses_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_semester_checkpoint_rotation"
+            referencedColumns: ["semester_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_courses_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_semesters"
+            referencedColumns: ["id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_exam_simulations_exam_id_fkey"
+            columns: ["last_simulation_exam_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_paper_catalog"
+            referencedColumns: ["exam_id"]
+          },
+          {
+            foreignKeyName: "study_exam_simulations_exam_id_fkey"
+            columns: ["last_simulation_exam_id"]
+            isOneToOne: false
+            referencedRelation: "study_exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      study_exam_paper_catalog: {
+        Row: {
+          active: boolean | null
+          course_id: string | null
+          duration_minutes: number | null
+          effective_weight: number | null
+          exam_at: string | null
+          exam_id: string | null
+          incomplete_question_count: number | null
+          mapped_question_count: number | null
+          missing_answer_count: number | null
+          notes: string | null
+          official: boolean | null
+          official_answer_count: number | null
+          question_count: number | null
+          question_points: number | null
+          recency_weight: number | null
+          simulatable: boolean | null
+          solution_resource_id: string | null
+          source_resource_id: string | null
+          stable_key: string | null
+          syllabus_relevance: number | null
+          title: string | null
+          total_points: number | null
+          unverified_answer_count: number | null
+          user_id: string | null
+          verified_answer_count: number | null
+          verified_solution_coverage_percent: number | null
+          year_label: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_exams_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_configuration"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_exams_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_operating_mode"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_exams_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_progress"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_exams_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_risk"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_exams_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_courses"
+            referencedColumns: ["id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_exams_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_exams_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_exams_resource_owner_fk"
+            columns: ["source_resource_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_resources"
+            referencedColumns: ["id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_exams_solution_resource_fk"
+            columns: ["solution_resource_id"]
+            isOneToOne: false
+            referencedRelation: "study_resources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      study_exam_strategy: {
+        Row: {
+          blueprint_confidence: string | null
+          course_id: string | null
+          days_to_exam: number | null
+          display_name: string | null
+          effective_exam_weight: number | null
+          exam_questions: number | null
+          final_check_minutes: number | null
+          first_pass_minutes: number | null
+          last_score_percent: number | null
+          last_simulation_at: string | null
+          last_simulation_exam_id: string | null
+          last_simulation_id: string | null
+          last_time_used_seconds: number | null
+          last_verified_coverage_percent: number | null
+          last_verified_score_percent: number | null
+          next_action: string | null
+          next_action_reason: string | null
+          operating_mode: string | null
+          processed_exams: number | null
+          recommended_mix: Json | null
+          return_pass_minutes: number | null
+          semester_id: string | null
+          short_name: string | null
+          simulatable_exams: number | null
+          strategy_duration_minutes: number | null
+          strategy_total_points: number | null
+          topic_priorities: Json | null
+          typical_duration_minutes: number | null
+          typical_total_points: number | null
+          user_id: string | null
+          verified_solution_coverage_percent: number | null
+          working_minutes_per_point: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_courses_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_semester_checkpoint_rotation"
+            referencedColumns: ["semester_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_courses_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_semesters"
+            referencedColumns: ["id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_exam_simulations_exam_id_fkey"
+            columns: ["last_simulation_exam_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_paper_catalog"
+            referencedColumns: ["exam_id"]
+          },
+          {
+            foreignKeyName: "study_exam_simulations_exam_id_fkey"
+            columns: ["last_simulation_exam_id"]
+            isOneToOne: false
+            referencedRelation: "study_exams"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -7061,6 +7972,20 @@ export type Database = {
             referencedRelation: "study_courses"
             referencedColumns: ["id", "user_id"]
           },
+          {
+            foreignKeyName: "study_skills_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_skills_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id", "user_id"]
+          },
         ]
       }
       study_week_actions: {
@@ -7147,6 +8072,20 @@ export type Database = {
             referencedRelation: "study_courses"
             referencedColumns: ["id", "user_id"]
           },
+          {
+            foreignKeyName: "study_weeks_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_weeks_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id", "user_id"]
+          },
         ]
       }
       study_weekly_health: {
@@ -7217,6 +8156,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "study_courses"
             referencedColumns: ["id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_weeks_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_weeks_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id", "user_id"]
           },
         ]
       }
@@ -8379,6 +9332,10 @@ export type Database = {
         }
         Returns: Json
       }
+      study_abandon_exam_simulation: {
+        Args: { p_ended_at?: string; p_simulation_id: string }
+        Returns: Json
+      }
       study_accept_ingestion_run: { Args: { p_run_id: string }; Returns: Json }
       study_add_reconciliation_finding: {
         Args: {
@@ -8395,11 +9352,30 @@ export type Database = {
         Returns: Json
       }
       study_candidate_has_anchor: { Args: { p_source: Json }; Returns: boolean }
+      study_finish_exam_simulation: {
+        Args: {
+          p_completed_at?: string
+          p_note?: string
+          p_simulation_id: string
+        }
+        Returns: Json
+      }
       study_finish_review_session: {
         Args: { p_ended_at?: string; p_note?: string; p_session_id: string }
         Returns: Json
       }
       study_get_processing_packet: { Args: { p_run_id: string }; Returns: Json }
+      study_grade_exam_simulation_item: {
+        Args: {
+          p_awarded_points: number
+          p_error_types?: Database["public"]["Enums"]["study_error_type"][]
+          p_exam_question_id: string
+          p_graded_at?: string
+          p_self_confidence?: number
+          p_simulation_id: string
+        }
+        Returns: Json
+      }
       study_initialize_ws2627: { Args: never; Returns: Json }
       study_mark_week_milestone: {
         Args: {
@@ -8495,6 +9471,15 @@ export type Database = {
         }
         Returns: Json
       }
+      study_save_exam_simulation_response: {
+        Args: {
+          p_duration_seconds?: number
+          p_exam_question_id: string
+          p_response_text?: string
+          p_simulation_id: string
+        }
+        Returns: Json
+      }
       study_service_mark_drive_scan: {
         Args: {
           p_note?: string
@@ -8547,6 +9532,10 @@ export type Database = {
         }
         Returns: Json
       }
+      study_start_exam_simulation: {
+        Args: { p_exam_id: string; p_session_id: string; p_started_at?: string }
+        Returns: Json
+      }
       study_start_review_session: {
         Args: {
           p_planned_minutes?: number
@@ -8562,6 +9551,14 @@ export type Database = {
           p_session_id: string
           p_session_type: Database["public"]["Enums"]["study_session_type"]
           p_started_at?: string
+        }
+        Returns: Json
+      }
+      study_submit_exam_simulation: {
+        Args: {
+          p_responses?: Json
+          p_simulation_id: string
+          p_submitted_at?: string
         }
         Returns: Json
       }
@@ -8592,6 +9589,15 @@ export type Database = {
           p_professor?: string
           p_short_name?: string
           p_solution_reconcile_target_hours?: number
+        }
+        Returns: Json
+      }
+      study_update_exam_metadata: {
+        Args: {
+          p_active: boolean
+          p_exam_id: string
+          p_notes?: string
+          p_syllabus_relevance: number
         }
         Returns: Json
       }
@@ -8666,6 +9672,21 @@ export type Database = {
         | "execution"
         | "transfer"
         | "exam"
+      study_exam_answer_status:
+        | "missing"
+        | "unverified"
+        | "verified"
+        | "official"
+      study_exam_grading_status:
+        | "pending"
+        | "provisional"
+        | "verified"
+        | "official"
+      study_exam_simulation_status:
+        | "in_progress"
+        | "grading"
+        | "completed"
+        | "abandoned"
       study_independence:
         | "independent"
         | "hint_1"
@@ -8889,6 +9910,24 @@ export const Constants = {
         "transfer",
         "exam",
       ],
+      study_exam_answer_status: [
+        "missing",
+        "unverified",
+        "verified",
+        "official",
+      ],
+      study_exam_grading_status: [
+        "pending",
+        "provisional",
+        "verified",
+        "official",
+      ],
+      study_exam_simulation_status: [
+        "in_progress",
+        "grading",
+        "completed",
+        "abandoned",
+      ],
       study_independence: [
         "independent",
         "hint_1",
@@ -8990,5 +10029,8 @@ export type StudyResourceType = Database["public"]["Enums"]["study_resource_type
 export type StudySourceAuthority = Database["public"]["Enums"]["study_source_authority"];
 export type StudyProcessingStatus = Database["public"]["Enums"]["study_processing_status"];
 export type StudySessionType = Database["public"]["Enums"]["study_session_type"];
+export type StudyExamAnswerStatus = Database["public"]["Enums"]["study_exam_answer_status"];
+export type StudyExamSimulationStatus = Database["public"]["Enums"]["study_exam_simulation_status"];
+export type StudyExamGradingStatus = Database["public"]["Enums"]["study_exam_grading_status"];
 export type StudyWeekHealthStatus = "empty" | "needs_processing" | "source_only" | "learning" | "fragile" | "retained";
 export type StudyIntakeStatus = "discovered" | "classified" | "candidate" | "registered" | "needs_review" | "ignored" | "failed";

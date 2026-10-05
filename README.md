@@ -160,3 +160,21 @@ StudyOS now diagnoses retention and course danger over time instead of only show
 - ordinary daily retention remains capped rather than expanding with backlog.
 
 Live Vercel/Study Drive activation from P6 remains deferred independently of this development work.
+
+
+## P9 Altklausur intelligence and timed exam simulation
+
+StudyOS now treats past exams as evidence, not prophecy.
+
+- accepted `exam` resources create numbered past-paper questions linked to real course skills;
+- `exam_solution` resources attach grading rubrics to an existing paper by stable exam key;
+- solution authority is explicit: missing → unverified → verified → official;
+- old or syllabus-mismatched papers can be down-weighted with `syllabus_relevance` instead of being deleted;
+- historical frequency is recency/relevance weighted, while unseen syllabus topics retain nonzero priority;
+- the Exam Blueprint combines historical occurrence/point share, course exam importance, current exam-readiness gap, and certified simulation performance;
+- full timed simulations snapshot the original paper, hide solutions until submission, track total/question time, and require point-loss diagnosis;
+- provisional self-grades are stored for diagnostics but cannot create mastery evidence;
+- verified/official grading can create `exam`-dimension attempt evidence;
+- exam strategy recommends the next action and a first-pass / return-pass / final-check time split.
+
+Live Vercel/Study Drive activation remains independent of P9.

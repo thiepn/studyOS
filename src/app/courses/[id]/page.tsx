@@ -4,12 +4,14 @@ import { CourseConfigForm } from "@/components/course-config-form";
 import { WeekWorkflowPanel } from "@/components/week-workflow-panel";
 import { CourseMasterMap } from "@/components/course-master-map";
 import { getCourseWorkflow } from "@/lib/study/workflow";
+import { getCourseExamIntelligence } from "@/lib/study/exams";
+import { ExamIntelligence } from "@/components/exam-intelligence";
 
 export const dynamic = "force-dynamic";
 
 export default async function CourseDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const data = await getCourseWorkflow(id);
+  const [data, exam] = await Promise.all([getCourseWorkflow(id), getCourseExamIntelligence(id)]);
   const c = data.configuration;
   return (
     <main className="shell">
@@ -39,6 +41,8 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
       </section>
 
       <CourseMasterMap topics={data.masterMap} />
+
+      <ExamIntelligence papers={exam.papers} blueprint={exam.blueprint} strategy={exam.strategy} />
 
       <section className="workflow-heading">
         <div><p className="eyebrow">Weekly operating loop</p><h2>What needs to happen next</h2></div>

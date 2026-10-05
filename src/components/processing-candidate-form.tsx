@@ -34,7 +34,7 @@ export function ProcessingCandidateForm({ runId, resourceTitle, courseName }: { 
       if (!payload || typeof payload !== "object" || Array.isArray(payload)) throw new Error("Candidate must be a JSON object.");
       const response = await fetch("/api/study/ingestion/" + runId + "/candidate", {
         method: "POST", headers: { "content-type": "application/json" },
-        body: JSON.stringify({ payload, processor: "chatgpt-assisted-manual", processorVersion: "p7", extractionConfidence: 0.9, validationIssues: [] }),
+        body: JSON.stringify({ payload, processor: "chatgpt-assisted-manual", processorVersion: "p9", extractionConfidence: 0.9, validationIssues: [] }),
       });
       const body = await response.json();
       if (!response.ok) throw new Error(body?.error || "Could not submit candidate");
