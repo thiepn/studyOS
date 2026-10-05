@@ -178,3 +178,23 @@ StudyOS now treats past exams as evidence, not prophecy.
 - exam strategy recommends the next action and a first-pass / return-pass / final-check time split.
 
 Live Vercel/Study Drive activation remains independent of P9.
+
+
+## P10 semester autopilot and recovery-safe workload planning
+
+StudyOS now converts all previously collected evidence into a bounded daily study plan.
+
+- the Today page has an explicit independent-study capacity rather than an unbounded backlog;
+- Normal, Light, Recovery, Intensive, and one-day Custom capacity modes are available;
+- Recovery Mode defaults to 45 total minutes, a 20-minute retention ceiling, and at most two focus items;
+- ordinary mode defaults remain configurable rather than hard-coded to the user forever;
+- overdue work changes priority but never expands the configured daily capacity;
+- deadlines/assignments can be registered with course, due time, estimate, and priority;
+- the planner combines retention, course workflow, commitments, the weekly checkpoint, P8 course risk, and P9 exam strategy;
+- urgent deadlines can outrank ordinary work;
+- a dynamic same-course penalty prevents one subject from monopolizing a balanced daily plan;
+- splittable work may receive a partial block when it is the best use of the remaining time;
+- heavy optional work such as full timed exams/checkpoints is suppressed in Recovery Mode unless genuinely urgent;
+- deferred work remains visible but never becomes punitive “debt minutes” on the next day.
+
+The planner remains deterministic and does not require a paid AI API.

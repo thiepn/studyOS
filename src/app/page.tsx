@@ -1,27 +1,43 @@
 import Link from "next/link";
 import { Nav } from "@/components/nav";
-import { getTodayData } from "@/lib/study/queries";
-import { getSemesterPulse, topRiskDrivers } from "@/lib/study/pulse";
+import { DailyPlan } from "@/components/daily-plan";
+import { CapacityControls } from "@/components/capacity-controls";
+import { CommitmentsPanel } from "@/components/commitments-panel";
+import { getDailyOrchestration } from "@/lib/study/planning";
+import { topRiskDrivers } from "@/lib/study/pulse";
+import type { PlanningMode } from "@/lib/study/planner";
 
 export const dynamic = "force-dynamic";
 
 export default async function TodayPage() {
-  const [data,pulse] = await Promise.all([getTodayData(),getSemesterPulse()]);
+  const orchestration=await getDailyOrchestration();
+  const {today:data,pulse,capacity,plan,commitments,courses,settings}=orchestration;
   const topRisk=pulse.risks[0] ?? null;
   const checkpoint=pulse.checkpoint;
   const examCourses=pulse.risks.filter((course)=>course.operating_mode==="exam"||course.operating_mode==="transition");
+  const configured=String(settings?.default_mode??"normal");
+  const defaultMode=(configured==="light"||configured==="recovery"||configured==="intensive"?configured:"normal") as Exclude<PlanningMode,"custom">;
+
   return (
     <main className="shell">
       <header className="header">
-        <div><p className="eyebrow">WS26/27</p><h1>Today</h1></div>
+        <div><p className="eyebrow">WS26/27 · Week {Math.max(0,orchestration.currentWeek)}</p><h1>Today</h1></div>
         <Nav />
       </header>
 
-      <section className="hero panel">
-        <div><span className="metric">{data.queueMinutes}</span><span className="metric-unit"> min selected</span></div>
-        <p>{data.dueSkillCount} skills are due; ordinary retention stays capped at {data.dailyBudgetMinutes} minutes even when backlog grows.</p>
-        <div className="hero-actions"><Link className="primary-button" href="/practice">Start today&apos;s review</Link></div>
+      <section className="hero panel autopilot-hero">
+        <div><span className="metric">{plan.usedMinutes}</span><span className="metric-unit"> / {plan.budgetMinutes} min planned</span></div>
+        <p>{capacity.mode.replace("_"," ")} mode · {data.queueMinutes} min retention · {plan.deferred.length} item{plan.deferred.length===1?"":"s"} deferred by capacity.</p>
+        <div className="hero-actions">{plan.selected[0]
+          ? plan.selected[0].href.startsWith("http")
+            ? <a className="primary-button" href={plan.selected[0].href} target="_blank" rel="noreferrer">Start next task</a>
+            : <Link className="primary-button" href={plan.selected[0].href}>Start next task</Link>
+          : <Link className="secondary-button" href="/courses">Review courses</Link>}
+        </div>
       </section>
+
+      <DailyPlan plan={plan} />
+      <CapacityControls capacity={capacity} defaultMode={defaultMode} />
 
       <section className="pulse-grid">
         <article className="panel pulse-card">
@@ -35,7 +51,7 @@ export default async function TodayPage() {
                 : checkpoint.eligible_skills
                   ? checkpoint.eligible_skills + " skills are eligible · up to " + checkpoint.budget_minutes + " minutes."
                   : "No verified questions are available for this checkpoint yet."}</p>
-            {checkpoint.due ? <Link className="primary-button" href="/practice?mode=checkpoint">Start checkpoint</Link> : null}
+            {checkpoint.due ? <Link className="secondary-button" href="/practice?mode=checkpoint">Open checkpoint</Link> : null}
           </> : <p className="muted">Checkpoint rotation will appear after semester initialization.</p>}
         </article>
 
@@ -60,9 +76,12 @@ export default async function TodayPage() {
         </article>
       </section>
 
-      <section className="grid">
+      <CommitmentsPanel commitments={commitments} courses={courses} />
+
+      <section className="grid today-lower-grid">
         <div className="panel">
           <h2>Review queue</h2>
+          <p className="muted">{data.dueSkillCount} skills due · today&apos;s review cap is {data.dailyBudgetMinutes} minutes.</p>
           {data.queue.length ? (
             <ol className="queue">
               {data.queue.map((item) => (

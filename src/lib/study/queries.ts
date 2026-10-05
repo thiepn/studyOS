@@ -8,13 +8,14 @@ export async function getTodayData(): Promise<TodayData> {
   const supabase = await createClient();
   const { semesterId } = await ensureStudyWorkspace(supabase);
 
-  const [semesterResult, courseResult, dueResult] = await Promise.all([
+  const [semesterResult, capacityResult, courseResult, dueResult] = await Promise.all([
     supabase.from("study_semesters").select("review_daily_budget_minutes").eq("id", semesterId).single(),
+    (supabase as any).from("study_current_capacity").select("effective_review_budget_minutes").eq("semester_id", semesterId).maybeSingle(),
     supabase.from("study_course_progress").select("*").eq("semester_id", semesterId).order("sort_order"),
     supabase.from("study_due_skills").select("*").eq("semester_id", semesterId).eq("is_due", true).order("priority_score", { ascending: false }),
   ]);
 
-  const error = semesterResult.error || courseResult.error || dueResult.error;
+  const error = semesterResult.error || capacityResult.error || courseResult.error || dueResult.error;
   if (error) throw new StudyServiceError("Could not load Semester OS state", error.code || "study_read_failed", error);
 
   const dueSkills = (dueResult.data ?? []) as DueSkill[];
@@ -26,7 +27,7 @@ export async function getTodayData(): Promise<TodayData> {
     questions = (questionResult.data ?? []) as StudyQuestion[];
   }
 
-  const dailyBudgetMinutes = semesterResult.data?.review_daily_budget_minutes ?? 40;
+  const dailyBudgetMinutes = Number(capacityResult.data?.effective_review_budget_minutes ?? semesterResult.data?.review_daily_budget_minutes ?? 40);
   const queue = buildReviewQueue(dueSkills, questions, dailyBudgetMinutes);
   return { semesterId, dailyBudgetMinutes, courses: courseResult.data ?? [], queue, queueMinutes: queueMinutes(queue), dueSkillCount: dueSkills.length };
 }

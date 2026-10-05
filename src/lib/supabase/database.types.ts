@@ -765,6 +765,39 @@ export type Database = {
         }
         Relationships: []
       }
+      french_sync_state: {
+        Row: {
+          app_version: string
+          client_updated_at: string | null
+          created_at: string
+          device_id: string | null
+          revision: number
+          state: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          app_version?: string
+          client_updated_at?: string | null
+          created_at?: string
+          device_id?: string | null
+          revision?: number
+          state: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          app_version?: string
+          client_updated_at?: string | null
+          created_at?: string
+          device_id?: string | null
+          revision?: number
+          state?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       goal_phases: {
         Row: {
           active: boolean
@@ -3169,6 +3202,39 @@ export type Database = {
           },
         ]
       }
+      library_sync_state: {
+        Row: {
+          app_version: string
+          client_updated_at: string | null
+          created_at: string
+          device_id: string | null
+          revision: number
+          state: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          app_version?: string
+          client_updated_at?: string | null
+          created_at?: string
+          device_id?: string | null
+          revision?: number
+          state: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          app_version?: string
+          client_updated_at?: string | null
+          created_at?: string
+          device_id?: string | null
+          revision?: number
+          state?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       meal_items: {
         Row: {
           calories: number
@@ -4300,6 +4366,148 @@ export type Database = {
           },
         ]
       }
+      study_commitments: {
+        Row: {
+          completed_at: string | null
+          course_id: string | null
+          created_at: string
+          due_at: string
+          estimated_minutes: number
+          id: string
+          kind: Database["public"]["Enums"]["study_commitment_kind"]
+          note: string | null
+          priority: number
+          resource_id: string | null
+          semester_id: string
+          source_url: string | null
+          status: Database["public"]["Enums"]["study_commitment_status"]
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          course_id?: string | null
+          created_at?: string
+          due_at: string
+          estimated_minutes?: number
+          id?: string
+          kind?: Database["public"]["Enums"]["study_commitment_kind"]
+          note?: string | null
+          priority?: number
+          resource_id?: string | null
+          semester_id: string
+          source_url?: string | null
+          status?: Database["public"]["Enums"]["study_commitment_status"]
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          course_id?: string | null
+          created_at?: string
+          due_at?: string
+          estimated_minutes?: number
+          id?: string
+          kind?: Database["public"]["Enums"]["study_commitment_kind"]
+          note?: string | null
+          priority?: number
+          resource_id?: string | null
+          semester_id?: string
+          source_url?: string | null
+          status?: Database["public"]["Enums"]["study_commitment_status"]
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_commitments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_configuration"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_commitments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_operating_mode"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_commitments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_progress"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_commitments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_risk"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_commitments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_commitments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_commitments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_commitments_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_semester_checkpoint_rotation"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_commitments_resource_id_fkey"
+            columns: ["resource_id"]
+            isOneToOne: false
+            referencedRelation: "study_resources"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_commitments_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "study_current_capacity"
+            referencedColumns: ["semester_id"]
+          },
+          {
+            foreignKeyName: "study_commitments_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "study_semester_checkpoint_rotation"
+            referencedColumns: ["semester_id"]
+          },
+          {
+            foreignKeyName: "study_commitments_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "study_semesters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       study_course_workflow_settings: {
         Row: {
           checkpoint_budget_minutes: number
@@ -4470,6 +4678,13 @@ export type Database = {
             foreignKeyName: "study_courses_semester_owner_fk"
             columns: ["semester_id", "user_id"]
             isOneToOne: false
+            referencedRelation: "study_current_capacity"
+            referencedColumns: ["semester_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_courses_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
             referencedRelation: "study_semester_checkpoint_rotation"
             referencedColumns: ["semester_id", "user_id"]
           },
@@ -4479,6 +4694,61 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "study_semesters"
             referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      study_daily_capacity: {
+        Row: {
+          created_at: string
+          custom_budget_minutes: number | null
+          mode: Database["public"]["Enums"]["study_capacity_mode"]
+          note: string | null
+          plan_date: string
+          semester_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          custom_budget_minutes?: number | null
+          mode: Database["public"]["Enums"]["study_capacity_mode"]
+          note?: string | null
+          plan_date: string
+          semester_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          custom_budget_minutes?: number | null
+          mode?: Database["public"]["Enums"]["study_capacity_mode"]
+          note?: string | null
+          plan_date?: string
+          semester_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_daily_capacity_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "study_current_capacity"
+            referencedColumns: ["semester_id"]
+          },
+          {
+            foreignKeyName: "study_daily_capacity_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "study_semester_checkpoint_rotation"
+            referencedColumns: ["semester_id"]
+          },
+          {
+            foreignKeyName: "study_daily_capacity_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "study_semesters"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -5553,6 +5823,13 @@ export type Database = {
             foreignKeyName: "study_intake_items_semester_owner_fk"
             columns: ["semester_id", "user_id"]
             isOneToOne: false
+            referencedRelation: "study_current_capacity"
+            referencedColumns: ["semester_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_intake_items_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
             referencedRelation: "study_semester_checkpoint_rotation"
             referencedColumns: ["semester_id", "user_id"]
           },
@@ -5562,6 +5839,76 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "study_semesters"
             referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      study_planning_settings: {
+        Row: {
+          created_at: string
+          default_mode: Database["public"]["Enums"]["study_capacity_mode"]
+          intensive_budget_minutes: number
+          light_budget_minutes: number
+          light_review_budget_minutes: number
+          max_focus_items: number
+          normal_budget_minutes: number
+          recovery_budget_minutes: number
+          recovery_max_focus_items: number
+          recovery_review_budget_minutes: number
+          semester_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          default_mode?: Database["public"]["Enums"]["study_capacity_mode"]
+          intensive_budget_minutes?: number
+          light_budget_minutes?: number
+          light_review_budget_minutes?: number
+          max_focus_items?: number
+          normal_budget_minutes?: number
+          recovery_budget_minutes?: number
+          recovery_max_focus_items?: number
+          recovery_review_budget_minutes?: number
+          semester_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          default_mode?: Database["public"]["Enums"]["study_capacity_mode"]
+          intensive_budget_minutes?: number
+          light_budget_minutes?: number
+          light_review_budget_minutes?: number
+          max_focus_items?: number
+          normal_budget_minutes?: number
+          recovery_budget_minutes?: number
+          recovery_max_focus_items?: number
+          recovery_review_budget_minutes?: number
+          semester_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_planning_settings_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "study_current_capacity"
+            referencedColumns: ["semester_id"]
+          },
+          {
+            foreignKeyName: "study_planning_settings_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "study_semester_checkpoint_rotation"
+            referencedColumns: ["semester_id"]
+          },
+          {
+            foreignKeyName: "study_planning_settings_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "study_semesters"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -7292,6 +7639,13 @@ export type Database = {
             foreignKeyName: "study_courses_semester_owner_fk"
             columns: ["semester_id", "user_id"]
             isOneToOne: false
+            referencedRelation: "study_current_capacity"
+            referencedColumns: ["semester_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_courses_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
             referencedRelation: "study_semester_checkpoint_rotation"
             referencedColumns: ["semester_id", "user_id"]
           },
@@ -7351,6 +7705,13 @@ export type Database = {
             foreignKeyName: "study_courses_semester_owner_fk"
             columns: ["semester_id", "user_id"]
             isOneToOne: false
+            referencedRelation: "study_current_capacity"
+            referencedColumns: ["semester_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_courses_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
             referencedRelation: "study_semester_checkpoint_rotation"
             referencedColumns: ["semester_id", "user_id"]
           },
@@ -7387,6 +7748,13 @@ export type Database = {
           user_id: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "study_courses_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_current_capacity"
+            referencedColumns: ["semester_id", "user_id"]
+          },
           {
             foreignKeyName: "study_courses_semester_owner_fk"
             columns: ["semester_id", "user_id"]
@@ -7515,6 +7883,13 @@ export type Database = {
             foreignKeyName: "study_courses_semester_owner_fk"
             columns: ["semester_id", "user_id"]
             isOneToOne: false
+            referencedRelation: "study_current_capacity"
+            referencedColumns: ["semester_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_courses_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
             referencedRelation: "study_semester_checkpoint_rotation"
             referencedColumns: ["semester_id", "user_id"]
           },
@@ -7526,6 +7901,30 @@ export type Database = {
             referencedColumns: ["id", "user_id"]
           },
         ]
+      }
+      study_current_capacity: {
+        Row: {
+          custom_budget_minutes: number | null
+          daily_note: string | null
+          effective_max_focus_items: number | null
+          effective_review_budget_minutes: number | null
+          intensive_budget_minutes: number | null
+          light_budget_minutes: number | null
+          light_review_budget_minutes: number | null
+          local_today: string | null
+          max_focus_items: number | null
+          mode: Database["public"]["Enums"]["study_capacity_mode"] | null
+          normal_budget_minutes: number | null
+          recovery_budget_minutes: number | null
+          recovery_max_focus_items: number | null
+          recovery_review_budget_minutes: number | null
+          review_daily_budget_minutes: number | null
+          semester_id: string | null
+          timezone: string | null
+          total_budget_minutes: number | null
+          user_id: string | null
+        }
+        Relationships: []
       }
       study_due_skills: {
         Row: {
@@ -7680,6 +8079,13 @@ export type Database = {
           verified_solution_coverage_percent: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "study_courses_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_current_capacity"
+            referencedColumns: ["semester_id", "user_id"]
+          },
           {
             foreignKeyName: "study_courses_semester_owner_fk"
             columns: ["semester_id", "user_id"]
@@ -7842,6 +8248,13 @@ export type Database = {
           working_minutes_per_point: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "study_courses_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_current_capacity"
+            referencedColumns: ["semester_id", "user_id"]
+          },
           {
             foreignKeyName: "study_courses_semester_owner_fk"
             columns: ["semester_id", "user_id"]
@@ -8243,6 +8656,7 @@ export type Database = {
       }
       delete_notes_auth_identity: { Args: never; Returns: Json }
       delete_thiepn_account: { Args: { p_confirmation: string }; Returns: Json }
+      delete_thiepn_library_state: { Args: never; Returns: boolean }
       delete_tms60_cloud_data: {
         Args: { p_expected_user_id: string }
         Returns: Json
@@ -9352,6 +9766,20 @@ export type Database = {
         Returns: Json
       }
       study_candidate_has_anchor: { Args: { p_source: Json }; Returns: boolean }
+      study_create_commitment: {
+        Args: {
+          p_course_id?: string
+          p_due_at: string
+          p_estimated_minutes: number
+          p_kind?: Database["public"]["Enums"]["study_commitment_kind"]
+          p_note?: string
+          p_priority?: number
+          p_resource_id?: string
+          p_source_url?: string
+          p_title: string
+        }
+        Returns: string
+      }
       study_finish_exam_simulation: {
         Args: {
           p_completed_at?: string
@@ -9532,6 +9960,22 @@ export type Database = {
         }
         Returns: Json
       }
+      study_set_commitment_status: {
+        Args: {
+          p_id: string
+          p_status: Database["public"]["Enums"]["study_commitment_status"]
+        }
+        Returns: Json
+      }
+      study_set_daily_capacity: {
+        Args: {
+          p_custom_budget_minutes?: number
+          p_mode: Database["public"]["Enums"]["study_capacity_mode"]
+          p_note?: string
+          p_plan_date?: string
+        }
+        Returns: Json
+      }
       study_start_exam_simulation: {
         Args: { p_exam_id: string; p_session_id: string; p_started_at?: string }
         Returns: Json
@@ -9601,6 +10045,20 @@ export type Database = {
         }
         Returns: Json
       }
+      study_update_planning_settings: {
+        Args: {
+          p_default_mode?: Database["public"]["Enums"]["study_capacity_mode"]
+          p_intensive_budget_minutes: number
+          p_light_budget_minutes: number
+          p_light_review_budget_minutes: number
+          p_max_focus_items: number
+          p_normal_budget_minutes: number
+          p_recovery_budget_minutes: number
+          p_recovery_max_focus_items: number
+          p_recovery_review_budget_minutes: number
+        }
+        Returns: Json
+      }
       submit_leaderboard_result: {
         Args: {
           p_accuracy: number
@@ -9621,6 +10079,36 @@ export type Database = {
           p_user_id: string
           p_words_completed: number
           p_wpm: number
+        }
+        Returns: Json
+      }
+      sync_thiepn_french_state: {
+        Args: {
+          p_app_version?: string
+          p_client_updated_at?: string
+          p_device_id?: string
+          p_expected_revision: number
+          p_state: Json
+        }
+        Returns: Json
+      }
+      sync_thiepn_library_state: {
+        Args: {
+          p_app_version?: string
+          p_client_updated_at?: string
+          p_device_id?: string
+          p_expected_revision: number
+          p_state: Json
+        }
+        Returns: Json
+      }
+      thiepn_hub_notes_inbox: {
+        Args: {
+          p_action?: string
+          p_expected_updated_at?: string
+          p_issue_id?: string
+          p_request_id: string
+          p_revision: string
         }
         Returns: Json
       }
@@ -9654,6 +10142,19 @@ export type Database = {
     }
     Enums: {
       study_attempt_result: "incorrect" | "partial" | "correct"
+      study_capacity_mode:
+        | "normal"
+        | "light"
+        | "recovery"
+        | "intensive"
+        | "custom"
+      study_commitment_kind:
+        | "assignment"
+        | "deadline"
+        | "exam"
+        | "administrative"
+        | "other"
+      study_commitment_status: "open" | "completed" | "cancelled"
       study_course_kind: "major" | "retake" | "minor"
       study_error_type:
         | "concept"
@@ -9890,6 +10391,21 @@ export const Constants = {
   public: {
     Enums: {
       study_attempt_result: ["incorrect", "partial", "correct"],
+      study_capacity_mode: [
+        "normal",
+        "light",
+        "recovery",
+        "intensive",
+        "custom",
+      ],
+      study_commitment_kind: [
+        "assignment",
+        "deadline",
+        "exam",
+        "administrative",
+        "other",
+      ],
+      study_commitment_status: ["open", "completed", "cancelled"],
       study_course_kind: ["major", "retake", "minor"],
       study_error_type: [
         "concept",
@@ -10032,5 +10548,8 @@ export type StudySessionType = Database["public"]["Enums"]["study_session_type"]
 export type StudyExamAnswerStatus = Database["public"]["Enums"]["study_exam_answer_status"];
 export type StudyExamSimulationStatus = Database["public"]["Enums"]["study_exam_simulation_status"];
 export type StudyExamGradingStatus = Database["public"]["Enums"]["study_exam_grading_status"];
+export type StudyCapacityMode = Database["public"]["Enums"]["study_capacity_mode"];
+export type StudyCommitmentKind = Database["public"]["Enums"]["study_commitment_kind"];
+export type StudyCommitmentStatus = Database["public"]["Enums"]["study_commitment_status"];
 export type StudyWeekHealthStatus = "empty" | "needs_processing" | "source_only" | "learning" | "fragile" | "retained";
 export type StudyIntakeStatus = "discovered" | "classified" | "candidate" | "registered" | "needs_review" | "ignored" | "failed";
