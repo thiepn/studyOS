@@ -5,6 +5,7 @@ import { getTodayData } from "@/lib/study/queries";
 import { getCheckpointData } from "@/lib/study/pulse";
 import { getAvailableExamPapers } from "@/lib/study/exams";
 import { getCalibrationPractice, getSemesterCalibration } from "@/lib/study/calibration-data";
+import { getStrategyPractice } from "@/lib/study/strategy-data";
 
 export const dynamic = "force-dynamic";
 
@@ -12,8 +13,8 @@ function metric(value:number|null,suffix=""){
   return value==null?"—":String(value)+suffix;
 }
 
-export default async function PracticePage({ searchParams }: { searchParams: Promise<{ mode?: string; course?: string }> }) {
-  const { mode,course } = await searchParams;
+export default async function PracticePage({ searchParams }: { searchParams: Promise<{ mode?: string; course?: string; strategy?: string }> }) {
+  const { mode,course,strategy } = await searchParams;
   if(mode==="checkpoint"){
     const data=await getCheckpointData();
     const rotation=data.rotation;
@@ -72,6 +73,33 @@ export default async function PracticePage({ searchParams }: { searchParams: Pro
           intro="This is a bounded correction inside your existing daily capacity. Work independently and closed-book. P15 will judge the intervention only from later independent evidence, not from performance inside this repair session itself."
           completionNote="P14 drift repair intervention"
         />
+      </main>
+    );
+  }
+
+  if(mode==="strategy"){
+    const data=await getStrategyPractice(course,strategy);
+    return (
+      <main className="shell practice-shell">
+        <header className="header"><div><p className="eyebrow">P16 · controlled method experiment</p><h1>{data.course?.displayName ?? "Strategy experiment"}</h1></div><Nav /></header>
+        {data.strategy ? <section className="panel strategy-session-context">
+          <div><p className="eyebrow">{data.strategy.title}</p><h2>{data.strategy.purpose}</h2></div>
+          <p>{data.strategy.instructions}</p>
+          <small>{data.strategy.budgetMinutes} minute ceiling · target {data.strategy.targetDimensions.join(" + ")} · later transfer evidence decides whether this method survives.</small>
+        </section> : <section className="panel empty-state">
+          <h2>No method experiment should start yet</h2>
+          <p>{data.course?.recommendation.reason ?? "No strategy is available."}</p>
+          {data.course ? <Link className="secondary-button" href={"/strategy?course="+data.course.courseId}>Back to strategy lab</Link> : null}
+        </section>}
+        {data.strategy ? <ReviewSession
+          queue={data.queue}
+          plannedMinutes={Math.max(1,data.queueMinutes||data.strategy.budgetMinutes)}
+          sessionType="relearning"
+          courseId={data.course?.courseId}
+          eyebrow={"P16 · "+data.strategy.title}
+          intro={data.strategy.instructions+" This session tests the method; its own score will not count as proof that the method works. P16 will judge later independent transfer."}
+          completionNote={data.completionNote ?? undefined}
+        /> : null}
       </main>
     );
   }
