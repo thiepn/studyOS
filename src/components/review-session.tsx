@@ -25,7 +25,7 @@ function formatSeconds(seconds: number) {
   return `${min}:${String(sec).padStart(2, "0")}`;
 }
 
-export function ReviewSession({ queue, plannedMinutes, sessionType = "review", courseId, eyebrow = "Daily retrieval", intro }: { queue: QueueItem[]; plannedMinutes: number; sessionType?: "review"|"checkpoint"|"exam_simulation"|"relearning"|"coursework"; courseId?: string; eyebrow?: string; intro?: string }) {
+export function ReviewSession({ queue, plannedMinutes, sessionType = "review", courseId, eyebrow = "Daily retrieval", intro, completionNote }: { queue: QueueItem[]; plannedMinutes: number; sessionType?: "review"|"checkpoint"|"exam_simulation"|"relearning"|"coursework"; courseId?: string; eyebrow?: string; intro?: string; completionNote?: string }) {
   const [phase, setPhase] = useState<Phase>("ready");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionStartedAt, setSessionStartedAt] = useState<string | null>(null);
@@ -103,7 +103,8 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
     const endedAt = new Date().toISOString();
     if (sessionId) {
       const pending = extraOutcomes.filter((x) => x.queued).length;
-      await finishSessionWithFallback({ sessionId, endedAt, note: pending ? `${pending} attempt(s) were pending local sync when the session ended.` : undefined });
+      const note=[completionNote,pending ? `${pending} attempt(s) were pending local sync when the session ended.` : null].filter(Boolean).join(" · ") || undefined;
+      await finishSessionWithFallback({ sessionId, endedAt, note });
     }
     setPhase("complete");
   }

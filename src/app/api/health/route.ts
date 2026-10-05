@@ -7,7 +7,7 @@ export async function GET() {
     {
       status: "ok",
       app: "studyOS",
-      version: "0.11.0",
+      version: "0.13.0",
       environment: process.env.VERCEL_ENV ?? process.env.NODE_ENV ?? "unknown",
       commit: process.env.VERCEL_GIT_COMMIT_SHA ?? null,
       timestamp: new Date().toISOString(),
