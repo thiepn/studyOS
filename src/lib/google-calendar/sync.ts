@@ -60,7 +60,7 @@ export async function syncStudyCalendar(userId:string){
             const row={
               user_id:userId,semester_id:semesterResult.data.id,course_id:c.courseId,kind:"deadline" as const,title:event.summary||"Calendar deadline",
               due_at:deadlineDueAt(event,bounds,timezone),estimated_minutes:Number(existing.data?.estimated_minutes??45),priority:Number(existing.data?.priority??3),
-              status:existing.data?.status==="completed"?"completed":"open",source_url:event.htmlLink??null,
+              status:(existing.data?.status==="completed"?"completed":"open") as "open"|"completed",source_url:event.htmlLink??null,
               note:existing.data?.note??"Synced from Study Calendar. Review the 45-minute default estimate if needed.",
               calendar_id:source.calendar_id,calendar_event_id:event.id,calendar_synced:true,source_updated_at:event.updated??null,updated_at:new Date().toISOString(),
             };
