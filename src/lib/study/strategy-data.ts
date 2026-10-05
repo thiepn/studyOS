@@ -158,6 +158,7 @@ export async function getStrategyPractice(courseId?:string|null,requestedStrateg
   const [portfolio,state]=await Promise.all([getCourseStrategyPortfolio(courseId),loadStrategyState()]);
   const course=portfolio.course;
   if(!course)return {course:null,strategy:null,queue:[],queueMinutes:0,completionNote:null};
+  if(course.recommendation.awaitingEvidence)return {course,strategy:null,queue:[],queueMinutes:0,completionNote:null};
   const requested=isStrategyKey(requestedStrategy)?strategyDefinition(requestedStrategy):null;
   const selected=requested&&course.recommendation.statusByKey[requested.key]!=="retired"
     ?requested
