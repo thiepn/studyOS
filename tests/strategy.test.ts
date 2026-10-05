@@ -65,3 +65,13 @@ test("interleaved strategy samples distinct skills and obeys its budget",()=>{
   assert.equal(new Set(queue.map((item)=>item.skillId)).size,queue.length);
   assert.ok(queue.every((item)=>item.targetDimension==="transfer"||item.targetDimension==="exam"));
 });
+
+
+test("pending transfer evidence blocks a second method experiment",()=>{
+  const rec=recommendStrategy(signal({difficultySignal:"structural"}),[
+    {key:"concept_reconstruction",experiments:1,evaluated:0,effective:0,pending:1,effectivenessRate:null,latestOutcome:"pending"},
+  ]);
+  assert.equal(rec.recommended,null);
+  assert.equal(rec.awaitingEvidence,true);
+  assert.match(rec.reason,/follow-up evidence/i);
+});
