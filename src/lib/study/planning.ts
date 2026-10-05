@@ -7,6 +7,7 @@ import { StudyServiceError } from "./errors";
 import type { ExamStrategy } from "./exams";
 import { getSemesterDrift } from "./drift-data";
 import { driftPriorityAdjustment } from "./drift";
+import { getSemesterLearningAnalytics } from "./analytics-data";
 
 const ACTIONS=new Set(["process_material","retrieve_lecture","attempt_exercise","reconcile_solution","repair_findings"]);
 const MODE_SET=new Set<PlanningMode>(["normal","light","recovery","intensive","custom"]);
@@ -52,10 +53,11 @@ export async function getDailyOrchestration(){
   const {semesterId}=await ensureStudyWorkspace(supabase);
   const db=supabase as any;
 
-  const [today,pulse,drift,capacityResult,semesterResult,settingsResult,weekResult,commitmentResult,strategyResult,papersResult,coursesResult,baselineResult]=await Promise.all([
+  const [today,pulse,drift,learningAnalytics,capacityResult,semesterResult,settingsResult,weekResult,commitmentResult,strategyResult,papersResult,coursesResult,baselineResult]=await Promise.all([
     getTodayData(),
     getSemesterPulse(),
     getSemesterDrift(),
+    getSemesterLearningAnalytics(),
     db.from("study_current_capacity").select("*").eq("semester_id",semesterId).maybeSingle(),
     db.from("study_semesters").select("starts_on,ends_on,timezone").eq("id",semesterId).single(),
     db.from("study_planning_settings").select("*").eq("semester_id",semesterId).maybeSingle(),
@@ -165,18 +167,26 @@ export async function getDailyOrchestration(){
   }
 
   const driftMap=new Map(drift.courses.map((course)=>[course.courseId,course]));
+  const learningMap=new Map(learningAnalytics.courses.map((course)=>[course.courseId,course.analytics]));
   for(const course of drift.courses){
     const mode=riskMap.get(course.courseId)?.operating_mode;
     if(course.profile.correctionKind!=="targeted_practice"||course.profile.correctionMinutes<=0||!course.hasPracticeQuestions)continue;
     if(mode==="transition"||mode==="exam"||mode==="post_exam")continue;
+    const learning=learningMap.get(course.courseId);
+    const failedPattern=learning?.difficultySignal==="persistent"||learning?.difficultySignal==="structural";
     candidates.push({
       id:"drift-repair:"+course.courseId,kind:"drift_repair",courseId:course.courseId,courseName:course.displayName,
-      title:"Targeted drift repair · "+(course.shortName??course.displayName),
-      reason:course.profile.recommendation,
-      href:"/practice?mode=drift&course="+course.courseId,
-      estimatedMinutes:course.profile.correctionMinutes,priority:70,
+      title:(failedPattern?"Review failed intervention pattern · ":"Targeted drift repair · ")+(course.shortName??course.displayName),
+      reason:failedPattern
+        ? learning.recommendation
+        : course.profile.recommendation,
+      href:failedPattern?"/progress#course-"+course.courseId:"/practice?mode=drift&course="+course.courseId,
+      estimatedMinutes:failedPattern?15:course.profile.correctionMinutes,priority:failedPattern?74:70,
       heavy:false,splittable:false,allowedInRecovery:false,
-      metadata:{driftBand:course.profile.band,workloadFeedback:course.profile.workloadFeedback},
+      metadata:{
+        driftBand:course.profile.band,workloadFeedback:course.profile.workloadFeedback,
+        difficultySignal:learning?.difficultySignal??"insufficient_evidence",
+      },
     });
   }
 
@@ -203,7 +213,7 @@ export async function getDailyOrchestration(){
     return {...commitment,course_name:course?.display_name??null,course_short_name:course?.short_name??null};
   });
 
-  return {semesterId,today,pulse,drift,capacity,settings:settingsResult.data??null,courses,commitments:enrichedCommitments,candidates:correctedCandidates,plan,currentWeek};
+  return {semesterId,today,pulse,drift,learningAnalytics,capacity,settings:settingsResult.data??null,courses,commitments:enrichedCommitments,candidates:correctedCandidates,plan,currentWeek};
 }
 
 export async function setDailyCapacity(input:{mode:string;customBudgetMinutes?:number|null;planDate?:string|null;note?:string|null}){
