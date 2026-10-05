@@ -76,6 +76,7 @@ export function evaluateIntervention(
   attempts:AnalyticsAttempt[],
   currentWeek:number,
   semesterStartsOn:string,
+  interventionSessionIds:Set<string>=new Set([session.id]),
 ):InterventionEvaluation{
   const interventionWeek=weekForDate(session.startedAt,semesterStartsOn);
   const completedWeek=Math.max(0,currentWeek-1);
@@ -83,9 +84,11 @@ export function evaluateIntervention(
   const followupWeeks=[interventionWeek+1,interventionWeek+2].filter((week)=>week<=completedWeek);
 
   const mapped=attempts.map((attempt)=>({attempt,weekNo:weekForDate(attempt.completedAt,semesterStartsOn)}));
-  const baseline=mapped.filter((row)=>baselineWeeks.includes(row.weekNo)).map((row)=>row.attempt);
+  const baseline=mapped
+    .filter((row)=>baselineWeeks.includes(row.weekNo)&&(!row.attempt.sessionId||!interventionSessionIds.has(row.attempt.sessionId)))
+    .map((row)=>row.attempt);
   const followup=mapped
-    .filter((row)=>followupWeeks.includes(row.weekNo)&&row.attempt.sessionId!==session.id)
+    .filter((row)=>followupWeeks.includes(row.weekNo)&&(!row.attempt.sessionId||!interventionSessionIds.has(row.attempt.sessionId)))
     .map((row)=>row.attempt);
   const baselineIndependent=independent(baseline);
   const followupIndependent=independent(followup);
@@ -120,9 +123,10 @@ export function buildCourseLearningAnalytics(input:{
     currentWeek:input.currentWeek,semesterStartsOn:input.semesterStartsOn,
     attempts:input.driftAttempts,weeks:input.driftWeeks,
   });
-  const interventions=input.interventions
-    .filter((session)=>session.endedAt)
-    .map((session)=>evaluateIntervention(session,input.attempts,input.currentWeek,input.semesterStartsOn))
+  const completedInterventions=input.interventions.filter((session)=>session.endedAt);
+  const interventionSessionIds=new Set(completedInterventions.map((session)=>session.id));
+  const interventions=completedInterventions
+    .map((session)=>evaluateIntervention(session,input.attempts,input.currentWeek,input.semesterStartsOn,interventionSessionIds))
     .sort((a,b)=>b.interventionWeek-a.interventionWeek);
 
   const evaluated=interventions.filter((item)=>["effective","unchanged","regressed"].includes(item.outcome));
