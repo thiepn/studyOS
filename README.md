@@ -2,9 +2,9 @@
 
 StudyOS is the WS26/27 retention and exam-readiness system for the THIEPN ecosystem. The application keeps raw university material in a dedicated Google Drive account, structured academic state in Supabase, and daily review/exam-readiness workflows in a Next.js frontend.
 
-## Current phase: P15
+## Current phase: P16
 
-Implemented through P15; the foundation includes:
+Implemented through P16; the foundation includes:
 
 - Next.js 16 App Router + Supabase SSR authentication
 - THIEPN Account shared identity with isolated `study_*` application data
@@ -296,3 +296,22 @@ StudyOS now measures whether P14 corrections transfer into later independent per
 - P15 does not increase capacity and creates no new mastery model.
 
 The next phase is **P16 — Strategy Escalation, Intervention Portfolio & Method-Level Experimentation**.
+
+
+## P16 strategy escalation and method-level experimentation
+
+Persistent/structural P15 cases now move into a controlled method portfolio instead of receiving the same repair repeatedly.
+
+- seven distinct learning-method families target concept, method-selection, execution, transfer, prerequisite, pace, and explanation failures;
+- P13/P14/P15 evidence selects the next method;
+- P16 experiments are tagged relearning sessions and are judged only by later normal independent transfer;
+- all intervention-session attempts are excluded from experiment evaluation;
+- only one unresolved experiment may run per course at a time;
+- methods become untested, testing, promising, proven, or retired;
+- two evaluated failures with no successful transfer retire a method from automatic recommendation;
+- multiple retired methods in a structural course trigger a source-change warning;
+- exhausting the full in-app portfolio triggers external-support escalation rather than more solo practice;
+- Today and Progress route persistent/structural courses directly to the Strategy Lab;
+- all experiments remain inside the existing P10 study-capacity ceiling.
+
+The next phase is **P17 — Semester Decision Layer, Course-Level Forecasting & Exam Outcome Readiness**.
