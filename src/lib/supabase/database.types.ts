@@ -4366,6 +4366,319 @@ export type Database = {
           },
         ]
       }
+      study_calendar_connections: {
+        Row: {
+          connected_at: string | null
+          created_at: string
+          google_account_email: string | null
+          google_account_sub: string | null
+          last_error: string | null
+          last_sync_at: string | null
+          last_sync_status: string | null
+          scopes: string[]
+          status: string
+          timezone: string | null
+          updated_at: string
+          user_id: string
+          write_calendar_id: string | null
+        }
+        Insert: {
+          connected_at?: string | null
+          created_at?: string
+          google_account_email?: string | null
+          google_account_sub?: string | null
+          last_error?: string | null
+          last_sync_at?: string | null
+          last_sync_status?: string | null
+          scopes?: string[]
+          status?: string
+          timezone?: string | null
+          updated_at?: string
+          user_id: string
+          write_calendar_id?: string | null
+        }
+        Update: {
+          connected_at?: string | null
+          created_at?: string
+          google_account_email?: string | null
+          google_account_sub?: string | null
+          last_error?: string | null
+          last_sync_at?: string | null
+          last_sync_status?: string | null
+          scopes?: string[]
+          status?: string
+          timezone?: string | null
+          updated_at?: string
+          user_id?: string
+          write_calendar_id?: string | null
+        }
+        Relationships: []
+      }
+      study_calendar_credentials: {
+        Row: {
+          created_at: string
+          encrypted_refresh_token: string
+          encryption_version: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          encrypted_refresh_token: string
+          encryption_version?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          encrypted_refresh_token?: string
+          encryption_version?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      study_calendar_events: {
+        Row: {
+          all_day: boolean
+          calendar_id: string
+          course_id: string | null
+          created_at: string
+          end_at: string
+          event_id: string
+          event_role: Database["public"]["Enums"]["study_calendar_event_role"]
+          event_type: string | null
+          event_url: string | null
+          location: string | null
+          recurring_event_id: string | null
+          source_updated_at: string | null
+          start_at: string
+          status: string | null
+          study_owned: boolean
+          summary: string | null
+          synced_at: string
+          transparency: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          all_day?: boolean
+          calendar_id: string
+          course_id?: string | null
+          created_at?: string
+          end_at: string
+          event_id: string
+          event_role?: Database["public"]["Enums"]["study_calendar_event_role"]
+          event_type?: string | null
+          event_url?: string | null
+          location?: string | null
+          recurring_event_id?: string | null
+          source_updated_at?: string | null
+          start_at: string
+          status?: string | null
+          study_owned?: boolean
+          summary?: string | null
+          synced_at?: string
+          transparency?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          all_day?: boolean
+          calendar_id?: string
+          course_id?: string | null
+          created_at?: string
+          end_at?: string
+          event_id?: string
+          event_role?: Database["public"]["Enums"]["study_calendar_event_role"]
+          event_type?: string | null
+          event_url?: string | null
+          location?: string | null
+          recurring_event_id?: string | null
+          source_updated_at?: string | null
+          start_at?: string
+          status?: string | null
+          study_owned?: boolean
+          summary?: string | null
+          synced_at?: string
+          transparency?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_calendar_events_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_configuration"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_calendar_events_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_operating_mode"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_calendar_events_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_progress"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_calendar_events_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_risk"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_calendar_events_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_calendar_events_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_calendar_events_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_calendar_events_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_semester_checkpoint_rotation"
+            referencedColumns: ["course_id"]
+          },
+        ]
+      }
+      study_calendar_planning_settings: {
+        Row: {
+          calendar_buffer_minutes: number
+          created_at: string
+          day_end: string
+          day_start: string
+          include_weekends: boolean
+          max_block_minutes: number
+          minimum_block_minutes: number
+          semester_id: string
+          study_reminder_minutes: number
+          sync_future_days: number
+          sync_past_days: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          calendar_buffer_minutes?: number
+          created_at?: string
+          day_end?: string
+          day_start?: string
+          include_weekends?: boolean
+          max_block_minutes?: number
+          minimum_block_minutes?: number
+          semester_id: string
+          study_reminder_minutes?: number
+          sync_future_days?: number
+          sync_past_days?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          calendar_buffer_minutes?: number
+          created_at?: string
+          day_end?: string
+          day_start?: string
+          include_weekends?: boolean
+          max_block_minutes?: number
+          minimum_block_minutes?: number
+          semester_id?: string
+          study_reminder_minutes?: number
+          sync_future_days?: number
+          sync_past_days?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_calendar_planning_settings_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "study_current_capacity"
+            referencedColumns: ["semester_id"]
+          },
+          {
+            foreignKeyName: "study_calendar_planning_settings_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "study_semester_checkpoint_rotation"
+            referencedColumns: ["semester_id"]
+          },
+          {
+            foreignKeyName: "study_calendar_planning_settings_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "study_semesters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      study_calendar_sources: {
+        Row: {
+          access_role: string | null
+          background_color: string | null
+          calendar_id: string
+          created_at: string
+          is_primary: boolean
+          last_seen_at: string
+          selected: boolean
+          summary: string
+          timezone: string | null
+          updated_at: string
+          user_id: string
+          writable: boolean
+        }
+        Insert: {
+          access_role?: string | null
+          background_color?: string | null
+          calendar_id: string
+          created_at?: string
+          is_primary?: boolean
+          last_seen_at?: string
+          selected?: boolean
+          summary: string
+          timezone?: string | null
+          updated_at?: string
+          user_id: string
+          writable?: boolean
+        }
+        Update: {
+          access_role?: string | null
+          background_color?: string | null
+          calendar_id?: string
+          created_at?: string
+          is_primary?: boolean
+          last_seen_at?: string
+          selected?: boolean
+          summary?: string
+          timezone?: string | null
+          updated_at?: string
+          user_id?: string
+          writable?: boolean
+        }
+        Relationships: []
+      }
       study_commitments: {
         Row: {
           completed_at: string | null
@@ -6658,6 +6971,153 @@ export type Database = {
             isOneToOne: true
             referencedRelation: "study_skills"
             referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      study_scheduled_blocks: {
+        Row: {
+          calendar_id: string
+          cancelled_at: string | null
+          candidate_id: string
+          candidate_kind: string
+          completed_at: string | null
+          course_id: string | null
+          created_at: string
+          end_at: string
+          event_id: string
+          event_url: string | null
+          id: string
+          plan_date: string
+          reminder_minutes: number
+          scheduled_minutes: number
+          semester_id: string
+          start_at: string
+          status: Database["public"]["Enums"]["study_scheduled_block_status"]
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          calendar_id: string
+          cancelled_at?: string | null
+          candidate_id: string
+          candidate_kind: string
+          completed_at?: string | null
+          course_id?: string | null
+          created_at?: string
+          end_at: string
+          event_id: string
+          event_url?: string | null
+          id?: string
+          plan_date: string
+          reminder_minutes?: number
+          scheduled_minutes: number
+          semester_id: string
+          start_at: string
+          status?: Database["public"]["Enums"]["study_scheduled_block_status"]
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          calendar_id?: string
+          cancelled_at?: string | null
+          candidate_id?: string
+          candidate_kind?: string
+          completed_at?: string | null
+          course_id?: string | null
+          created_at?: string
+          end_at?: string
+          event_id?: string
+          event_url?: string | null
+          id?: string
+          plan_date?: string
+          reminder_minutes?: number
+          scheduled_minutes?: number
+          semester_id?: string
+          start_at?: string
+          status?: Database["public"]["Enums"]["study_scheduled_block_status"]
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_scheduled_blocks_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_configuration"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_scheduled_blocks_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_operating_mode"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_scheduled_blocks_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_progress"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_scheduled_blocks_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_risk"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_scheduled_blocks_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_scheduled_blocks_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_scheduled_blocks_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_scheduled_blocks_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_semester_checkpoint_rotation"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_scheduled_blocks_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "study_current_capacity"
+            referencedColumns: ["semester_id"]
+          },
+          {
+            foreignKeyName: "study_scheduled_blocks_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "study_semester_checkpoint_rotation"
+            referencedColumns: ["semester_id"]
+          },
+          {
+            foreignKeyName: "study_scheduled_blocks_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "study_semesters"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -10102,6 +10562,16 @@ export type Database = {
         }
         Returns: Json
       }
+      thiepn_hub_notes_capture: {
+        Args: {
+          p_content: string
+          p_destination: string
+          p_request_id: string
+          p_revision: string
+          p_title: string
+        }
+        Returns: Json
+      }
       thiepn_hub_notes_inbox: {
         Args: {
           p_action?: string
@@ -10142,6 +10612,14 @@ export type Database = {
     }
     Enums: {
       study_attempt_result: "incorrect" | "partial" | "correct"
+      study_calendar_event_role:
+        | "busy"
+        | "lecture"
+        | "exercise"
+        | "exam"
+        | "deadline"
+        | "study_block"
+        | "other"
       study_capacity_mode:
         | "normal"
         | "light"
@@ -10233,6 +10711,11 @@ export type Database = {
         | "supplement"
         | "course_info"
         | "other"
+      study_scheduled_block_status:
+        | "proposed"
+        | "committed"
+        | "completed"
+        | "cancelled"
       study_session_type:
         | "review"
         | "coursework"
@@ -10391,6 +10874,15 @@ export const Constants = {
   public: {
     Enums: {
       study_attempt_result: ["incorrect", "partial", "correct"],
+      study_calendar_event_role: [
+        "busy",
+        "lecture",
+        "exercise",
+        "exam",
+        "deadline",
+        "study_block",
+        "other",
+      ],
       study_capacity_mode: [
         "normal",
         "light",
@@ -10494,6 +10986,12 @@ export const Constants = {
         "course_info",
         "other",
       ],
+      study_scheduled_block_status: [
+        "proposed",
+        "committed",
+        "completed",
+        "cancelled",
+      ],
       study_session_type: [
         "review",
         "coursework",
@@ -10551,5 +11049,7 @@ export type StudyExamGradingStatus = Database["public"]["Enums"]["study_exam_gra
 export type StudyCapacityMode = Database["public"]["Enums"]["study_capacity_mode"];
 export type StudyCommitmentKind = Database["public"]["Enums"]["study_commitment_kind"];
 export type StudyCommitmentStatus = Database["public"]["Enums"]["study_commitment_status"];
+export type StudyCalendarEventRole = Database["public"]["Enums"]["study_calendar_event_role"];
+export type StudyScheduledBlockStatus = Database["public"]["Enums"]["study_scheduled_block_status"];
 export type StudyWeekHealthStatus = "empty" | "needs_processing" | "source_only" | "learning" | "fragile" | "retained";
 export type StudyIntakeStatus = "discovered" | "classified" | "candidate" | "registered" | "needs_review" | "ignored" | "failed";

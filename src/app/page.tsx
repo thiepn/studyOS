@@ -4,6 +4,8 @@ import { DailyPlan } from "@/components/daily-plan";
 import { CapacityControls } from "@/components/capacity-controls";
 import { CommitmentsPanel } from "@/components/commitments-panel";
 import { getDailyOrchestration } from "@/lib/study/planning";
+import { getCalendarAutopilot } from "@/lib/study/calendar-autopilot";
+import { CalendarAutopilotPanel } from "@/components/calendar-autopilot-panel";
 import { topRiskDrivers } from "@/lib/study/pulse";
 import type { PlanningMode } from "@/lib/study/planner";
 
@@ -11,6 +13,7 @@ export const dynamic = "force-dynamic";
 
 export default async function TodayPage() {
   const orchestration=await getDailyOrchestration();
+  const calendar=await getCalendarAutopilot(orchestration);
   const {today:data,pulse,capacity,plan,commitments,courses,settings}=orchestration;
   const topRisk=pulse.risks[0] ?? null;
   const checkpoint=pulse.checkpoint;
@@ -37,6 +40,7 @@ export default async function TodayPage() {
       </section>
 
       <DailyPlan plan={plan} />
+      <CalendarAutopilotPanel data={calendar} />
       <CapacityControls capacity={capacity} defaultMode={defaultMode} />
 
       <section className="pulse-grid">

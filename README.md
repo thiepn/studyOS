@@ -198,3 +198,21 @@ StudyOS now converts all previously collected evidence into a bounded daily stud
 - deferred work remains visible but never becomes punitive “debt minutes” on the next day.
 
 The planner remains deterministic and does not require a paid AI API.
+
+
+## P11 calendar-aware scheduling and weekly autopilot
+
+StudyOS can now place P10's bounded plan into real free time without turning the calendar into another source of workload debt.
+
+- Study Calendar uses an OAuth connection independent from ChatGPT and independent from the Study Drive token/account;
+- only the primary calendar is selected on first connection; additional visible calendars are opt-in;
+- selected calendars are cached as busy/free context, with cancelled and transparent events ignored by the scheduler;
+- planning uses the semester timezone and handles daylight-saving changes;
+- study-day start/end, minimum block size, event buffer, maximum block size, weekend use, and reminder lead time are configurable;
+- P10's ordered tasks are placed into free windows without overlap;
+- non-splittable work such as a full timed exam waits for one continuous block instead of being fragmented;
+- tasks that do not fit remain unscheduled rather than displacing real commitments;
+- the seven-day runway shows free calendar capacity, busy-event count, and due commitments;
+- committing the proposal explicitly creates Google Calendar events with popup reminders;
+- cancelling a committed StudyOS block removes the corresponding Google Calendar event and records the cancellation locally;
+- StudyOS never silently imports or writes through the Google Calendar account connected to ChatGPT.

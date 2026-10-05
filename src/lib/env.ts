@@ -28,6 +28,9 @@ export const env = {
   googleDriveClientId: optional("GOOGLE_DRIVE_CLIENT_ID"),
   googleDriveClientSecret: optional("GOOGLE_DRIVE_CLIENT_SECRET"),
   driveTokenKey: optional("STUDY_DRIVE_TOKEN_KEY"),
+  googleCalendarClientId: optional("GOOGLE_CALENDAR_CLIENT_ID") ?? optional("GOOGLE_DRIVE_CLIENT_ID"),
+  googleCalendarClientSecret: optional("GOOGLE_CALENDAR_CLIENT_SECRET") ?? optional("GOOGLE_DRIVE_CLIENT_SECRET"),
+  calendarTokenKey: optional("STUDY_CALENDAR_TOKEN_KEY") ?? optional("STUDY_DRIVE_TOKEN_KEY"),
   appOrigin: originFromEnvironment(),
   googleDriveScopeMode: optional("GOOGLE_DRIVE_SCOPE_MODE") === "readonly" ? "readonly" : "file",
   deploymentEnv: optional("VERCEL_ENV") ?? (process.env.NODE_ENV === "production" ? "production" : "development"),
@@ -71,6 +74,26 @@ export function serverConfigurationStatus() {
     googleDriveConfigured: Boolean(env.googleDriveClientId && env.googleDriveClientSecret && env.driveTokenKey),
     authCallbackUrl: `${env.appOrigin}/auth/callback`,
     googleDriveCallbackUrl: `${env.appOrigin}/api/integrations/google-drive/callback`,
+    googleCalendarConfigured: Boolean(env.googleCalendarClientId && env.googleCalendarClientSecret && env.calendarTokenKey),
+    googleCalendarCallbackUrl: `${env.appOrigin}/api/integrations/google-calendar/callback`,
     buildSha: env.buildSha ?? null,
+  };
+}
+
+
+export function requireCalendarServerEnv() {
+  const missing = [
+    ["SUPABASE_SECRET_KEY", env.supabaseSecretKey],
+    ["GOOGLE_CALENDAR_CLIENT_ID", env.googleCalendarClientId],
+    ["GOOGLE_CALENDAR_CLIENT_SECRET", env.googleCalendarClientSecret],
+    ["STUDY_CALENDAR_TOKEN_KEY", env.calendarTokenKey],
+  ].filter(([, value]) => !value).map(([name]) => name);
+  if (missing.length) throw new Error("Missing Calendar server environment: " + missing.join(", "));
+  return {
+    serviceRoleKey: env.supabaseSecretKey!,
+    clientId: env.googleCalendarClientId!,
+    clientSecret: env.googleCalendarClientSecret!,
+    tokenKey: env.calendarTokenKey!,
+    appOrigin: env.appOrigin,
   };
 }

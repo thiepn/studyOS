@@ -39,10 +39,12 @@ export default async function SetupPage() {
             <Check ok={server.hasSupabaseSecret} title="Supabase server secret" detail="Required for server-only Drive credential operations." />
             <Check ok={server.secureOrigin} title="Stable HTTPS origin" detail={server.appOrigin} />
             <Check ok={server.googleDriveConfigured} title="Google Drive OAuth" detail="Client ID, client secret, and encrypted-token key are configured." />
+            <Check ok={server.googleCalendarConfigured} title="Google Calendar OAuth" detail="Separate Study Calendar credentials are available (or securely reuse the Study Drive OAuth app)." />
           </div>
           <div className="callback-list">
             <div><span>Supabase auth redirect</span><code>{server.authCallbackUrl}</code></div>
             <div><span>Study Drive OAuth redirect</span><code>{server.googleDriveCallbackUrl}</code></div>
+            <div><span>Study Calendar OAuth redirect</span><code>{server.googleCalendarCallbackUrl}</code></div>
           </div>
           <p className="muted tiny">{server.deploymentEnv} · {server.buildSha ? server.buildSha.slice(0, 12) : "local/unversioned runtime"}</p>
         </div>
@@ -55,6 +57,7 @@ export default async function SetupPage() {
             <Check ok={Boolean(backend.courses_ready)} title="Six real courses" detail={`${backend.named_course_count ?? 0} / 6 named and active`} />
             <Check ok={Boolean(backend.drive_connected)} title="Study Google account" detail="Independent from the Google account connected to ChatGPT." />
             <Check ok={Boolean(backend.drive_tree_ready)} title="Drive tree" detail="Semester root, inbox, and all six course folders exist." />
+            <Check ok={data.calendarConnection?.status === "connected"} title="Study Calendar account" detail={data.calendarConnection?.google_account_email ?? "Independent calendar account not connected yet."} />
           </div>
           <div className="button-row"><Link className="primary-button" href="/resources">Connect / inspect Drive</Link><Link className="secondary-button" href="/courses">Inspect courses</Link></div>
         </div>
