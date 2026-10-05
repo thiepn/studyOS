@@ -178,7 +178,7 @@ export async function getDailyOrchestration(){
       id:"drift-repair:"+course.courseId,kind:"drift_repair",courseId:course.courseId,courseName:course.displayName,
       title:(failedPattern?"Review failed intervention pattern · ":"Targeted drift repair · ")+(course.shortName??course.displayName),
       reason:failedPattern
-        ? learning.recommendation
+        ? (learning?.recommendation ?? course.profile.recommendation)
         : course.profile.recommendation,
       href:failedPattern?"/progress#course-"+course.courseId:"/practice?mode=drift&course="+course.courseId,
       estimatedMinutes:failedPattern?15:course.profile.correctionMinutes,priority:failedPattern?74:70,
