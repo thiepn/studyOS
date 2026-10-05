@@ -262,3 +262,19 @@ StudyOS now turns the first real Week-1 attempts into a guarded calibration prof
 - calibration itself never writes mastery evidence and never increases the daily workload budget.
 
 The next phase is **P14 — Multi-Week Drift Detection, Workload/Performance Feedback & Automatic Plan Correction**.
+
+
+## P14 multi-week drift detection and bounded plan correction
+
+StudyOS now compares completed-week workload and performance instead of reacting to the unfinished current week.
+
+- major courses receive a multi-week drift state: insufficient data, on track, watch, drifting, or critical;
+- recent completed weeks are compared with the preceding completed-week window using independent accuracy, solving time, workflow lag, and unresolved errors;
+- workload feedback distinguishes underinvestment from low-yield effort, so “do more” is not the default response;
+- P14 rebalances P10 candidate priority inside the existing capacity ceiling;
+- sustained performance/efficiency drift can inject one bounded targeted-practice candidate when verified questions exist;
+- current deadlines, review limits, Recovery Mode, and P9 exam strategy remain authoritative;
+- Today explains active automatic correction; Progress exposes the full drift evidence and drivers;
+- P14 creates no mastery evidence and adds no second persistence model.
+
+The next phase is **P15 — Semester-Level Learning Analytics & Intervention Validation**.
