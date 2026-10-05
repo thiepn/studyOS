@@ -2,15 +2,15 @@ import Link from "next/link";
 import { Nav } from "@/components/nav";
 import { getSemesterPulse, topRiskDrivers } from "@/lib/study/pulse";
 import { getSemesterCalibration } from "@/lib/study/calibration-data";
-import { getSemesterDrift } from "@/lib/study/drift-data";
+import { getSemesterLearningAnalytics } from "@/lib/study/analytics-data";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProgressPage(){
-  const [pulse,calibration,drift]=await Promise.all([getSemesterPulse(),getSemesterCalibration(),getSemesterDrift()]);
+  const [pulse,calibration,learning]=await Promise.all([getSemesterPulse(),getSemesterCalibration(),getSemesterLearningAnalytics()]);
   const calibrationByCourse=new Map(calibration.map((item)=>[item.courseId,item.profile]));
-  const driftByCourse=new Map(drift.courses.map((item)=>[item.courseId,item.profile]));
-  const sustainedDrift=drift.courses.filter((item)=>item.profile.band==="drifting"||item.profile.band==="critical").length;
+  const learningByCourse=new Map(learning.courses.map((item)=>[item.courseId,item.analytics]));
+  const sustainedDrift=learning.courses.filter((item)=>item.analytics.latestDrift.band==="drifting"||item.analytics.latestDrift.band==="critical").length;
   return <main className="shell">
     <header className="header"><div><p className="eyebrow">Longitudinal diagnostics</p><h1>Progress</h1></div><Nav /></header>
 
@@ -19,13 +19,27 @@ export default async function ProgressPage(){
       <p className="muted">Risk is deterministic: retention pressure + overdue reviews + recent lapses + actionable coursework backlog + unresolved errors + exam-readiness gap. P14 separately checks completed-week performance and workload drift; {sustainedDrift} course{sustainedDrift===1?" is":"s are"} currently in sustained drift.</p>
     </section>
 
+    <section className="panel intervention-summary">
+      <div className="section-heading"><div><p className="eyebrow">P15 · intervention validation</p><h2>Are corrections actually working?</h2></div><span>{learning.summary.effectivenessRate==null?"—":learning.summary.effectivenessRate+"%"}</span></div>
+      <div className="intervention-summary-grid">
+        <div><strong>{learning.summary.totalInterventions}</strong><span>completed P14 repairs</span></div>
+        <div><strong>{learning.summary.evaluatedInterventions}</strong><span>with enough follow-up</span></div>
+        <div><strong>{learning.summary.effectiveInterventions}</strong><span>effective</span></div>
+        <div><strong>{learning.summary.pendingInterventions}</strong><span>pending / insufficient evidence</span></div>
+        <div><strong>{learning.summary.persistentCourses}</strong><span>persistent difficulty</span></div>
+        <div><strong>{learning.summary.structuralCourses}</strong><span>structural signal</span></div>
+      </div>
+      <p className="muted">P15 judges a repair only from later independent attempts. Performance inside the repair session itself is excluded, so the metric measures transfer rather than practice-set success.</p>
+    </section>
+
     <section className="risk-course-list">
       {pulse.risks.map((course)=>{
         const drivers=topRiskDrivers(course,3);
         const mix=course.recommended_mix && typeof course.recommended_mix==="object" ? Object.entries(course.recommended_mix) : [];
         const calibrationProfile=calibrationByCourse.get(course.course_id);
-        const driftProfile=driftByCourse.get(course.course_id);
-        return <article className="panel risk-course" key={course.course_id}>
+        const learningProfile=learningByCourse.get(course.course_id);
+        const driftProfile=learningProfile?.latestDrift;
+        return <article className="panel risk-course" id={"course-"+course.course_id} key={course.course_id}>
           <div className="risk-course-head">
             <div><p className="eyebrow">{course.operating_mode.replace("_"," ")} mode</p><h2>{course.display_name}</h2></div>
             <div className="risk-score-block"><span className={"risk-badge risk-" + course.risk_band}>{course.risk_band.replace("_"," ")}</span><strong>{Math.round(Number(course.risk_score))}/100</strong></div>
@@ -61,6 +75,21 @@ export default async function ProgressPage(){
             </div>
             {driftProfile.components.length?<ul>{driftProfile.components.slice(0,3).map((component)=><li key={component.key}>{component.label} <strong>+{component.points}</strong></li>)}</ul>:null}
             <p>{driftProfile.recommendation}</p>
+          </div> : null}
+
+          {learningProfile ? <div className={"course-learning-panel difficulty-"+learningProfile.difficultySignal}>
+            <div className="course-learning-head">
+              <div><span>Intervention validation</span><strong>{learningProfile.difficultySignal.replace("_"," ")}</strong></div>
+              <b>{learningProfile.effectivenessRate==null?"—":learningProfile.effectivenessRate+"% effective"}</b>
+            </div>
+            <div className="course-learning-metrics">
+              <span><strong>{learningProfile.totalInterventions}</strong> repairs</span>
+              <span><strong>{learningProfile.evaluatedInterventions}</strong> evaluated</span>
+              <span><strong>{learningProfile.effectiveInterventions}</strong> effective</span>
+              <span><strong>{learningProfile.pendingInterventions}</strong> pending</span>
+            </div>
+            {learningProfile.interventions[0] ? <p className="latest-intervention"><strong>Latest:</strong> {learningProfile.interventions[0].outcome.replace("_"," ")} · {learningProfile.interventions[0].baselineAccuracyPercent==null?"—":learningProfile.interventions[0].baselineAccuracyPercent+"%"} → {learningProfile.interventions[0].followupAccuracyPercent==null?"—":learningProfile.interventions[0].followupAccuracyPercent+"%"} · {learningProfile.interventions[0].evidenceWindow}</p> : null}
+            <p>{learningProfile.recommendation}</p>
           </div> : null}
 
           <div className="risk-detail-grid">
