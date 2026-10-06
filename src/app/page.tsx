@@ -28,7 +28,10 @@ export default async function TodayPage() {
   const topForecast=[...orchestration.forecast.courses].sort((a,b)=>b.decisionPriority-a.decisionPriority)[0]??null;
   const examCommand=orchestration.examCommand;
   const examOperations=orchestration.examOperations;
+  const examOutcomeState=orchestration.examOutcomeState;
   const topExamCommand=examCommand.courses[0]??null;
+  const pendingRetake=examOutcomeState.pendingRetakes[0]??null;
+  const resultReady=examOutcomeState.ready[0]??null;
   const weekRuntime=orchestration.weekRuntime;
   const pendingPostExam=examOperations.courses.find(course=>
     course.phase==="post_exam"&&
@@ -67,6 +70,19 @@ export default async function TodayPage() {
       </section>
 
       <DailyPlan plan={plan} />
+
+      {pendingRetake||resultReady ? <section className={"panel exam-result-today "+(pendingRetake?"retake-pending":"result-ready")}>
+        <div className="exam-result-today-head">
+          <div><p className="eyebrow">P24 · exam outcome</p><h2>{pendingRetake
+            ? (pendingRetake.shortName??pendingRetake.displayName)+" · retake decision pending"
+            : (resultReady?.shortName??resultReady?.displayName)+" · result ready"}</h2></div>
+          <span>{pendingRetake?"decision":"intake"}</span>
+        </div>
+        <p>{pendingRetake
+          ?"Discretionary planning for this course is paused until the retake decision is resolved."
+          :"The configured exam has ended and no official outcome is recorded yet."}</p>
+        <div className="button-row"><Link className="secondary-button" href="/exam-results">{pendingRetake?"Resolve retake":"Record result"}</Link></div>
+      </section> : null}
 
       {activeExamBoundary ? <section className={"panel exam-day-today phase-"+activeExamBoundary.phase}>
         <div className="exam-day-today-head">
