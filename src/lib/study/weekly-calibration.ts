@@ -112,7 +112,7 @@ export function buildWeeklyCalibrationProfile(
       creditedMinutes:credited,
       adherencePercent:ratioPct(credited,target),
       rebalanced:rows.some(row=>row.rebalanced),
-      sacrificedCourses:rows.filter(row=>row.targetMinutes<row.protectionFloorMinutes).length,
+      sacrificedCourses:rows.filter(row=>row.originalMinutes<row.protectionFloorMinutes||row.targetMinutes<row.protectionFloorMinutes).length,
     };
   }).sort((a,b)=>a.periodEndsOn.localeCompare(b.periodEndsOn));
 
@@ -137,7 +137,7 @@ export function buildWeeklyCalibrationProfile(
       const gap=row.creditedMinutes-row.targetMinutes;
       return row.targetMinutes>=30&&gap>=Math.max(30,row.targetMinutes*0.20);
     });
-    const sacrificedRows=rows.filter(row=>row.targetMinutes<row.protectionFloorMinutes);
+    const sacrificedRows=rows.filter(row=>row.originalMinutes<row.protectionFloorMinutes||row.targetMinutes<row.protectionFloorMinutes);
     const rebalancedRows=rows.filter(row=>row.rebalanced);
     const evidence=evidenceBand(rows.length);
 
