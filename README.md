@@ -567,7 +567,7 @@ The next phase is **P28 — Cross-Semester Transfer Validation, Prior Calibratio
 ### P27 invariant hardening
 
 - switching the Study Drive account now resets the active semester's Drive tree rather than a hard-coded historical semester;
-- the switch clears P27 certification until the active-semester folders are reprovisioned;
+- switching or disconnecting Study Drive clears P27 certification until the active-semester Drive requirements are restored and certified again;
 - direct writes to historical-prior rows are database-guarded: source snapshots and identity are immutable and canonicalized from archived owner data;
 - archived historical priors are read-only;
 - direct course-roster insert/delete operations invalidate bootstrap certification as a database invariant.
