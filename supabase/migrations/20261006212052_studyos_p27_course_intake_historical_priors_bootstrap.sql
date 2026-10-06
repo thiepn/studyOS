@@ -185,7 +185,24 @@ create trigger study_courses_auto_attach_direct_retake_prior after insert on pub
 for each row execute function public.study_auto_attach_direct_retake_prior();
 
 insert into public.study_course_historical_priors(user_id,semester_id,course_id,source_semester_id,source_course_id,relation,source_snapshot)
-select c.user_id,c.semester_id,c.id,src.semester_id,src.id,'direct_retake',public.study_historical_prior_snapshot(src.id)
+select c.user_id,c.semester_id,c.id,src.semester_id,src.id,'direct_retake',
+  jsonb_build_object(
+    'source_course_id',src.id,
+    'source_semester_id',src.semester_id,
+    'stable_key',src.stable_key,
+    'display_name',src.display_name,
+    'short_name',src.short_name,
+    'course_kind',src.course_kind,
+    'credits',src.credits,
+    'official_attempts',(select count(*) from public.study_exam_results r where r.user_id=c.user_id and r.course_id=src.id and r.result_status='official'),
+    'latest_outcome',(select r.outcome from public.study_exam_results r where r.user_id=c.user_id and r.course_id=src.id and r.result_status='official' order by r.attempt_no desc limit 1),
+    'latest_grade_text',(select r.grade_text from public.study_exam_results r where r.user_id=c.user_id and r.course_id=src.id and r.result_status='official' order by r.attempt_no desc limit 1),
+    'latest_score_percent',(select r.score_percent from public.study_exam_results r where r.user_id=c.user_id and r.course_id=src.id and r.result_status='official' order by r.attempt_no desc limit 1),
+    'latest_readiness_index',(select r.readiness_index_snapshot from public.study_exam_results r where r.user_id=c.user_id and r.course_id=src.id and r.result_status='official' order by r.attempt_no desc limit 1),
+    'latest_readiness_band',(select r.readiness_band_snapshot from public.study_exam_results r where r.user_id=c.user_id and r.course_id=src.id and r.result_status='official' order by r.attempt_no desc limit 1),
+    'skill_count',(select count(*) from public.study_skills sk where sk.user_id=c.user_id and sk.course_id=src.id and sk.active),
+    'unresolved_findings',(select count(*) from public.study_reconciliation_findings rf where rf.user_id=c.user_id and rf.course_id=src.id and rf.status in ('open','repair_scheduled'))
+  )
 from public.study_courses c
 join public.study_semesters sem on sem.id=c.semester_id and sem.user_id=c.user_id
 join public.study_courses src on src.semester_id=sem.previous_semester_id and src.user_id=c.user_id and src.stable_key=c.stable_key
