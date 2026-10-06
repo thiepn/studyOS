@@ -198,7 +198,8 @@ export async function getDailyOrchestration(){
     candidates.push({
       id:"exam:"+strategy.course_id+":"+strategy.next_action,kind:"exam_strategy",courseId:strategy.course_id,
       courseName:strategy.display_name,title:examActionLabel(strategy.next_action)+" · "+(strategy.short_name??strategy.display_name),
-      reason:strategy.next_action_reason,href:timed&&paperMap.get(strategy.course_id)?"/practice/exam/"+paperMap.get(strategy.course_id):"/courses/"+strategy.course_id,
+      reason:strategy.next_action_reason+(directive.priorityAdjustment?" · P22 cross-exam priority +"+directive.priorityAdjustment:""),
+      href:timed&&paperMap.get(strategy.course_id)?"/practice/exam/"+paperMap.get(strategy.course_id):"/courses/"+strategy.course_id,
       estimatedMinutes:examEstimate(strategy),
       priority:(strategy.operating_mode==="exam"?86:72)+Math.max(0,12-Math.max(0,days))+Number(risk?.risk_score??0)*0.15+directive.priorityAdjustment,
       urgent:days<=3,heavy:timed,splittable:!timed,allowedInRecovery:!timed,
