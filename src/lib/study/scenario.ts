@@ -1,6 +1,6 @@
 import type { CourseForecast, ReadinessBand, RunwayBand } from "./forecast";
 
-export type ScenarioObjective="protect_passes"|"balanced"|"target_performance";
+export type ScenarioObjective="protect_passes"|"balanced"|"target_performance"|"exam_period";
 export type ScenarioCapacitySource="planning_default"|"calendar_capped"|"custom";
 
 export type ScenarioCourse={
@@ -101,6 +101,8 @@ function objectiveScore(course:ScenarioCourse,objective:ScenarioObjective,alloca
 
   if(objective==="protect_passes"){
     objectiveTerm=belowPass?34:course.band==="pass_ready"?12:-6;
+  }else if(objective==="exam_period"){
+    objectiveTerm=(course.runway==="urgent"?36:course.runway==="compressed"?28:course.runway==="workable"?12:0)+(belowPass?24:course.band==="pass_ready"?10:0);
   }else if(objective==="target_performance"){
     if(belowPass)objectiveTerm=24;
     else if(belowTarget)objectiveTerm=30-Math.abs(80-readiness)*0.5;
@@ -120,6 +122,7 @@ function reasonFor(course:ScenarioCourse,objective:ScenarioObjective,floor:numbe
   const parts:string[]=[];
   if(course.band==="at_risk"||course.band==="fragile")parts.push("protect pass readiness");
   else if(course.band==="insufficient_evidence")parts.push("close evidence uncertainty");
+  else if(objective==="exam_period"&&(course.runway==="urgent"||course.runway==="compressed"))parts.push("protect the nearest exam");
   else if(objective==="target_performance"&&(course.readinessIndex??0)<80)parts.push("close the 80+ readiness gap");
   else parts.push("maintain current readiness");
   if(course.runway==="urgent"||course.runway==="compressed")parts.push(course.runway+" exam runway");
@@ -207,7 +210,9 @@ export function buildScenario(input:ScenarioInput):ScenarioPlan{
       ?"All course protection floors fit. Remaining capacity is concentrated where pass-readiness risk has the highest marginal value."
       :input.objective==="target_performance"
         ?"All course protection floors fit. Remaining capacity is tilted toward courses where extra work can most efficiently close the 80+ readiness gap."
-        :"All course protection floors fit. Remaining capacity is balanced by readiness gap, exam runway, trajectory, credits, and diminishing returns."
+        :input.objective==="exam_period"
+          ?"All course protection floors fit. Remaining capacity is tilted toward the nearest exams while still protecting weak courses and diminishing returns."
+          :"All course protection floors fit. Remaining capacity is balanced by readiness gap, exam runway, trajectory, credits, and diminishing returns."
     :"Weekly capacity is insufficient to satisfy every course protection floor. Shortfalls are shown explicitly; the scenario does not overbook the week.";
 
   return {
@@ -225,5 +230,6 @@ export function buildStandardScenarios(input:Omit<ScenarioInput,"objective">){
     protectPasses:buildScenario({...input,objective:"protect_passes"}),
     balanced:buildScenario({...input,objective:"balanced"}),
     targetPerformance:buildScenario({...input,objective:"target_performance"}),
+    examPeriod:buildScenario({...input,objective:"exam_period"}),
   };
 }
