@@ -149,7 +149,7 @@ export async function getSemesterStrategyPortfolios(){
       recommendation,experiments,
     };
   });
-  return {courses};
+  return {courses,calibration,learning};
 }
 
 export async function getCourseStrategyPortfolio(requestedCourseId?:string|null){

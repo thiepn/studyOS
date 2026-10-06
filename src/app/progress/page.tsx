@@ -17,6 +17,7 @@ export default async function ProgressPage(){
     <section className="panel progress-summary">
       <div className="section-heading"><div><p className="eyebrow">Semester health</p><h2>Where retention is failing</h2></div><span>{pulse.risks.filter((c)=>c.risk_band==="at_risk"||c.risk_band==="critical").length}</span></div>
       <p className="muted">Risk is deterministic: retention pressure + overdue reviews + recent lapses + actionable coursework backlog + unresolved errors + exam-readiness gap. P14 separately checks completed-week performance and workload drift; {sustainedDrift} course{sustainedDrift===1?" is":"s are"} currently in sustained drift.</p>
+      <div className="button-row"><Link className="secondary-button" href="/outlook">Open semester outlook</Link></div>
     </section>
 
     <section className="panel intervention-summary">
