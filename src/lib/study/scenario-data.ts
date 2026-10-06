@@ -41,9 +41,8 @@ export async function getSemesterScenarioData(){
   };
   const standard=buildStandardScenarios(input);
 
-  const constrainedCapacity=round15(Math.max(mandatoryCommitments,baselineWeekly*0.75));
-  const expandedCeiling=calendarFree==null?round15(nominalWeekly*1.5):round15(calendarFree);
-  const expandedCapacity=Math.max(baselineWeekly,Math.min(expandedCeiling,round15(baselineWeekly*1.25)));
+  const constrainedCapacity=round15(baselineWeekly*0.75);
+  const expandedCapacity=round15(baselineWeekly*1.25);
   const stressCapacities=[
     {key:"constrained",label:"75% capacity",minutes:constrainedCapacity},
     {key:"baseline",label:"Baseline",minutes:baselineWeekly},
@@ -60,8 +59,8 @@ export async function getSemesterScenarioData(){
     }),
   }));
 
-  const maxCustomCapacity=Math.max(180,calendarFree==null?round15(nominalWeekly*1.5):round15(calendarFree));
-  const minCustomCapacity=Math.min(maxCustomCapacity,Math.max(60,round15(Math.min(baselineWeekly,mandatoryCommitments+60))));
+  const maxCustomCapacity=Math.max(180,round15(nominalWeekly*1.5),round15(calendarFree??0));
+  const minCustomCapacity=baselineWeekly===0?0:Math.min(maxCustomCapacity,Math.max(60,round15(Math.min(baselineWeekly,mandatoryCommitments+60))));
 
   return {
     source:(calendar.connection?.status==="connected"?"calendar_capped":"planning_default") as "calendar_capped"|"planning_default",
