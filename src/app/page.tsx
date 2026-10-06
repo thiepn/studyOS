@@ -29,11 +29,16 @@ export default async function TodayPage() {
   const examCommand=orchestration.examCommand;
   const examOperations=orchestration.examOperations;
   const topExamCommand=examCommand.courses[0]??null;
-  const activeExamBoundary=examOperations.inProgress[0]
-    ??examOperations.latestCompleted
-    ??examOperations.courses.find(course=>course.phase==="final_window")
-    ??null;
   const weekRuntime=orchestration.weekRuntime;
+  const pendingPostExam=examOperations.courses.find(course=>
+    course.phase==="post_exam"&&
+    (weekRuntime?.progress.courses.find(row=>row.courseId===course.courseId)?.remainingMinutes??0)>0
+  )??null;
+  const activeExamBoundary=examOperations.inProgress[0]
+    ??(examOperations.recoveryLevel!=="none"?examOperations.latestCompleted:null)
+    ??examOperations.courses.find(course=>course.phase==="final_window")
+    ??pendingPostExam
+    ??null;
   const weekConcern=weekRuntime?.progress.courses
     .filter(course=>course.remainingMinutes>0)
     .sort((a,b)=>{
