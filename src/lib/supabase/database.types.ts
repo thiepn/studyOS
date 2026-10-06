@@ -401,6 +401,50 @@ export type Database = {
         }
         Relationships: []
       }
+      account_first_party_oauth_clients: {
+        Row: {
+          active: boolean
+          app_slug: string
+          automatic_identity_consent: boolean
+          client_name: string
+          client_uri: string
+          created_at: string
+          oauth_client_id: string
+          redirect_uri: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          app_slug: string
+          automatic_identity_consent?: boolean
+          client_name: string
+          client_uri: string
+          created_at?: string
+          oauth_client_id: string
+          redirect_uri: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          app_slug?: string
+          automatic_identity_consent?: boolean
+          client_name?: string
+          client_uri?: string
+          created_at?: string
+          oauth_client_id?: string
+          redirect_uri?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_first_party_oauth_clients_app_slug_fkey"
+            columns: ["app_slug"]
+            isOneToOne: false
+            referencedRelation: "account_apps"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
       account_profiles: {
         Row: {
           created_at: string
@@ -7881,6 +7925,7 @@ export type Database = {
       study_semesters: {
         Row: {
           active: boolean
+          archived_at: string | null
           created_at: string
           display_name: string
           drive_inbox_folder_id: string | null
@@ -7892,6 +7937,7 @@ export type Database = {
           drive_root_folder_url: string | null
           ends_on: string | null
           id: string
+          previous_semester_id: string | null
           review_daily_budget_minutes: number
           stable_key: string
           starts_on: string | null
@@ -7902,6 +7948,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          archived_at?: string | null
           created_at?: string
           display_name: string
           drive_inbox_folder_id?: string | null
@@ -7913,6 +7960,7 @@ export type Database = {
           drive_root_folder_url?: string | null
           ends_on?: string | null
           id?: string
+          previous_semester_id?: string | null
           review_daily_budget_minutes?: number
           stable_key: string
           starts_on?: string | null
@@ -7923,6 +7971,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          archived_at?: string | null
           created_at?: string
           display_name?: string
           drive_inbox_folder_id?: string | null
@@ -7934,6 +7983,7 @@ export type Database = {
           drive_root_folder_url?: string | null
           ends_on?: string | null
           id?: string
+          previous_semester_id?: string | null
           review_daily_budget_minutes?: number
           stable_key?: string
           starts_on?: string | null
@@ -7942,7 +7992,36 @@ export type Database = {
           user_id?: string
           weekly_checkpoint_minutes?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "study_semesters_previous_owner_fk"
+            columns: ["previous_semester_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_activation_snapshot"
+            referencedColumns: ["semester_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_semesters_previous_owner_fk"
+            columns: ["previous_semester_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_current_capacity"
+            referencedColumns: ["semester_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_semesters_previous_owner_fk"
+            columns: ["previous_semester_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_semester_checkpoint_rotation"
+            referencedColumns: ["semester_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_semesters_previous_owner_fk"
+            columns: ["previous_semester_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_semesters"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
       }
       study_sessions: {
         Row: {
@@ -10723,6 +10802,10 @@ export type Database = {
       diet_p22_maintenance_status: { Args: never; Returns: Json }
       disable_notes_sync_access: { Args: never; Returns: boolean }
       disconnect_thiepn_app: { Args: { p_app_slug: string }; Returns: Json }
+      ensure_thiepn_first_party_app_connection: {
+        Args: { p_app_slug: string; p_client_id: string }
+        Returns: Json
+      }
       execute_thiepn_app_data_deletion: {
         Args: { p_plan_id: string }
         Returns: Json
@@ -11345,6 +11428,10 @@ export type Database = {
       }
       has_library_personal_file_sync_access: { Args: never; Returns: boolean }
       has_notes_sync_access: { Args: never; Returns: boolean }
+      is_thiepn_first_party_oauth_client_for_app: {
+        Args: { p_app_slug: string }
+        Returns: boolean
+      }
       list_notes_auth_sessions: {
         Args: never
         Returns: {
@@ -11599,6 +11686,19 @@ export type Database = {
         Args: { p_app_slugs?: string[] }
         Returns: string
       }
+      resolve_thiepn_first_party_oauth_client: {
+        Args: {
+          p_client_id: string
+          p_client_uri: string
+          p_redirect_uri: string
+          p_scope: string
+        }
+        Returns: Json
+      }
+      resolve_thiepn_first_party_oauth_redirect: {
+        Args: { p_redirect_uri: string }
+        Returns: Json
+      }
       restore_thiepn_tms60_backup: {
         Args: { p_backup_id: string }
         Returns: Json
@@ -11751,6 +11851,26 @@ export type Database = {
         }
         Returns: Json
       }
+      study_record_exam_result: {
+        Args: {
+          p_attempt_no: number
+          p_course_id: string
+          p_decision_priority_snapshot?: number
+          p_exam_at: string
+          p_grade_text?: string
+          p_next_exam_at?: string
+          p_outcome: string
+          p_published_at?: string
+          p_readiness_band_snapshot?: string
+          p_readiness_index_snapshot?: number
+          p_result_status: string
+          p_retake_decision?: string
+          p_score_percent?: number
+          p_source_note?: string
+          p_source_url?: string
+        }
+        Returns: Json
+      }
       study_register_resource: {
         Args: {
           p_content_sha256?: string
@@ -11788,6 +11908,17 @@ export type Database = {
           p_dismiss?: boolean
           p_finding_id: string
           p_resolution_note?: string
+        }
+        Returns: Json
+      }
+      study_rollover_semester: {
+        Args: {
+          p_ends_on?: string
+          p_new_display_name: string
+          p_new_stable_key: string
+          p_source_semester_id: string
+          p_starts_on: string
+          p_timezone?: string
         }
         Returns: Json
       }
@@ -11995,6 +12126,7 @@ export type Database = {
         }
         Returns: Json
       }
+      thiepn_account_access_token_hook: { Args: { event: Json }; Returns: Json }
       thiepn_hub_notes_capture: {
         Args: {
           p_content: string
