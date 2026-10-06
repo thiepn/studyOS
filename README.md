@@ -2,9 +2,9 @@
 
 StudyOS is the WS26/27 retention and exam-readiness system for the THIEPN ecosystem. The application keeps raw university material in a dedicated Google Drive account, structured academic state in Supabase, and daily review/exam-readiness workflows in a Next.js frontend.
 
-## Current phase: P16
+## Current phase: P17
 
-Implemented through P16; the foundation includes:
+Implemented through P17; the foundation includes:
 
 - Next.js 16 App Router + Supabase SSR authentication
 - THIEPN Account shared identity with isolated `study_*` application data
@@ -315,3 +315,21 @@ Persistent/structural P15 cases now move into a controlled method portfolio inst
 - all experiments remain inside the existing P10 study-capacity ceiling.
 
 The next phase is **P17 — Semester Decision Layer, Course-Level Forecasting & Exam Outcome Readiness**.
+
+
+## P17 semester decision layer and outcome readiness
+
+StudyOS now has a cross-course decision layer above the individual learning engines.
+
+- each course receives an evidence-gated StudyOS readiness index, confidence band, uncertainty range, trajectory, and exam runway;
+- the readiness index is explicitly not an exam-score prediction or pass probability;
+- courses with insufficient evidence remain unclassified rather than receiving false precision;
+- readiness combines coverage, durable mastery, exam-ready skills, recent independent success, calibration, and verified timed-paper transfer;
+- P8 risk, P14 drift, and P15 structural failure can conservatively reduce the current readiness call;
+- P16 method response informs strategy/trajectory without becoming fake mastery;
+- P9 remains authoritative in transition/exam mode;
+- every course receives one bounded highest-value next action and a decision-priority score;
+- the new /outlook surface provides a semester-wide decision queue and credit-weighted readiness summary;
+- Today surfaces the highest-priority P17 decision while P10 remains the daily capacity authority.
+
+The next phase is **P18 — Semester Scenario Planning, Capacity Trade-offs & Exam-Period Allocation**.
