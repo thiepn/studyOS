@@ -4,7 +4,7 @@ import { evaluateActivation, type ActivationSnapshot, type PlatformActivation } 
 
 const platform:PlatformActivation={secureOrigin:true,hasSupabaseSecret:true,googleDriveConfigured:true,googleCalendarConfigured:true};
 const snapshot:ActivationSnapshot={
-  course_count:6,major_course_count:4,retake_course_count:2,drive_connected:true,drive_tree_ready:true,
+  course_count:6,major_course_count:4,retake_course_count:2,bootstrap_certified:true,drive_connected:true,drive_tree_ready:true,
   calendar_connected:true,calendar_synced:true,majors_with_timetable:4,retake_baselines_completed:2,
   majors_with_week1_material:4,majors_with_study_map:4,majors_with_attempts:4,
 };
@@ -56,4 +56,11 @@ test("retake-only semester does not require nonexistent major evidence",()=>{
   });
   assert.equal(result.preSemesterReady,true);
   assert.equal(result.firstWeekCertified,true);
+});
+
+
+test("uncertified rollover semester cannot pass P12 activation",()=>{
+  const result=evaluateActivation(platform,{...snapshot,bootstrap_certified:false});
+  assert.equal(result.preSemesterReady,false);
+  assert.ok(result.activationBlockers.some(item=>item.includes("P27")));
 });
