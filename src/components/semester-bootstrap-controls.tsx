@@ -73,7 +73,7 @@ export function BootstrapPriorForm({courses,options}:{courses:Course[];options:P
   return <form className="bootstrap-prior-form" onSubmit={submit}>
     <label><span>Current course</span><select value={courseId} onChange={e=>setCourseId(e.target.value)}>{courses.map(c=><option value={c.courseId} key={c.courseId}>{c.shortName??c.displayName}</option>)}</select></label>
     <label><span>Archived source</span><select value={sourceCourseId} onChange={e=>setSourceCourseId(e.target.value)}>{grouped.map(o=><option value={o.id} key={o.id}>{o.semester_name} · {o.short_name??o.display_name}</option>)}</select></label>
-    <label><span>Relationship</span><select name="relation" defaultValue="prerequisite"><option value="direct_retake">Direct retake</option><option value="prerequisite">Prerequisite</option><option value="related">Related</option></select></label>
+    <label><span>Relationship</span><select name="relation" defaultValue="prerequisite"><option value="direct_retake">Direct retake · same stable key</option><option value="prerequisite">Prerequisite</option><option value="related">Related</option></select></label>
     <label className="wide"><span>Why this prior matters</span><textarea name="note" rows={2} maxLength={1000}/></label>
     <div className="wide button-row"><button className="secondary-button button-reset" disabled={busy}>{busy?"Attaching…":"Attach historical prior"}</button></div>
     {message?<p className="wide form-message">{message}</p>:null}
