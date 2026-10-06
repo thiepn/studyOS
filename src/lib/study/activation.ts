@@ -14,14 +14,15 @@ export type ActivationCourseStatus={
 
 export async function getActivationData(){
   const supabase=await createClient();const {semesterId}=await ensureStudyWorkspace(supabase);const db=supabase as any;
-  const [snapshotResult,coursesResult,baselineResult,driveResult,calendarResult]=await Promise.all([
+  const [snapshotResult,coursesResult,baselineResult,driveResult,calendarResult,semesterResult]=await Promise.all([
     db.from("study_activation_snapshot").select("*").eq("semester_id",semesterId).single(),
     db.from("study_activation_course_status").select("*").eq("semester_id",semesterId).order("sort_order"),
     db.from("study_baseline_summary").select("*").eq("semester_id",semesterId).order("course_id"),
     db.from("study_drive_connections").select("status,google_account_email,root_folder_url,semester_folder_url,inbox_folder_url,last_scan_at,last_scan_status,last_error").maybeSingle(),
     db.from("study_calendar_connections").select("status,google_account_email,last_sync_at,last_sync_status,last_error").maybeSingle(),
+    db.from("study_semesters").select("display_name,starts_on,ends_on,timezone,bootstrap_certified_at").eq("id",semesterId).single(),
   ]);
-  const error=snapshotResult.error||coursesResult.error||baselineResult.error||driveResult.error||calendarResult.error;
+  const error=snapshotResult.error||coursesResult.error||baselineResult.error||driveResult.error||calendarResult.error||semesterResult.error;
   if(error)throw new StudyServiceError("Could not load P12 activation state",error.code||"activation_read_failed",error);
 
   const snapshot=snapshotResult.data as ActivationSnapshot;
@@ -34,6 +35,6 @@ export async function getActivationData(){
     semesterId,server,snapshot,evaluation,
     courses:(coursesResult.data??[]) as ActivationCourseStatus[],
     baselines:baselineResult.data??[],
-    drive:driveResult.data??null,calendar:calendarResult.data??null,
+    drive:driveResult.data??null,calendar:calendarResult.data??null,semester:semesterResult.data,
   };
 }

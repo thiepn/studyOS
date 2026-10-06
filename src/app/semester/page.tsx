@@ -165,7 +165,7 @@ export default async function SemesterPage(){
       <div className="section-heading"><div><p className="eyebrow">Next-semester handoff</p><h2>Evidence-backed changes</h2></div><span>{retrospective.nextSemesterActions.length}</span></div>
       <ol>{retrospective.nextSemesterActions.map(item=><li key={item}>{item}</li>)}</ol>
       <div className="button-row">
-        <Link className="secondary-button" href="/exam-results">Open exam results</Link>
+        <Link className="secondary-button" href="/semester/bootstrap">Semester bootstrap</Link><Link className="secondary-button" href="/exam-results">Open exam results</Link>
         <Link className="secondary-button" href="/quality">Inspect execution quality</Link>
         <Link className="secondary-button" href="/outlook">Review readiness model</Link>
         <Link className="secondary-button" href="/semesters">Semester history</Link>

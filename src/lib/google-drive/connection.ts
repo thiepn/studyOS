@@ -43,14 +43,23 @@ export async function saveDriveConnection(input: {
   if (connectionError) throw new Error(`Could not store Drive connection: ${connectionError.message}`);
 
   if (switchedAccount) {
-    const { data: semester } = await admin.from("study_semesters").select("id").eq("user_id", input.userId).eq("stable_key", "ws26_27").maybeSingle();
+    const { data: semester, error: semesterError } = await admin.from("study_semesters")
+      .select("id").eq("user_id", input.userId).eq("active", true).maybeSingle();
+    if (semesterError) throw new Error(`Could not inspect active semester during Drive account switch: ${semesterError.message}`);
     if (semester?.id) {
-      await admin.from("study_semesters").update({
-        drive_root_folder_id: null, drive_root_folder_url: null, drive_inbox_folder_id: null, drive_inbox_folder_url: null,
+      const { error: semesterResetError } = await admin.from("study_semesters").update({
+        drive_root_folder_id: null, drive_root_folder_url: null,
+        drive_semester_folder_id: null, drive_semester_folder_url: null,
+        drive_inbox_folder_id: null, drive_inbox_folder_url: null,
         drive_last_scan_at: null, drive_last_scan_status: null, drive_last_scan_note: null,
+        bootstrap_certified_at: null,
       }).eq("id", semester.id).eq("user_id", input.userId);
-      await admin.from("study_courses").update({ drive_folder_id: null, drive_folder_url: null, drive_folder_map: {} })
+      if (semesterResetError) throw new Error(`Could not reset active-semester Drive state: ${semesterResetError.message}`);
+
+      const { error: courseResetError } = await admin.from("study_courses")
+        .update({ drive_folder_id: null, drive_folder_url: null, drive_folder_map: {} })
         .eq("semester_id", semester.id).eq("user_id", input.userId);
+      if (courseResetError) throw new Error(`Could not reset active-semester course Drive state: ${courseResetError.message}`);
     }
   }
 }
@@ -66,4 +75,9 @@ export async function disconnectDrive(userId: string) {
     last_error: null,
   }).eq("user_id", userId);
   if (error) throw new Error(`Could not disconnect Drive: ${error.message}`);
+
+  const { error: certificationError } = await admin.from("study_semesters")
+    .update({ bootstrap_certified_at: null, updated_at: new Date().toISOString() })
+    .eq("user_id", userId).eq("active", true);
+  if (certificationError) throw new Error(`Could not invalidate semester bootstrap after Drive disconnect: ${certificationError.message}`);
 }

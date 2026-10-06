@@ -16,15 +16,16 @@ export type BaselineSkill={
 export async function getBaselineDiagnostic(courseId:string){
   if(!UUID.test(courseId))throw new StudyServiceError("Invalid course ID","invalid_course");
   const supabase=await createClient();const {semesterId}=await ensureStudyWorkspace(supabase);const db=supabase as any;
-  const [courseResult,skillsResult,questionsResult,diagResult,resultsResult,summaryResult]=await Promise.all([
+  const [courseResult,skillsResult,questionsResult,diagResult,resultsResult,summaryResult,priorResult]=await Promise.all([
     db.from("study_courses").select("id,stable_key,display_name,short_name,course_kind").eq("id",courseId).eq("semester_id",semesterId).single(),
     db.from("study_skills").select("id,title,description,skill_kind,created_at").eq("course_id",courseId).eq("active",true).order("created_at"),
     db.from("study_questions").select("id,primary_skill_id,prompt,answer_key_or_rubric,question_type,origin,created_at").eq("course_id",courseId).eq("active",true).order("created_at"),
     db.from("study_baseline_diagnostics").select("*").eq("course_id",courseId).maybeSingle(),
     db.from("study_baseline_results").select("skill_id,classification,confidence,note,classified_at").eq("course_id",courseId),
     db.from("study_baseline_summary").select("*").eq("course_id",courseId).maybeSingle(),
+    db.from("study_course_historical_priors").select("id,relation,note,source_snapshot").eq("course_id",courseId).order("created_at"),
   ]);
-  const error=courseResult.error||skillsResult.error||questionsResult.error||diagResult.error||resultsResult.error||summaryResult.error;
+  const error=courseResult.error||skillsResult.error||questionsResult.error||diagResult.error||resultsResult.error||summaryResult.error||priorResult.error;
   if(error)throw new StudyServiceError("Could not load baseline diagnostic",error.code||"baseline_read_failed",error);
   if(courseResult.data.course_kind!=="retake")throw new StudyServiceError("Baseline diagnostics are only for retake courses","invalid_course");
 
@@ -39,7 +40,7 @@ export async function getBaselineDiagnostic(courseId:string){
     id:skill.id,title:skill.title,description:skill.description,skill_kind:skill.skill_kind,
     question:questionBySkill.get(skill.id)??null,result:resultBySkill.get(skill.id)??null,
   }));
-  return {course:courseResult.data,diagnostic:diagResult.data??null,summary:summaryResult.data??null,skills};
+  return {course:courseResult.data,diagnostic:diagResult.data??null,summary:summaryResult.data??null,skills,priors:priorResult.data??[]};
 }
 
 export async function startBaseline(courseId:string){

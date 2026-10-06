@@ -17,7 +17,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
     <main className="shell">
       <header className="header">
         <div>
-          <p className="eyebrow">{c.course_kind} · WS26/27</p>
+          <p className="eyebrow">{c.course_kind} · active semester</p>
           <h1>{c.display_name}</h1>
           <p className="muted course-subline">
             {[c.professor, c.credits ? `${c.credits} ECTS` : null, c.exam_at ? `Exam ${new Date(c.exam_at).toLocaleDateString()}` : null].filter(Boolean).join(" · ") || "Course details not configured yet."}

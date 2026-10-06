@@ -109,6 +109,12 @@ export async function commitWeeklyPlan(input:{objective:string;capacityMinutes?:
   const supabase=await createClient();
   const {semesterId,userId}=await ensureStudyWorkspace(supabase);
   const db=supabase as any;
+  const bootstrapResult=await db.from("study_semesters").select("bootstrap_certified_at").eq("id",semesterId).single();
+  if(bootstrapResult.error)throw new StudyServiceError("Could not inspect semester bootstrap state",bootstrapResult.error.code||"semester_bootstrap_read_failed",bootstrapResult.error);
+  if(!bootstrapResult.data?.bootstrap_certified_at)throw new StudyServiceError(
+    "Finish P27 semester bootstrap before committing a weekly study plan.",
+    "invalid_semester_bootstrap",
+  );
   const existingResult=await db.from("study_week_plans").select("*")
     .eq("user_id",userId).eq("semester_id",semesterId).eq("period_ends_on",envelope.periodEndsOn).maybeSingle();
   if(existingResult.error)throw new StudyServiceError("Could not inspect weekly commitment",existingResult.error.code||"week_plan_read_failed",existingResult.error);

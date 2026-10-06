@@ -43,7 +43,7 @@ export async function scanDrive(userId: string) {
   const admin = createAdminClient();
   const [{ data: connection, error: connectionError }, { data: semester, error: semesterError }] = await Promise.all([
     admin.from("study_drive_connections").select("inbox_folder_id,status").eq("user_id", userId).single(),
-    admin.from("study_semesters").select("id,drive_inbox_folder_id").eq("user_id", userId).eq("stable_key", "ws26_27").single(),
+    admin.from("study_semesters").select("id,drive_inbox_folder_id").eq("user_id", userId).eq("active", true).single(),
   ]);
   if (connectionError || !connection || connection.status !== "connected") throw new Error("Google Drive is not connected");
   if (semesterError || !semester?.drive_inbox_folder_id) throw new Error("Semester Drive tree is not set up");

@@ -69,6 +69,12 @@ export default async function TodayPage() {
         </div>
       </section>
 
+      {!orchestration.bootstrapCertified ? <section className="panel bootstrap-today-warning">
+        <div className="section-heading"><div><p className="eyebrow">P27 · semester bootstrap</p><h2>Discretionary planning is paused</h2></div><span>setup required</span></div>
+        <p>The active semester has not been bootstrap-certified. Real commitments remain visible, but StudyOS will not generate normal course/review work from an unanchored curriculum.</p>
+        <div className="button-row"><Link className="primary-button" href="/semester/bootstrap">Finish semester bootstrap</Link></div>
+      </section> : null}
+
       <DailyPlan plan={plan} />
 
       {pendingRetake||resultReady ? <section className={"panel exam-result-today "+(pendingRetake?"retake-pending":"result-ready")}>

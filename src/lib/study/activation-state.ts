@@ -1,5 +1,5 @@
 export type ActivationSnapshot={
-  course_count:number;major_course_count:number;retake_course_count:number;
+  course_count:number;major_course_count:number;retake_course_count:number;bootstrap_certified:boolean;
   drive_connected:boolean;drive_tree_ready:boolean;calendar_connected:boolean;calendar_synced:boolean;
   majors_with_timetable:number;retake_baselines_completed:number;majors_with_week1_material:number;
   majors_with_study_map:number;majors_with_attempts:number;
@@ -25,20 +25,21 @@ export function evaluateActivation(platform:PlatformActivation,snapshot:Activati
   const platformBlockers=platformChecks.filter(([ok])=>!ok).map(([,message])=>message);
 
   const activationChecks=[
-    [snapshot.course_count===6&&snapshot.major_course_count===4&&snapshot.retake_course_count===2,"Initialize the six WS26/27 courses."],
+    [snapshot.bootstrap_certified,"Complete and certify P27 new-semester bootstrap."],
+    [snapshot.course_count>0,"Add the real courses for the active semester."],
     [snapshot.drive_connected,"Connect the intended Study Drive Google account."],
-    [snapshot.drive_tree_ready,"Provision the WS26/27 Drive root, inbox, and course folders."],
+    [snapshot.drive_tree_ready,"Provision the active-semester Drive folder, inbox, and course folders."],
     [snapshot.calendar_connected,"Connect the intended Study Calendar Google account."],
     [snapshot.calendar_synced,"Sync the Study Calendar successfully."],
-    [snapshot.majors_with_timetable===4,"Map at least one real timetable event to each of the four major courses."],
-    [snapshot.retake_baselines_completed===2,"Complete the EiP and Mikro baseline diagnostics."],
+    [snapshot.major_course_count===0||snapshot.majors_with_timetable>=snapshot.major_course_count,"Map at least one real timetable event to every major course."],
+    [snapshot.retake_course_count===0||snapshot.retake_baselines_completed>=snapshot.retake_course_count,"Complete a fresh baseline diagnostic for every retake course."],
   ] as const;
   const activationBlockers=activationChecks.filter(([ok])=>!ok).map(([,message])=>message);
 
   const firstWeekChecks=[
-    [snapshot.majors_with_week1_material===4,"Process at least one verified Week-1 source for every major course."],
-    [snapshot.majors_with_study_map===4,"Produce at least one active skill and review question for every major course."],
-    [snapshot.majors_with_attempts===4,"Record at least one real retrieval/practice attempt in every major course."],
+    [snapshot.major_course_count===0||snapshot.majors_with_week1_material>=snapshot.major_course_count,"Process at least one verified Week-1 source for every major course."],
+    [snapshot.major_course_count===0||snapshot.majors_with_study_map>=snapshot.major_course_count,"Produce at least one active skill and review question for every major course."],
+    [snapshot.major_course_count===0||snapshot.majors_with_attempts>=snapshot.major_course_count,"Record at least one real retrieval/practice attempt in every major course."],
   ] as const;
   const firstWeekBlockers=firstWeekChecks.filter(([ok])=>!ok).map(([,message])=>message);
 
