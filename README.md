@@ -2,9 +2,9 @@
 
 StudyOS is the WS26/27 retention and exam-readiness system for the THIEPN ecosystem. The application keeps raw university material in a dedicated Google Drive account, structured academic state in Supabase, and daily review/exam-readiness workflows in a Next.js frontend.
 
-## Current phase: P26
+## Current phase: P27
 
-Implemented through P26; the foundation includes:
+Implemented through P27; the foundation includes:
 
 - Next.js 16 App Router + Supabase SSR authentication
 - THIEPN Account shared identity with isolated `study_*` application data
@@ -539,3 +539,26 @@ StudyOS can now transition cleanly from one semester to the next.
 - P26 version is 0.24.0.
 
 The next phase is **P27 — New-Semester Course Intake, Curriculum Bootstrap & Historical Prior Transfer**.
+
+
+## P27 new-semester course intake, curriculum bootstrap and historical priors
+
+StudyOS can now turn a clean P26 rollover workspace into an operational semester without restoring stale mastery.
+
+- /semester/bootstrap provides active-semester course intake and certification;
+- study_create_course generalizes course creation beyond the fixed WS26/27 roster;
+- Drive provisioning and scanning now resolve the active semester rather than ws26_27;
+- the active semester owns its own semester-folder and inbox pointers;
+- study_course_historical_priors stores explicit archived-course relationships with owner-only RLS;
+- direct carried retakes receive a same-key historical prior automatically;
+- archived result/readiness/error context is advisory only and never restores mastery;
+- historical priors are surfaced in retake diagnostics to prioritize what should be re-checked;
+- every current course still needs fresh verified source material, active skills, and active questions;
+- every retake needs a fresh baseline;
+- study_certify_semester_bootstrap validates the bootstrap contract in the database;
+- uncertified rollover semesters retain real commitments but block ordinary discretionary P10 work and P19 weekly-plan commitment;
+- P12 activation now scales to the actual semester roster instead of assuming six courses / four majors / two retakes;
+- the already-operational pre-P26 semester is grandfathered as certified to avoid a deployment regression;
+- version 0.25.0.
+
+The next phase is **P28 — Cross-Semester Transfer Validation, Prior Calibration & Longitudinal Learning Profile**.
