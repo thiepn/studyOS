@@ -14,8 +14,8 @@ function signed(value:number|null){
   if(value==null)return "—";
   return value>0?"+"+value:String(value);
 }
-function dueLabel(iso:string){
-  return new Date(iso).toLocaleString("en-GB",{dateStyle:"medium",timeStyle:"short"});
+function dueLabel(iso:string,timezone:string){
+  return new Date(iso).toLocaleString("en-GB",{dateStyle:"medium",timeStyle:"short",timeZone:timezone});
 }
 
 export default async function HandoffPage(){
@@ -80,14 +80,14 @@ export default async function HandoffPage(){
         <h3>{data.previousEnded?"Carried unresolved obligations":"Currently open before next Monday"}</h3>
         {data.carryoverCommitments.map(item=><article key={item.id}>
           <div><strong>{item.title}</strong><span>{fmt(Number(item.estimated_minutes))}</span></div>
-          <small>{item.course_short_name??item.course_name??"General"} · due {dueLabel(item.due_at)} · priority {item.priority}/5</small>
+          <small>{item.course_short_name??item.course_name??"General"} · due {dueLabel(item.due_at,data.timezone)} · priority {item.priority}/5</small>
         </article>)}
       </div>:<p className="muted">No unresolved commitment currently crosses into the next week.</p>}
       {data.dueInTargetCommitments.length?<div className="handoff-obligation-group">
         <h3>Due during {data.targetStart} → {data.targetEnd}</h3>
         {data.dueInTargetCommitments.map(item=><article key={item.id}>
           <div><strong>{item.title}</strong><span>{fmt(Number(item.estimated_minutes))}</span></div>
-          <small>{item.course_short_name??item.course_name??"General"} · due {dueLabel(item.due_at)} · priority {item.priority}/5</small>
+          <small>{item.course_short_name??item.course_name??"General"} · due {dueLabel(item.due_at,data.timezone)} · priority {item.priority}/5</small>
         </article>)}
       </div>:null}
     </section>
