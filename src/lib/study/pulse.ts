@@ -6,7 +6,7 @@ import { queueMinutes } from "./queue";
 import type { StudyQuestion } from "./types";
 
 export type CourseRiskRow = {
-  course_id: string; display_name: string; short_name: string | null; course_kind: string;
+  course_id: string; stable_key: string; display_name: string; short_name: string | null; course_kind: string;
   total_skills: number; tested_skills: number; due_or_at_risk_skills: number; overdue_7d_skills: number;
   relearning_skills: number; recent_lapse_skills: number; avg_retention_pressure: number;
   independent_success_percent_28d: number | null; actionable_backlog: number; unresolved_errors: number;
