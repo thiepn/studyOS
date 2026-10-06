@@ -1,4 +1,4 @@
-import { buildScenario, type ScenarioCourse, type ScenarioObjective } from "./scenario";
+import { buildScenario, type ScenarioCourse, type ScenarioObjective } from "./scenario.ts";
 
 export type WeeklyPaceStatus="not_started"|"ahead"|"on_track"|"behind"|"met";
 
