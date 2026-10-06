@@ -102,7 +102,10 @@ export async function getSemesterBootstrapData(){
 }
 
 export async function createBootstrapCourse(value:unknown){
-  const input=parseBootstrapCourseDraft(value);
+  let input:ReturnType<typeof parseBootstrapCourseDraft>;
+  try{input=parseBootstrapCourseDraft(value);}
+  catch(error){throw new StudyServiceError(error instanceof Error?error.message:"Invalid course payload","invalid_semester_bootstrap_course",error);}
+
   const supabase=await createClient();await ensureStudyWorkspace(supabase);
   const {data,error}=await (supabase.rpc as any)("study_create_course",{
     p_stable_key:input.stableKey,p_display_name:input.displayName,p_short_name:input.shortName,
