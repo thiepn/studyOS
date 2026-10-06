@@ -798,33 +798,6 @@ export type Database = {
         }
         Relationships: []
       }
-      go_user_state: {
-        Row: {
-          client_updated_at: number
-          payload: Json
-          revision: number
-          schema_version: number
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          client_updated_at?: number
-          payload?: Json
-          revision?: number
-          schema_version?: number
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          client_updated_at?: number
-          payload?: Json
-          revision?: number
-          schema_version?: number
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       goal_phases: {
         Row: {
           active: boolean
@@ -10317,20 +10290,6 @@ export type Database = {
         Args: { p_expected_user_id: string }
         Returns: Json
       }
-      diet_app_complete_onboarding: {
-        Args: {
-          p_calorie_target: number
-          p_current_weight: number
-          p_desired_weekly_weight_change: number
-          p_fiber_target: number
-          p_goal_mode: string
-          p_goal_weight: number
-          p_protein_target: number
-          p_request_id: string
-          p_start_date: string
-        }
-        Returns: Json
-      }
       diet_app_delete_meal: {
         Args: {
           p_expected_updated_at: string
@@ -10602,14 +10561,6 @@ export type Database = {
       get_thiepn_hub_tms60_consent: {
         Args: { p_translation: string }
         Returns: Json
-      }
-      go_sync_write: {
-        Args: {
-          p_client_updated_at: number
-          p_expected_revision: number
-          p_payload: Json
-        }
-        Returns: number
       }
       gomoku_admin_assert_operator: {
         Args: { p_roles?: string[]; p_user_id: string }
@@ -12281,3 +12232,29 @@ export const Constants = {
     },
   },
 } as const
+
+
+export type StudyAttemptResult = Database["public"]["Enums"]["study_attempt_result"];
+export type StudyIndependence = Database["public"]["Enums"]["study_independence"];
+export type StudyErrorType = Database["public"]["Enums"]["study_error_type"];
+export type StudyEvidenceDimension = Database["public"]["Enums"]["study_evidence_dimension"];
+export type StudyMasteryState = Database["public"]["Enums"]["study_mastery_state"];
+export type StudyCourseKind = Database["public"]["Enums"]["study_course_kind"];
+export type StudySkillKind = Database["public"]["Enums"]["study_skill_kind"];
+export type StudyQuestionType = Database["public"]["Enums"]["study_question_type"];
+export type StudyResourceType = Database["public"]["Enums"]["study_resource_type"];
+export type StudySourceAuthority = Database["public"]["Enums"]["study_source_authority"];
+export type StudyProcessingStatus = Database["public"]["Enums"]["study_processing_status"];
+export type StudySessionType = Database["public"]["Enums"]["study_session_type"];
+export type StudyExamAnswerStatus = Database["public"]["Enums"]["study_exam_answer_status"];
+export type StudyExamSimulationStatus = Database["public"]["Enums"]["study_exam_simulation_status"];
+export type StudyExamGradingStatus = Database["public"]["Enums"]["study_exam_grading_status"];
+export type StudyCapacityMode = Database["public"]["Enums"]["study_capacity_mode"];
+export type StudyCommitmentKind = Database["public"]["Enums"]["study_commitment_kind"];
+export type StudyCommitmentStatus = Database["public"]["Enums"]["study_commitment_status"];
+export type StudyCalendarEventRole = Database["public"]["Enums"]["study_calendar_event_role"];
+export type StudyScheduledBlockStatus = Database["public"]["Enums"]["study_scheduled_block_status"];
+export type StudyBaselineStatus = Database["public"]["Enums"]["study_baseline_status"];
+export type StudyBaselineClassification = Database["public"]["Enums"]["study_baseline_classification"];
+export type StudyWeekHealthStatus = "empty" | "needs_processing" | "source_only" | "learning" | "fragile" | "retained";
+export type StudyIntakeStatus = "discovered" | "classified" | "candidate" | "registered" | "needs_review" | "ignored" | "failed";
