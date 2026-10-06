@@ -5258,6 +5258,231 @@ export type Database = {
           },
         ]
       }
+      study_course_historical_priors: {
+        Row: {
+          course_id: string
+          created_at: string
+          id: string
+          note: string | null
+          relation: string
+          semester_id: string
+          source_course_id: string
+          source_semester_id: string
+          source_snapshot: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          relation: string
+          semester_id: string
+          source_course_id: string
+          source_semester_id: string
+          source_snapshot?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          id?: string
+          note?: string | null
+          relation?: string
+          semester_id?: string
+          source_course_id?: string
+          source_semester_id?: string
+          source_snapshot?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_course_historical_priors_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_course_historical_priors_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_course_historical_priors_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_configuration"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_course_historical_priors_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_operating_mode"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_course_historical_priors_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_progress"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_course_historical_priors_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_risk"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_course_historical_priors_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_courses"
+            referencedColumns: ["id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_course_historical_priors_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_course_historical_priors_course_owner_fk"
+            columns: ["course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_course_historical_priors_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_activation_snapshot"
+            referencedColumns: ["semester_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_course_historical_priors_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_current_capacity"
+            referencedColumns: ["semester_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_course_historical_priors_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_semester_checkpoint_rotation"
+            referencedColumns: ["semester_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_course_historical_priors_semester_owner_fk"
+            columns: ["semester_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_semesters"
+            referencedColumns: ["id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_course_historical_priors_source_course_owner_fk"
+            columns: ["source_course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_course_historical_priors_source_course_owner_fk"
+            columns: ["source_course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_course_historical_priors_source_course_owner_fk"
+            columns: ["source_course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_configuration"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_course_historical_priors_source_course_owner_fk"
+            columns: ["source_course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_operating_mode"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_course_historical_priors_source_course_owner_fk"
+            columns: ["source_course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_progress"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_course_historical_priors_source_course_owner_fk"
+            columns: ["source_course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_risk"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_course_historical_priors_source_course_owner_fk"
+            columns: ["source_course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_courses"
+            referencedColumns: ["id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_course_historical_priors_source_course_owner_fk"
+            columns: ["source_course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_course_historical_priors_source_course_owner_fk"
+            columns: ["source_course_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_course_historical_priors_source_semester_owner_fk"
+            columns: ["source_semester_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_activation_snapshot"
+            referencedColumns: ["semester_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_course_historical_priors_source_semester_owner_fk"
+            columns: ["source_semester_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_current_capacity"
+            referencedColumns: ["semester_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_course_historical_priors_source_semester_owner_fk"
+            columns: ["source_semester_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_semester_checkpoint_rotation"
+            referencedColumns: ["semester_id", "user_id"]
+          },
+          {
+            foreignKeyName: "study_course_historical_priors_source_semester_owner_fk"
+            columns: ["source_semester_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "study_semesters"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
       study_course_workflow_settings: {
         Row: {
           checkpoint_budget_minutes: number
@@ -7926,6 +8151,7 @@ export type Database = {
         Row: {
           active: boolean
           archived_at: string | null
+          bootstrap_certified_at: string | null
           created_at: string
           display_name: string
           drive_inbox_folder_id: string | null
@@ -7935,6 +8161,8 @@ export type Database = {
           drive_last_scan_status: string | null
           drive_root_folder_id: string | null
           drive_root_folder_url: string | null
+          drive_semester_folder_id: string | null
+          drive_semester_folder_url: string | null
           ends_on: string | null
           id: string
           previous_semester_id: string | null
@@ -7949,6 +8177,7 @@ export type Database = {
         Insert: {
           active?: boolean
           archived_at?: string | null
+          bootstrap_certified_at?: string | null
           created_at?: string
           display_name: string
           drive_inbox_folder_id?: string | null
@@ -7958,6 +8187,8 @@ export type Database = {
           drive_last_scan_status?: string | null
           drive_root_folder_id?: string | null
           drive_root_folder_url?: string | null
+          drive_semester_folder_id?: string | null
+          drive_semester_folder_url?: string | null
           ends_on?: string | null
           id?: string
           previous_semester_id?: string | null
@@ -7972,6 +8203,7 @@ export type Database = {
         Update: {
           active?: boolean
           archived_at?: string | null
+          bootstrap_certified_at?: string | null
           created_at?: string
           display_name?: string
           drive_inbox_folder_id?: string | null
@@ -7981,6 +8213,8 @@ export type Database = {
           drive_last_scan_status?: string | null
           drive_root_folder_id?: string | null
           drive_root_folder_url?: string | null
+          drive_semester_folder_id?: string | null
+          drive_semester_folder_url?: string | null
           ends_on?: string | null
           id?: string
           previous_semester_id?: string | null
@@ -11687,16 +11921,15 @@ export type Database = {
         Returns: string
       }
       resolve_thiepn_first_party_oauth_client: {
-        Args: {
-          p_client_id: string
-          p_client_uri: string
-          p_redirect_uri: string
-          p_scope: string
-        }
+        Args: { p_client_id: string; p_redirect_uri: string; p_scope: string }
         Returns: Json
       }
       resolve_thiepn_first_party_oauth_redirect: {
         Args: { p_redirect_uri: string }
+        Returns: Json
+      }
+      resolve_thiepn_first_party_sso_probe: {
+        Args: { p_client_id: string }
         Returns: Json
       }
       restore_thiepn_tms60_backup: {
@@ -11746,7 +11979,17 @@ export type Database = {
         }
         Returns: Json
       }
+      study_attach_historical_prior: {
+        Args: {
+          p_course_id: string
+          p_note?: string
+          p_relation: string
+          p_source_course_id: string
+        }
+        Returns: Json
+      }
       study_candidate_has_anchor: { Args: { p_source: Json }; Returns: boolean }
+      study_certify_semester_bootstrap: { Args: never; Returns: Json }
       study_classify_baseline_skill: {
         Args: {
           p_classification: Database["public"]["Enums"]["study_baseline_classification"]
@@ -11772,6 +12015,27 @@ export type Database = {
         }
         Returns: string
       }
+      study_create_course: {
+        Args: {
+          p_checkpoint_weight?: number
+          p_course_kind?: string
+          p_credits?: number
+          p_display_name: string
+          p_exam_at?: string
+          p_exam_duration_minutes?: number
+          p_exam_format?: string
+          p_expected_lectures_per_week?: number
+          p_expects_exercise?: boolean
+          p_expects_solution?: boolean
+          p_lecture_retrieval_target_hours?: number
+          p_professor?: string
+          p_short_name?: string
+          p_solution_reconcile_target_hours?: number
+          p_sort_order?: number
+          p_stable_key: string
+        }
+        Returns: Json
+      }
       study_finish_exam_simulation: {
         Args: {
           p_completed_at?: string
@@ -11794,6 +12058,10 @@ export type Database = {
           p_self_confidence?: number
           p_simulation_id: string
         }
+        Returns: Json
+      }
+      study_historical_prior_snapshot: {
+        Args: { p_source_course_id: string }
         Returns: Json
       }
       study_initialize_ws2627: { Args: never; Returns: Json }
@@ -11890,6 +12158,10 @@ export type Database = {
       }
       study_reject_ingestion_run: {
         Args: { p_reason?: string; p_run_id: string }
+        Returns: Json
+      }
+      study_remove_historical_prior: {
+        Args: { p_prior_id: string }
         Returns: Json
       }
       study_required_evidence_floor: {
