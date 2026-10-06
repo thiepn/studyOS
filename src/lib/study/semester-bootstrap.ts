@@ -113,3 +113,8 @@ export function historicalPriorUse(relation:BootstrapRelation){
   if(relation==="prerequisite")return "Use prerequisite weaknesses only to prioritize diagnostic coverage. Current-semester evidence remains authoritative.";
   return "Use this related course as advisory context only; do not infer retained mastery.";
 }
+
+
+export function bootstrapAllowsCandidate(certified:boolean,kind:string){
+  return certified||kind==="commitment";
+}
