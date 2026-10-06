@@ -8,17 +8,21 @@ export async function getTodayData(): Promise<TodayData> {
   const supabase = await createClient();
   const { semesterId } = await ensureStudyWorkspace(supabase);
 
-  const [semesterResult, capacityResult, courseResult, dueResult] = await Promise.all([
+  const [semesterResult, capacityResult, courseResult, dueResult, operatingModeResult] = await Promise.all([
     supabase.from("study_semesters").select("review_daily_budget_minutes").eq("id", semesterId).single(),
     (supabase as any).from("study_current_capacity").select("effective_review_budget_minutes").eq("semester_id", semesterId).maybeSingle(),
     supabase.from("study_course_progress").select("*").eq("semester_id", semesterId).order("sort_order"),
     supabase.from("study_due_skills").select("*").eq("semester_id", semesterId).eq("is_due", true).order("priority_score", { ascending: false }),
+    supabase.from("study_course_operating_mode").select("course_id,operating_mode").eq("semester_id", semesterId),
   ]);
 
-  const error = semesterResult.error || capacityResult.error || courseResult.error || dueResult.error;
+  const error = semesterResult.error || capacityResult.error || courseResult.error || dueResult.error || operatingModeResult.error;
   if (error) throw new StudyServiceError("Could not load Semester OS state", error.code || "study_read_failed", error);
 
-  const dueSkills = (dueResult.data ?? []) as DueSkill[];
+  const postExamCourses = new Set(
+    (operatingModeResult.data ?? []).filter((row) => row.operating_mode === "post_exam").map((row) => row.course_id)
+  );
+  const dueSkills = ((dueResult.data ?? []) as DueSkill[]).filter((row) => !row.course_id || !postExamCourses.has(row.course_id));
   const skillIds = dueSkills.flatMap((row) => row.skill_id ? [row.skill_id] : []);
   let questions: StudyQuestion[] = [];
   if (skillIds.length) {

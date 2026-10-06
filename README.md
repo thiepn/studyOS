@@ -2,9 +2,9 @@
 
 StudyOS is the WS26/27 retention and exam-readiness system for the THIEPN ecosystem. The application keeps raw university material in a dedicated Google Drive account, structured academic state in Supabase, and daily review/exam-readiness workflows in a Next.js frontend.
 
-## Current phase: P22
+## Current phase: P23
 
-Implemented through P22; the foundation includes:
+Implemented through P23; the foundation includes:
 
 - Next.js 16 App Router + Supabase SSR authentication
 - THIEPN Account shared identity with isolated `study_*` application data
@@ -444,3 +444,27 @@ StudyOS can now coordinate several simultaneous P9 exam strategies without creat
 - P22 adds no database schema or authorization surface.
 
 The next phase is **P23 — Exam-Day Operations, Post-Exam Closure & Cross-Exam Recovery**.
+
+
+## P23 exam-day operations, post-exam closure and cross-exam recovery
+
+StudyOS now handles the operational boundary around each configured semester exam.
+
+- exam start and scheduled exam end are treated as separate boundaries;
+- pre-exam discretionary work freezes as soon as the exam starts;
+- explicit real commitments for that course remain intact;
+- post-exam course skills are removed from the active retention queue;
+- closure becomes eligible only after the configured exam duration has ended;
+- the first 4 hours after an exam create a full competing-exam recovery shield;
+- hours 4–12 allow lighter exam work but continue to block heavy actions;
+- P22 resumes normal multi-exam pressure after the recovery window;
+- /exam-day exposes exam state, weekly release, calendar cleanup and recovery;
+- closing an exam cancels obsolete StudyOS-owned calendar blocks through the existing P11 cancellation path;
+- unused active P19 course minutes are released down to credited work rather than carried as debt;
+- if another exam is inside a compressed runway, the released weekly capacity is rebalanced under the existing exam-period objective;
+- the total P19 course budget cannot expand during closure;
+- P19 records exam_closure:<course_id> as the rebalance reason for auditability;
+- Today surfaces only active/recent exam-boundary states and unresolved releases;
+- P23 adds no new database schema or authorization surface.
+
+The next phase is **P24 — Exam Result Intake, Outcome Reconciliation & Retake/Completion Decisions**.

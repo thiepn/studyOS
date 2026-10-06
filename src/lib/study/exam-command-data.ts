@@ -39,10 +39,10 @@ export async function getExamCommandCenterData(){
     const base=Math.max(0,Math.min(hardBudget,calendarCap));
     const review=Math.min(base,index===0?Number(orchestration.capacity.effective_review_budget_minutes):futureReview);
     const commitmentReserve=Number(day.commitmentMinutes)+(index===0?overdueToday:0);
-    return {
-      date:day.date,
-      availableMinutes:Math.max(0,base-review-Math.min(Math.max(0,base-review),commitmentReserve)),
-    };
+    let available=Math.max(0,base-review-Math.min(Math.max(0,base-review),commitmentReserve));
+    if(index===0&&(orchestration.examOperations.inProgress.length||orchestration.examOperations.recoveryLevel==="full"))available=0;
+    else if(index===0&&orchestration.examOperations.recoveryLevel==="light")available=Math.min(available,60);
+    return {date:day.date,availableMinutes:available};
   });
 
   const sourceCourses:ExamCommandInputCourse[]=orchestration.examCommand.courses.map(course=>({
@@ -66,5 +66,7 @@ export async function getExamCommandCenterData(){
     totalDailyBudget:Number(orchestration.capacity.total_budget_minutes),
     reviewReserveToday:Number(orchestration.capacity.effective_review_budget_minutes),
     overdueCommitmentMinutesToday:overdueToday,
+    p23RecoveryLevel:orchestration.examOperations.recoveryLevel,
+    p23ExamInProgress:orchestration.examOperations.inProgress.length>0,
   };
 }
