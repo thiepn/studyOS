@@ -155,18 +155,27 @@ export async function commitWeeklyPlan(input:{objective:string;capacityMinutes?:
   return {planId:plan.id,scenario};
 }
 
-export async function applyWeeklyRebalance(planId:string){
+export async function applyWeeklyRebalance(planId:string,objectiveOverride?:ScenarioObjective){
   if(!planId)throw new StudyServiceError("Weekly plan ID is required","invalid_week_plan_id");
   const data=await getWeeklyCommitmentData();
   const runtime=data.runtime;
   if(!runtime||runtime.plan.id!==planId)throw new StudyServiceError("Active weekly plan not found","invalid_week_plan_id");
-  if(!data.proposal?.material)return {changed:false,reason:"no_change"};
+  const objective=objectiveOverride??runtime.plan.objective as ScenarioObjective;
+  const proposal=objectiveOverride
+    ?buildRollingProposal({
+      objective,committedCourseBudgetMinutes:Number(runtime.plan.course_budget_minutes),
+      currentRemainingCourseCapacityMinutes:data.envelope.courseBudgetMinutes,
+      allocations:runtime.allocations,completion:runtime.completion,currentCourses:data.scenarioData.courses,
+      progress:runtime.progress,floorAdjustments:data.scenarioData.calibration.floorAdjustments,
+    })
+    :data.proposal;
+  if(!proposal?.material)return {changed:false,reason:"no_change"};
 
   const supabase=await createClient();
   const {userId}=await ensureStudyWorkspace(supabase);
   const db=supabase as any;
   const currentCourseMap=new Map(data.scenarioData.courses.map(course=>[course.courseId,course]));
-  for(const row of data.proposal.courses){
+  for(const row of proposal.courses){
     const current=currentCourseMap.get(row.courseId);
     const update=await db.from("study_week_allocations").update({
       target_minutes:row.proposedTargetMinutes,
@@ -180,17 +189,18 @@ export async function applyWeeklyRebalance(planId:string){
   }
   const now=new Date().toISOString();
   const planUpdate=await db.from("study_week_plans").update({
-    course_budget_minutes:data.proposal.proposedCourseBudgetMinutes,
-    revision:Number(runtime.plan.revision)+1,last_rebalanced_at:now,last_rebalance_reason:data.proposal.reason,
+    objective,
+    course_budget_minutes:proposal.proposedCourseBudgetMinutes,
+    revision:Number(runtime.plan.revision)+1,last_rebalanced_at:now,last_rebalance_reason:proposal.reason,
     scenario_snapshot:snapshot(data.scenarioData,buildScenario({
-      weeklyCapacityMinutes:data.proposal.feasibleRemainingMinutes,mandatoryCommitmentMinutes:0,retentionReserveMinutes:0,
-      objective:runtime.plan.objective as ScenarioObjective,courses:data.scenarioData.courses,
+      weeklyCapacityMinutes:proposal.feasibleRemainingMinutes,mandatoryCommitmentMinutes:0,retentionReserveMinutes:0,
+      objective,courses:data.scenarioData.courses,
       completedCourseMinutes:Object.fromEntries(runtime.completion.map(row=>[row.courseId,Math.min(row.creditedMinutes,runtime.allocations.find(a=>a.courseId===row.courseId)?.targetMinutes??row.creditedMinutes)])),
       floorAdjustments:data.scenarioData.calibration.floorAdjustments,
     })),
   }).eq("id",planId).eq("user_id",userId);
   if(planUpdate.error)throw new StudyServiceError("Could not finalize weekly reallocation",planUpdate.error.code||"week_rebalance_failed",planUpdate.error);
-  return {changed:true,reason:data.proposal.reason};
+  return {changed:true,reason:proposal.reason};
 }
 
 export async function cancelWeeklyPlan(planId:string){
