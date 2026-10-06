@@ -245,8 +245,9 @@ export function buildSemesterCompletionLedger(input:{
 
   const pendingResults=summary.provisionalCourses+summary.awaitingResultCourses;
   const retakes=summary.retakePendingCourses+summary.retakePlannedCourses;
+  const semesterEnded=Boolean(input.semester.endsOn&&input.today>input.semester.endsOn);
   let status:SemesterReviewStatus="in_progress";
-  if(summary.inactiveUnresolvedCourses>0)status="incomplete_data";
+  if(summary.inactiveUnresolvedCourses>0||(semesterEnded&&summary.ongoingCourses>0))status="incomplete_data";
   else if(pendingResults>0)status="results_pending";
   else if(retakes>0)status="retakes_open";
   else if(summary.totalCourses>0&&summary.terminalCourses===summary.totalCourses)status="complete";
