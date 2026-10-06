@@ -74,6 +74,7 @@ export async function getWeeklyCommitmentData(){
     retentionReserveMinutes:envelope.retentionMinutes,
     objective:"balanced",
     courses:scenarioData.courses,
+    floorAdjustments:scenarioData.calibration.floorAdjustments,
   });
   if(!runtime)return {scenarioData,envelope,preview,runtime:null,proposal:null};
 
@@ -82,7 +83,7 @@ export async function getWeeklyCommitmentData(){
     objective,committedCourseBudgetMinutes:Number(runtime.plan.course_budget_minutes),
     currentRemainingCourseCapacityMinutes:envelope.courseBudgetMinutes,
     allocations:runtime.allocations,completion:runtime.completion,currentCourses:scenarioData.courses,
-    progress:runtime.progress,
+    progress:runtime.progress,floorAdjustments:scenarioData.calibration.floorAdjustments,
   });
   return {scenarioData,envelope,preview,runtime,proposal};
 }
@@ -98,6 +99,7 @@ export async function commitWeeklyPlan(input:{objective:string;capacityMinutes?:
     mandatoryCommitmentMinutes:envelope.mandatoryMinutes,
     retentionReserveMinutes:envelope.retentionMinutes,
     objective,courses:scenarioData.courses,
+    floorAdjustments:scenarioData.calibration.floorAdjustments,
   });
   if(scenario.mandatoryShortfallMinutes>0)throw new StudyServiceError(
     "Mandatory commitments exceed the selected weekly capacity. Increase capacity or change the commitments before committing the week.",
@@ -184,6 +186,7 @@ export async function applyWeeklyRebalance(planId:string){
       weeklyCapacityMinutes:data.proposal.feasibleRemainingMinutes,mandatoryCommitmentMinutes:0,retentionReserveMinutes:0,
       objective:runtime.plan.objective as ScenarioObjective,courses:data.scenarioData.courses,
       completedCourseMinutes:Object.fromEntries(runtime.completion.map(row=>[row.courseId,Math.min(row.creditedMinutes,runtime.allocations.find(a=>a.courseId===row.courseId)?.targetMinutes??row.creditedMinutes)])),
+      floorAdjustments:data.scenarioData.calibration.floorAdjustments,
     })),
   }).eq("id",planId).eq("user_id",userId);
   if(planUpdate.error)throw new StudyServiceError("Could not finalize weekly reallocation",planUpdate.error.code||"week_rebalance_failed",planUpdate.error);
