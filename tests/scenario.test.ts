@@ -94,3 +94,17 @@ test("exam-period objective shifts discretionary capacity toward compressed runw
   const far=result.allocations.find((row)=>row.courseId==="far")!;
   assert.ok(near.allocatedMinutes>far.allocatedMinutes);
 });
+
+
+test("mandatory commitments exceeding capacity are surfaced as a separate infeasibility",()=>{
+  const result=buildScenario({
+    weeklyCapacityMinutes:120,mandatoryCommitmentMinutes:180,retentionReserveMinutes:30,objective:"balanced",
+    courses:[course("a",{band:"at_risk",readinessIndex:45})],
+  });
+  assert.equal(result.mandatoryCommitmentMinutes,120);
+  assert.equal(result.mandatoryDemandMinutes,180);
+  assert.equal(result.mandatoryShortfallMinutes,60);
+  assert.equal(result.allocatableCourseMinutes,0);
+  assert.equal(result.feasibleProtection,false);
+  assert.match(result.summary,/Mandatory commitments alone exceed/i);
+});
