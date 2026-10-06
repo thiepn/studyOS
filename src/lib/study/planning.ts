@@ -7,9 +7,7 @@ import { StudyServiceError } from "./errors";
 import type { ExamStrategy } from "./exams";
 import { getSemesterDrift } from "./drift-data";
 import { driftPriorityAdjustment } from "./drift";
-import { getSemesterLearningAnalytics } from "./analytics-data";
 import { getSemesterStrategyPortfolios } from "./strategy-data";
-import { getSemesterCalibration } from "./calibration-data";
 import { buildSemesterForecastFromEvidence } from "./forecast-data";
 
 const ACTIONS=new Set(["process_material","retrieve_lecture","attempt_exercise","reconcile_solution","repair_findings"]);
@@ -56,13 +54,11 @@ export async function getDailyOrchestration(){
   const {semesterId}=await ensureStudyWorkspace(supabase);
   const db=supabase as any;
 
-  const [today,pulse,drift,learningAnalytics,strategyPortfolios,calibration,capacityResult,semesterResult,settingsResult,weekResult,commitmentResult,strategyResult,papersResult,coursesResult,baselineResult]=await Promise.all([
+  const [today,pulse,drift,strategyPortfolios,capacityResult,semesterResult,settingsResult,weekResult,commitmentResult,strategyResult,papersResult,coursesResult,baselineResult]=await Promise.all([
     getTodayData(),
     getSemesterPulse(),
     getSemesterDrift(),
-    getSemesterLearningAnalytics(),
     getSemesterStrategyPortfolios(),
-    getSemesterCalibration(),
     db.from("study_current_capacity").select("*").eq("semester_id",semesterId).maybeSingle(),
     db.from("study_semesters").select("starts_on,ends_on,timezone").eq("id",semesterId).single(),
     db.from("study_planning_settings").select("*").eq("semester_id",semesterId).maybeSingle(),
@@ -75,6 +71,9 @@ export async function getDailyOrchestration(){
   ]);
   const error=capacityResult.error||semesterResult.error||settingsResult.error||weekResult.error||commitmentResult.error||strategyResult.error||papersResult.error||coursesResult.error||baselineResult.error;
   if(error) throw new StudyServiceError("Could not build daily study plan",error.code||"daily_plan_failed",error);
+
+  const learningAnalytics=strategyPortfolios.learning;
+  const calibration=strategyPortfolios.calibration;
 
   const capacity=(capacityResult.data??{
     semester_id:semesterId,timezone:semesterResult.data?.timezone??"Europe/Berlin",local_today:new Date().toISOString().slice(0,10),
