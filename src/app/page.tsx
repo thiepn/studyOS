@@ -26,6 +26,8 @@ export default async function TodayPage() {
     .filter((course)=>course.analytics.difficultySignal==="structural"||course.analytics.difficultySignal==="persistent")
     .sort((a,b)=>Number(b.analytics.difficultySignal==="structural")-Number(a.analytics.difficultySignal==="structural"))[0]??null;
   const topForecast=[...orchestration.forecast.courses].sort((a,b)=>b.decisionPriority-a.decisionPriority)[0]??null;
+  const examCommand=orchestration.examCommand;
+  const topExamCommand=examCommand.courses[0]??null;
   const weekRuntime=orchestration.weekRuntime;
   const weekConcern=weekRuntime?.progress.courses
     .filter(course=>course.remainingMinutes>0)
@@ -55,6 +57,18 @@ export default async function TodayPage() {
       </section>
 
       <DailyPlan plan={plan} />
+
+      {examCommand.active ? <section className={"panel exam-command-today level-"+examCommand.level}>
+        <div className="exam-command-today-head">
+          <div><p className="eyebrow">P22 · exam command</p><h2>{examCommand.activeExamCount} active exam{examCommand.activeExamCount===1?"":"s"} · {examCommand.level.replaceAll("_"," ")}</h2></div>
+          <span>{examCommand.urgentExamCount} urgent</span>
+        </div>
+        <p>{topExamCommand
+          ? (topExamCommand.shortName??topExamCommand.displayName)+" ranks first · "+topExamCommand.daysToExam+"d · "+topExamCommand.nextActionTitle+"."
+          : examCommand.summary}</p>
+        {topExamCommand?.conflictReason?<p className="exam-command-warning">{topExamCommand.conflictReason}</p>:null}
+        <div className="button-row"><Link className="secondary-button" href="/exam-command">Open exam command center</Link></div>
+      </section> : null}
 
       {weekRuntime ? <section className={"panel week-today "+(weekConcern?"pace-"+weekConcern.paceStatus:"pace-met")}>
         <div className="week-today-head">
