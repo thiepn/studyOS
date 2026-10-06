@@ -1,5 +1,5 @@
 export type PlanningMode = "normal" | "light" | "recovery" | "intensive" | "custom";
-export type PlanningCandidateKind = "review" | "commitment" | "workflow" | "checkpoint" | "exam_strategy" | "drift_repair";
+export type PlanningCandidateKind = "review" | "commitment" | "workflow" | "checkpoint" | "exam_strategy" | "drift_repair" | "weekly_envelope";
 
 export type PlanningCandidate = {
   id: string;

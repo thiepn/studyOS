@@ -8191,6 +8191,227 @@ export type Database = {
           },
         ]
       }
+      study_week_allocations: {
+        Row: {
+          action_authority: string
+          action_href: string
+          action_title: string
+          course_id: string
+          created_at: string
+          original_minutes: number
+          plan_id: string
+          protection_floor_minutes: number
+          snapshot_decision_priority: number | null
+          snapshot_readiness_index: number | null
+          target_minutes: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          action_authority: string
+          action_href: string
+          action_title: string
+          course_id: string
+          created_at?: string
+          original_minutes: number
+          plan_id: string
+          protection_floor_minutes?: number
+          snapshot_decision_priority?: number | null
+          snapshot_readiness_index?: number | null
+          target_minutes: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          action_authority?: string
+          action_href?: string
+          action_title?: string
+          course_id?: string
+          created_at?: string
+          original_minutes?: number
+          plan_id?: string
+          protection_floor_minutes?: number
+          snapshot_decision_priority?: number | null
+          snapshot_readiness_index?: number | null
+          target_minutes?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_week_allocations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_activation_course_status"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_week_allocations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_baseline_summary"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_week_allocations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_configuration"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_week_allocations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_operating_mode"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_week_allocations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_progress"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_week_allocations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_course_risk"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_week_allocations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "study_week_allocations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_intelligence_summary"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_week_allocations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_exam_strategy"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_week_allocations_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "study_semester_checkpoint_rotation"
+            referencedColumns: ["course_id"]
+          },
+          {
+            foreignKeyName: "study_week_allocations_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "study_week_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      study_week_plans: {
+        Row: {
+          capacity_source: string
+          committed_at: string
+          course_budget_minutes: number
+          created_at: string
+          id: string
+          last_rebalance_reason: string | null
+          last_rebalanced_at: string | null
+          mandatory_reserve_minutes: number
+          objective: string
+          period_ends_on: string
+          period_starts_on: string
+          retention_reserve_minutes: number
+          revision: number
+          scenario_snapshot: Json
+          semester_id: string
+          status: string
+          updated_at: string
+          user_id: string
+          weekly_capacity_minutes: number
+        }
+        Insert: {
+          capacity_source: string
+          committed_at?: string
+          course_budget_minutes?: number
+          created_at?: string
+          id?: string
+          last_rebalance_reason?: string | null
+          last_rebalanced_at?: string | null
+          mandatory_reserve_minutes?: number
+          objective: string
+          period_ends_on: string
+          period_starts_on: string
+          retention_reserve_minutes?: number
+          revision?: number
+          scenario_snapshot?: Json
+          semester_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          weekly_capacity_minutes: number
+        }
+        Update: {
+          capacity_source?: string
+          committed_at?: string
+          course_budget_minutes?: number
+          created_at?: string
+          id?: string
+          last_rebalance_reason?: string | null
+          last_rebalanced_at?: string | null
+          mandatory_reserve_minutes?: number
+          objective?: string
+          period_ends_on?: string
+          period_starts_on?: string
+          retention_reserve_minutes?: number
+          revision?: number
+          scenario_snapshot?: Json
+          semester_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          weekly_capacity_minutes?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_week_plans_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "study_activation_snapshot"
+            referencedColumns: ["semester_id"]
+          },
+          {
+            foreignKeyName: "study_week_plans_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "study_current_capacity"
+            referencedColumns: ["semester_id"]
+          },
+          {
+            foreignKeyName: "study_week_plans_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "study_semester_checkpoint_rotation"
+            referencedColumns: ["semester_id"]
+          },
+          {
+            foreignKeyName: "study_week_plans_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "study_semesters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       study_week_workflow: {
         Row: {
           checkpoint_completed_at: string | null

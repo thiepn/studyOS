@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Nav } from "@/components/nav";
 import { ScenarioPlanner } from "@/components/scenario-planner";
 import { getSemesterScenarioData } from "@/lib/study/scenario-data";
@@ -12,6 +13,7 @@ export default async function ScenariosPage(){
       <h2>Fixed time, explicit trade-offs</h2>
       <p>P18 never creates extra study time. It reserves mandatory commitments and retention first, protects minimum course floors where possible, then allocates remaining minutes by marginal value with diminishing returns.</p>
       <small>{data.calendarConnected?"Calendar free time is constraining this week’s ceiling.":"No connected Calendar cap is active; the configured StudyOS planning budget defines the weekly ceiling."}{data.calendarStale?" Calendar data is stale, so treat the capacity estimate cautiously.":""}</small>
+      <div className="button-row"><Link className="primary-button" href="/week">Commit a weekly plan</Link></div>
     </section>
     <ScenarioPlanner data={data}/>
   </main>;

@@ -26,6 +26,13 @@ export default async function TodayPage() {
     .filter((course)=>course.analytics.difficultySignal==="structural"||course.analytics.difficultySignal==="persistent")
     .sort((a,b)=>Number(b.analytics.difficultySignal==="structural")-Number(a.analytics.difficultySignal==="structural"))[0]??null;
   const topForecast=[...orchestration.forecast.courses].sort((a,b)=>b.decisionPriority-a.decisionPriority)[0]??null;
+  const weekRuntime=orchestration.weekRuntime;
+  const weekConcern=weekRuntime?.progress.courses
+    .filter(course=>course.remainingMinutes>0)
+    .sort((a,b)=>{
+      const rank=(value:string)=>value==="behind"||value==="not_started"?3:value==="on_track"?2:value==="ahead"?1:0;
+      return rank(b.paceStatus)-rank(a.paceStatus)||b.remainingMinutes-a.remainingMinutes;
+    })[0]??null;
   const configured=String(settings?.default_mode??"normal");
   const defaultMode=(configured==="light"||configured==="recovery"||configured==="intensive"?configured:"normal") as Exclude<PlanningMode,"custom">;
 
@@ -48,6 +55,22 @@ export default async function TodayPage() {
       </section>
 
       <DailyPlan plan={plan} />
+
+      {weekRuntime ? <section className={"panel week-today "+(weekConcern?"pace-"+weekConcern.paceStatus:"pace-met")}>
+        <div className="week-today-head">
+          <div><p className="eyebrow">P19 · weekly commitment</p><h2>{weekRuntime.progress.totalCompletedMinutes} / {weekRuntime.progress.totalTargetMinutes} course min</h2></div>
+          <span>{weekRuntime.daysRemaining}d left</span>
+        </div>
+        <div className="bar"><i style={{width:weekRuntime.progress.completionPercent+"%"}}/></div>
+        <p>{weekConcern
+          ? (weekConcern.shortName??weekConcern.displayName)+" · "+weekConcern.remainingMinutes+" min remaining · "+weekConcern.paceStatus.replace("_"," ")+" pace."
+          : "All committed course envelopes are complete."}</p>
+        <div className="button-row"><Link className="secondary-button" href="/week">Open weekly plan</Link></div>
+      </section> : <section className="panel week-today">
+        <div><p className="eyebrow">P19 · weekly commitment</p><h2>No committed week yet</h2></div>
+        <p>P18 scenarios are still exploratory until one is committed for the remainder of this week.</p>
+        <div className="button-row"><Link className="secondary-button" href="/week">Commit this week</Link></div>
+      </section>}
 
       {topForecast ? <section className={"panel semester-decision forecast-band-"+topForecast.band}>
         <div className="semester-decision-head">
