@@ -66,7 +66,7 @@ export function HandoffControls({
     </div>:null}
 
     {targetPlanActive?<p className="handoff-status"><strong>Next week is already committed.</strong> It will become the active P19 envelope when its Monday starts.</p>:null}
-    {!targetPlanActive&&!commitAllowed?<p className="handoff-status">Preview only. The next full week can be committed on Sunday or Monday; use <a href="/week">Week</a> for the current midweek remainder.</p>:null}
+    {!targetPlanActive&&!commitAllowed?<p className="handoff-status">Preview only. If a prior P19 week exists, let Sunday finish and close that review first; the normal handoff is then committed on Monday. Use <a href="/week">Week</a> for the current midweek remainder.</p>:null}
     {message?<p className="form-message" role="status">{message}</p>:null}
   </div>;
 }
