@@ -8,7 +8,7 @@ import { getWeeklyCalibrationProfile } from "./weekly-calibration-data";
 import { buildScenario, courseFromForecast, type ScenarioObjective } from "./scenario";
 import { loadWeekRuntimeForPlan } from "./weekly-runtime";
 import {
-  addDays,buildWeekReview,deriveHandoffCapacity,isHandoffCommitWindow,isWeekClosable,mondayOnOrAfter,recommendHandoffObjective,
+  addDays,buildWeekReview,canCommitHandoff,deriveHandoffCapacity,isHandoffCommitWindow,isWeekClosable,mondayOnOrAfter,recommendHandoffObjective,
 } from "./weekly-handoff";
 
 type PlanRow=Database["public"]["Tables"]["study_week_plans"]["Row"];
@@ -131,9 +131,9 @@ export async function getWeeklyHandoffData(){
     carryoverCommitments:carryover,dueInTargetCommitments:dueInTarget,mandatoryCommitments,
     capacity,recommendation,scenario,
     closeAllowed:Boolean(previousPlan&&previousPlan.status!=="completed"&&isWeekClosable(previousPlan.period_ends_on,today)),
-    commitAllowed:isHandoffCommitWindow(today,targetStart)
-      &&(!previousPlan||previousPlan.status==="completed")
-      &&(!targetPlan||targetPlan.status==="cancelled"),
+    commitAllowed:canCommitHandoff({
+      today,targetStart,previousStatus:previousPlan?.status??null,targetStatus:targetPlan?.status??null,
+    }),
   };
 }
 
