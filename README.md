@@ -2,9 +2,9 @@
 
 StudyOS is the WS26/27 retention and exam-readiness system for the THIEPN ecosystem. The application keeps raw university material in a dedicated Google Drive account, structured academic state in Supabase, and daily review/exam-readiness workflows in a Next.js frontend.
 
-## Current phase: P23
+## Current phase: P24
 
-Implemented through P23; the foundation includes:
+Implemented through P24; the foundation includes:
 
 - Next.js 16 App Router + Supabase SSR authentication
 - THIEPN Account shared identity with isolated `study_*` application data
@@ -468,3 +468,26 @@ StudyOS now handles the operational boundary around each configured semester exa
 - P23 adds no new database schema or authorization surface.
 
 The next phase is **P24 — Exam Result Intake, Outcome Reconciliation & Retake/Completion Decisions**.
+
+
+## P24 exam result intake, reconciliation and retake decisions
+
+StudyOS now has durable state for real university exam outcomes.
+
+- study_exam_results stores actual attempts separately from P9 practice simulations;
+- result rows are owner-only under RLS and tied to the owning course/semester;
+- provisional outcomes are informational and cannot structurally close or retake a course;
+- official passes deactivate the course without deleting evidence;
+- official non-passes require an explicit pending/planned/declined retake decision;
+- pending retake decisions pause discretionary P10 and retention work while preserving real commitments;
+- planned retakes reactivate the existing StudyOS pipeline through a future exam_at and course_kind=retake;
+- declined retakes close allocation without falsely marking the course passed;
+- the result write and course-state update are atomic through study_record_exam_result;
+- the original P17 readiness index/band/decision priority are snapshotted on first intake and preserved;
+- outcome reconciliation is directional only and never treats P17 as a predicted grade/pass probability;
+- official writes invoke P23 calendar/weekly cleanup best-effort, but cleanup failure cannot block the academic result;
+- duplicate result intake is suppressed once an official completed attempt is resolved;
+- /exam-results provides intake, reconciliation, structural state and attempt history;
+- Today surfaces result-ready exams and unresolved retake decisions.
+
+The next phase is **P25 — Semester Completion Ledger, Credit/Pass Progress & End-of-Semester Review**.
