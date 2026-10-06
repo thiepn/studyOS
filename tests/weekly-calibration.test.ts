@@ -91,3 +91,15 @@ test("repeated low total adherence creates only an advisory capacity reduction",
   assert.equal(profile.capacityRecommendationFactor,0.9);
   assert.deepEqual(profile.floorAdjustments,{});
 });
+
+
+test("original protection-floor sacrifice remains visible even after a later rebalance recovers the target",()=>{
+  const observations=[
+    obs(1,"amp",75,75,{originalMinutes:45,targetMinutes:75,protectionFloorMinutes:75,rebalanced:true}),
+    obs(2,"amp",75,75,{originalMinutes:45,targetMinutes:75,protectionFloorMinutes:75,rebalanced:true}),
+    obs(3,"amp",75,75,{originalMinutes:75,targetMinutes:75,protectionFloorMinutes:75}),
+  ];
+  const amp=buildWeeklyCalibrationProfile(observations,[]).courses[0];
+  assert.equal(amp.sacrificedWeeks,2);
+  assert.equal(amp.floorAdjustmentMinutes,15);
+});
