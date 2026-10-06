@@ -26,8 +26,9 @@ export async function getSemesterScenarioData(){
   const normalBudget=Math.max(1,Number(orchestration.capacity.normal_budget_minutes));
   const configuredReviewRatio=Math.min(0.5,Math.max(0,Number(orchestration.capacity.review_daily_budget_minutes)/normalBudget));
   const afterMandatory=Math.max(0,baselineWeekly-mandatoryCommitments);
+  const maxWeeklyRetentionMinutes=Number(orchestration.capacity.review_daily_budget_minutes)*7;
   const retentionReserve=round15(Math.min(
-    Number(orchestration.capacity.review_daily_budget_minutes)*7,
+    maxWeeklyRetentionMinutes,
     afterMandatory*configuredReviewRatio,
   ));
 
@@ -66,7 +67,7 @@ export async function getSemesterScenarioData(){
     source:(calendar.connection?.status==="connected"?"calendar_capped":"planning_default") as "calendar_capped"|"planning_default",
     dailyDefaultMinutes:dailyDefault,nominalWeeklyMinutes:nominalWeekly,calendarFreeMinutes:calendarFree,
     baselineWeeklyMinutes:baselineWeekly,mandatoryCommitmentMinutes:mandatoryCommitments,
-    retentionReserveMinutes:retentionReserve,configuredReviewRatio,
+    retentionReserveMinutes:retentionReserve,maxWeeklyRetentionMinutes,configuredReviewRatio,
     minCustomCapacity,maxCustomCapacity,courses,standard,stress,
     calendarConnected:calendar.connection?.status==="connected",calendarStale:calendar.stale,
     calendarDays:calendar.weekly,
