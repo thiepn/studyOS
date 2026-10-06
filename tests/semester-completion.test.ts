@@ -110,3 +110,15 @@ test("all terminal courses can close academically before the semester end date",
   assert.equal(ledger.retrospective.status,"complete");
   assert.equal(ledger.summary.terminalCourses,2);
 });
+
+
+test("ended semester with unresolved active course is flagged incomplete",()=>{
+  const ledger=buildSemesterCompletionLedger({
+    semester:{displayName:"WS26/27",startsOn:"2026-10-01",endsOn:"2027-03-31"},
+    today:"2027-04-05",
+    courses:[course("open",{examAt:null,examFinished:false,active:true})],
+    results:[],
+    calibration,
+  });
+  assert.equal(ledger.retrospective.status,"incomplete_data");
+});
