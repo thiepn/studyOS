@@ -30,6 +30,7 @@ export type ScenarioInput={
   objective:ScenarioObjective;
   courses:ScenarioCourse[];
   completedCourseMinutes?:Record<string,number>;
+  floorAdjustments?:Record<string,number>;
 };
 
 export type CourseAllocation={
@@ -39,6 +40,7 @@ export type CourseAllocation={
   courseKind:string;
   allocatedMinutes:number;
   protectionFloorMinutes:number;
+  floorCalibrationMinutes:number;
   floorMet:boolean;
   floorShortfallMinutes:number;
   sharePercent:number;
@@ -158,7 +160,14 @@ export function buildScenario(input:ScenarioInput):ScenarioPlan{
   const retention=Math.max(0,Math.min(afterMandatory,Math.floor(input.retentionReserveMinutes)));
   const allocatable=Math.max(0,weekly-mandatory-retention);
   const active=input.courses.filter((course)=>!course.postExam);
-  const floors=new Map(active.map((course)=>[course.courseId,protectionFloor(course)]));
+  const floorCalibration=new Map(active.map((course)=>{
+    const raw=Math.max(-30,Math.min(30,Math.round(Number(input.floorAdjustments?.[course.courseId]??0)/15)*15));
+    return [course.courseId,course.postExam?0:raw] as const;
+  }));
+  const floors=new Map(active.map((course)=>[
+    course.courseId,
+    Math.max(0,Math.min(240,protectionFloor(course)+(floorCalibration.get(course.courseId)??0))),
+  ]));
   const priorMinutes=new Map(active.map((course)=>[course.courseId,Math.max(0,Math.floor(input.completedCourseMinutes?.[course.courseId]??0))]));
   const totalFloor=[...floors.values()].reduce((sum,n)=>sum+n,0);
   const allocations=new Map(active.map((course)=>[course.courseId,0]));
@@ -203,10 +212,12 @@ export function buildScenario(input:ScenarioInput):ScenarioPlan{
     const shortfall=Math.max(0,floor-prior-allocated);
     return {
       courseId:course.courseId,displayName:course.displayName,shortName:course.shortName,courseKind:course.courseKind,
-      allocatedMinutes:allocated,protectionFloorMinutes:floor,floorMet:shortfall===0,floorShortfallMinutes:shortfall,
+      allocatedMinutes:allocated,protectionFloorMinutes:floor,floorCalibrationMinutes:floorCalibration.get(course.courseId)??0,
+      floorMet:shortfall===0,floorShortfallMinutes:shortfall,
       sharePercent:allocatable?Math.round(allocated/allocatable*100):0,
       marginalScore:Math.round(clamp(objectiveScore(course,input.objective,prior+allocated,floor))),
-      reason:reasonFor(course,input.objective,floor),sacrificeRank:null,
+      reason:reasonFor(course,input.objective,floor)+(floorCalibration.get(course.courseId)?" · P20 "+((floorCalibration.get(course.courseId)??0)>0?"+":"")+(floorCalibration.get(course.courseId)??0)+" min calibration":""),
+      sacrificeRank:null,
       readinessIndex:course.readinessIndex,band:course.band,runway:course.runway,actionTitle:course.actionTitle,
     };
   });
