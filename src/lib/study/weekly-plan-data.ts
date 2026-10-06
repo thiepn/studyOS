@@ -155,7 +155,7 @@ export async function commitWeeklyPlan(input:{objective:string;capacityMinutes?:
   return {planId:plan.id,scenario};
 }
 
-export async function applyWeeklyRebalance(planId:string,objectiveOverride?:ScenarioObjective){
+export async function applyWeeklyRebalance(planId:string,objectiveOverride?:ScenarioObjective,reasonOverride?:string){
   if(!planId)throw new StudyServiceError("Weekly plan ID is required","invalid_week_plan_id");
   const data=await getWeeklyCommitmentData();
   const runtime=data.runtime;
@@ -191,7 +191,7 @@ export async function applyWeeklyRebalance(planId:string,objectiveOverride?:Scen
   const planUpdate=await db.from("study_week_plans").update({
     objective,
     course_budget_minutes:proposal.proposedCourseBudgetMinutes,
-    revision:Number(runtime.plan.revision)+1,last_rebalanced_at:now,last_rebalance_reason:proposal.reason,
+    revision:Number(runtime.plan.revision)+1,last_rebalanced_at:now,last_rebalance_reason:reasonOverride??proposal.reason,
     scenario_snapshot:snapshot(data.scenarioData,buildScenario({
       weeklyCapacityMinutes:proposal.feasibleRemainingMinutes,mandatoryCommitmentMinutes:0,retentionReserveMinutes:0,
       objective,courses:data.scenarioData.courses,
@@ -200,7 +200,7 @@ export async function applyWeeklyRebalance(planId:string,objectiveOverride?:Scen
     })),
   }).eq("id",planId).eq("user_id",userId);
   if(planUpdate.error)throw new StudyServiceError("Could not finalize weekly reallocation",planUpdate.error.code||"week_rebalance_failed",planUpdate.error);
-  return {changed:true,reason:proposal.reason};
+  return {changed:true,reason:reasonOverride??proposal.reason};
 }
 
 export async function cancelWeeklyPlan(planId:string){
