@@ -526,6 +526,7 @@ StudyOS can now transition cleanly from one semester to the next.
 - missing/provisional outcomes block archive;
 - pending retake decisions block archive and must be resolved first;
 - only explicitly planned retakes with future exam dates are copied into the new semester;
+- P10 capacity defaults and P11 calendar-planning preferences carry as configuration, with standard defaults created if no prior preference row exists;
 - carried retakes receive fresh course rows and fresh operational state;
 - weekly plans, unfinished study minutes, sessions, calendar planning, Drive semester folders and other stale execution state never carry;
 - remaining active P19 plan state is closed at archive time;
