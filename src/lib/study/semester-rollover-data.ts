@@ -70,27 +70,34 @@ export async function getSemesterRolloverData(){
 }
 
 export async function rolloverSemester(input:{
+  sourceSemesterId:string;
   stableKey:string;
   displayName:string;
   startsOn:string;
   endsOn:string|null;
   timezone:string;
 }){
+  if(!UUID.test(input.sourceSemesterId))throw new StudyServiceError("Invalid source semester ID","invalid_semester_rollover");
   const validation=validateNewSemester(input);
   if(validation)throw new StudyServiceError(validation,"invalid_semester_rollover");
 
   const before=await getSemesterRolloverData();
-  if(!before.activeSemester||!before.preflight)throw new StudyServiceError("No active semester is available to roll over","invalid_semester_rollover");
-  if(!before.preflight.eligible){
-    throw new StudyServiceError(
-      "Semester rollover is blocked: "+before.preflight.blockers.map(item=>item.message).join(" "),
-      "invalid_semester_rollover",
-    );
+  const sourceIsActive=String(before.activeSemester?.id??"")===input.sourceSemesterId;
+  const sourceIsArchived=before.archives.some(row=>String(row.id)===input.sourceSemesterId);
+  if(!sourceIsActive&&!sourceIsArchived)throw new StudyServiceError("Source semester not found","invalid_semester_rollover");
+  if(sourceIsActive){
+    if(!before.preflight)throw new StudyServiceError("Semester rollover preflight is unavailable","invalid_semester_rollover");
+    if(!before.preflight.eligible){
+      throw new StudyServiceError(
+        "Semester rollover is blocked: "+before.preflight.blockers.map(item=>item.message).join(" "),
+        "invalid_semester_rollover",
+      );
+    }
   }
 
   const {supabase}=await requireUser();
   const {data,error}=await (supabase.rpc as any)("study_rollover_semester",{
-    p_source_semester_id:String(before.activeSemester.id),
+    p_source_semester_id:input.sourceSemesterId,
     p_new_stable_key:input.stableKey,
     p_new_display_name:input.displayName.trim(),
     p_starts_on:input.startsOn,
@@ -99,26 +106,13 @@ export async function rolloverSemester(input:{
   });
   if(error)throw new StudyServiceError("Could not roll over semester",error.code||"semester_rollover_failed",error);
 
-  const calendarErrors:Array<{blockId:string;title:string;error:string}>=[];
-  let cancelledCalendarBlocks=0;
-  for(const block of before.futureBlocks){
-    try{
-      await cancelScheduledBlock(String(block.id));
-      cancelledCalendarBlocks++;
-    }catch(error){
-      calendarErrors.push({
-        blockId:String(block.id),title:String(block.title),
-        error:error instanceof Error?error.message:"Calendar cancellation failed",
-      });
-    }
-  }
-
+  const cleanup=await cleanupArchivedSemesterCalendar(input.sourceSemesterId);
   return {
     rollover:data,
-    archivedSemesterId:String(before.activeSemester.id),
-    carriedCourses:before.preflight.carryCourses,
-    cancelledCalendarBlocks,
-    calendarErrors,
+    archivedSemesterId:input.sourceSemesterId,
+    carriedCourses:sourceIsActive&&before.preflight?before.preflight.carryCourses:[],
+    cancelledCalendarBlocks:cleanup.cancelled,
+    calendarErrors:cleanup.errors,
   };
 }
 
