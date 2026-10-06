@@ -1,0 +1,116 @@
+import Link from "next/link";
+import { Nav } from "@/components/nav";
+import {
+  BootstrapActionButtons,BootstrapCourseForm,BootstrapPriorForm,RemovePriorButton,
+} from "@/components/semester-bootstrap-controls";
+import { getSemesterBootstrapData } from "@/lib/study/semester-bootstrap-data";
+import { historicalPriorUse } from "@/lib/study/semester-bootstrap";
+
+export const dynamic="force-dynamic";
+
+function pretty(value:string|null|undefined){return value?value.replaceAll("_"," "):"—";}
+function snapshotValue(snapshot:any,key:string){
+  const value=snapshot&&typeof snapshot==="object"&&!Array.isArray(snapshot)?snapshot[key]:null;
+  return value==null?"—":String(value);
+}
+
+export default async function SemesterBootstrapPage(){
+  const data=await getSemesterBootstrapData();
+  const {evaluation}=data;
+  return <main className="shell">
+    <header className="header">
+      <div><p className="eyebrow">P27 · new-semester bootstrap</p><h1>{data.semester.display_name}</h1></div>
+      <Nav />
+    </header>
+
+    <section className={"panel bootstrap-hero "+(evaluation.ready?"ready":"blocked")}>
+      <div className="section-heading">
+        <div><p className="eyebrow">Operational baseline</p><h2>{evaluation.certified?"Certified":evaluation.ready?"Ready to certify":"Bootstrap incomplete"}</h2></div>
+        <span>{evaluation.percent}%</span>
+      </div>
+      <div className="bar"><i style={{width:evaluation.percent+"%"}}/></div>
+      <p>P27 creates a clean semester baseline from current sources. Archived evidence may guide diagnostics, but old mastery, study sessions, weekly debt, and planner state are never restored.</p>
+      <div className="bootstrap-summary-grid">
+        <span><strong>{evaluation.readyCourses}/{evaluation.courseCount}</strong> courses ready</span>
+        <span><strong>{evaluation.driveConnected?"connected":"off"}</strong> Study Drive</span>
+        <span><strong>{evaluation.driveTreeReady?"ready":"pending"}</strong> Drive tree</span>
+        <span><strong>{data.priors.length}</strong> historical priors</span>
+      </div>
+      {evaluation.blockers.length?<ul className="bootstrap-blockers">{evaluation.blockers.map(item=><li key={item}>{item}</li>)}</ul>:null}
+      <BootstrapActionButtons ready={evaluation.ready} certified={evaluation.certified} driveConnected={evaluation.driveConnected}/>
+    </section>
+
+    <section className="panel bootstrap-intake">
+      <div className="section-heading">
+        <div><p className="eyebrow">Course roster</p><h2>Add real courses</h2></div>
+        <span>{data.courses.length}</span>
+      </div>
+      <p className="muted">Add only courses that actually belong to this semester. Stable keys become the internal identity used for historical lineage and Drive classification.</p>
+      <BootstrapCourseForm/>
+    </section>
+
+    <section className="bootstrap-course-grid">
+      {evaluation.courses.map(course=><article className={"panel bootstrap-course "+(course.ready?"ready":"blocked")} key={course.courseId}>
+        <div className="bootstrap-course-head">
+          <div><p className="eyebrow">{pretty(course.courseKind)} · {course.stableKey}</p><h2>{course.displayName}</h2></div>
+          <span>{course.ready?"ready":"incomplete"}</span>
+        </div>
+        <div className="bootstrap-course-checks">
+          <span className={course.identityReady?"ok":""}>Identity</span>
+          <span className={course.workflowReady?"ok":""}>Workflow</span>
+          <span className={course.driveFolderReady?"ok":""}>Drive</span>
+          <span className={course.curriculumReady?"ok":""}>Curriculum</span>
+          <span className={course.baselineReady?"ok":""}>{course.courseKind==="retake"?"Baseline":"Baseline n/a"}</span>
+          <span className={course.historicalPriorCount>0?"ok":""}>Priors {course.historicalPriorCount||"—"}</span>
+        </div>
+        <p>{course.verifiedResourceCount} verified source{course.verifiedResourceCount===1?"":"s"} · {course.skillCount} skills · {course.questionCount} questions</p>
+        {course.blockers.length?<ul>{course.blockers.map(item=><li key={item}>{item}</li>)}</ul>:<p className="bootstrap-ok">Current curriculum baseline is independently anchored.</p>}
+        <div className="button-row">
+          <Link className="secondary-button" href={"/courses/"+course.courseId}>Configure</Link>
+          <Link className="secondary-button" href="/resources">Curriculum sources</Link>
+          {course.courseKind==="retake"?<Link className="secondary-button" href={"/diagnostics/"+course.courseId}>Baseline diagnostic</Link>:null}
+        </div>
+      </article>)}
+      {!evaluation.courses.length?<section className="panel"><p>No active courses exist yet. Add the real semester roster above.</p></section>:null}
+    </section>
+
+    <section className="panel bootstrap-priors">
+      <div className="section-heading">
+        <div><p className="eyebrow">Historical prior transfer</p><h2>Use history without restoring mastery</h2></div>
+        <span>{data.priors.length}</span>
+      </div>
+      <p>Attach an archived course only when it genuinely informs this course. The prior changes what StudyOS suggests you diagnose first; it never marks a current skill retained, stable, or exam-ready.</p>
+      <BootstrapPriorForm courses={data.courses} options={data.priorOptions}/>
+      {data.priors.length?<div className="bootstrap-prior-list">{data.priors.map((prior:any)=>{
+        const snapshot=prior.source_snapshot??{};
+        return <article key={prior.id}>
+          <div className="status-line">
+            <strong>{snapshotValue(snapshot,"display_name")} → {data.courses.find(c=>c.courseId===prior.course_id)?.displayName??"Current course"}</strong>
+            <span>{pretty(prior.relation)}</span>
+          </div>
+          <p>{historicalPriorUse(prior.relation)}</p>
+          <div className="bootstrap-prior-metrics">
+            <span><strong>{snapshotValue(snapshot,"official_attempts")}</strong> official attempts</span>
+            <span><strong>{pretty(snapshotValue(snapshot,"latest_outcome"))}</strong> latest outcome</span>
+            <span><strong>{snapshotValue(snapshot,"latest_readiness_index")}</strong> prior P17</span>
+            <span><strong>{snapshotValue(snapshot,"unresolved_findings")}</strong> unresolved findings</span>
+          </div>
+          {prior.note?<p className="muted">{prior.note}</p>:null}
+          <RemovePriorButton priorId={String(prior.id)}/>
+        </article>;
+      })}</div>:<p className="muted">No optional historical priors are attached. Direct carried retakes are attached automatically when a matching archived course exists.</p>}
+    </section>
+
+    <section className="panel bootstrap-contract">
+      <p className="eyebrow">Certification contract</p>
+      <h2>What “bootstrap certified” means</h2>
+      <div className="bootstrap-contract-grid">
+        <span><strong>Real roster</strong> At least one current-semester course exists.</span>
+        <span><strong>Fresh Drive tree</strong> Every active course has a folder in this semester.</span>
+        <span><strong>Current curriculum</strong> Every course has verified source material, active skills, and active questions.</span>
+        <span><strong>Retake proof</strong> Every retake has a fresh baseline diagnostic.</span>
+      </div>
+      <p className="muted">Certification unlocks normal discretionary planning. It does not certify first-week execution; P12 still requires real timetable/material/attempt evidence after the semester begins.</p>
+    </section>
+  </main>;
+}
