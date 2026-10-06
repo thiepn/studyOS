@@ -1,6 +1,7 @@
 import { getDailyOrchestration } from "./planning";
 import { getCalendarAutopilot } from "./calendar-autopilot";
 import { buildScenario, buildStandardScenarios, courseFromForecast, type ScenarioObjective } from "./scenario";
+import { getWeeklyCalibrationProfile } from "./weekly-calibration-data";
 
 function round15(value:number){return Math.max(0,Math.round(value/15)*15);}
 
@@ -14,7 +15,11 @@ function configuredDailyBudget(orchestration:Awaited<ReturnType<typeof getDailyO
 
 export async function getSemesterScenarioData(){
   const orchestration=await getDailyOrchestration();
-  const calendar=await getCalendarAutopilot(orchestration);
+  const [calendar,calibrationData]=await Promise.all([
+    getCalendarAutopilot(orchestration),
+    getWeeklyCalibrationProfile(),
+  ]);
+  const calibration=calibrationData.profile;
   const dailyDefault=Math.max(15,configuredDailyBudget(orchestration));
   const nominalWeekly=round15(dailyDefault*7);
   const calendarFree=calendar.connection?.status==="connected"
@@ -41,6 +46,7 @@ export async function getSemesterScenarioData(){
     mandatoryCommitmentMinutes:mandatoryCommitments,
     retentionReserveMinutes:retentionReserve,
     courses,
+    floorAdjustments:calibration.floorAdjustments,
   };
   const standard=buildStandardScenarios(input);
 
@@ -59,6 +65,7 @@ export async function getSemesterScenarioData(){
       retentionReserveMinutes:round15(Math.min(Number(orchestration.capacity.review_daily_budget_minutes)*7,Math.max(0,item.minutes-mandatoryCommitments)*configuredReviewRatio)),
       objective:"balanced",
       courses,
+      floorAdjustments:calibration.floorAdjustments,
     }),
   }));
 
@@ -71,7 +78,7 @@ export async function getSemesterScenarioData(){
     dailyDefaultMinutes:dailyDefault,nominalWeeklyMinutes:nominalWeekly,calendarFreeMinutes:calendarFree,todayRemainingFreeMinutes,
     baselineWeeklyMinutes:baselineWeekly,mandatoryCommitmentMinutes:mandatoryCommitments,
     retentionReserveMinutes:retentionReserve,maxWeeklyRetentionMinutes,configuredReviewRatio,
-    minCustomCapacity,maxCustomCapacity,courses,standard,stress,
+    minCustomCapacity,maxCustomCapacity,courses,standard,stress,calibration,
     calendarConnected:calendar.connection?.status==="connected",calendarStale:calendar.stale,
     calendarDays:calendar.weekly,
   };

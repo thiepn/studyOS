@@ -2,9 +2,9 @@
 
 StudyOS is the WS26/27 retention and exam-readiness system for the THIEPN ecosystem. The application keeps raw university material in a dedicated Google Drive account, structured academic state in Supabase, and daily review/exam-readiness workflows in a Next.js frontend.
 
-## Current phase: P19
+## Current phase: P20
 
-Implemented through P19; the foundation includes:
+Implemented through P20; the foundation includes:
 
 - Next.js 16 App Router + Supabase SSR authentication
 - THIEPN Account shared identity with isolated `study_*` application data
@@ -374,3 +374,27 @@ StudyOS can now turn a P18 scenario into a durable operational commitment for th
 - live Supabase schema changes use owner RLS and were checked with security/performance advisors.
 
 The next phase is **P20 — Weekly Execution Quality, Plan Adherence & Allocation Calibration**.
+
+
+## P20 weekly execution quality and allocation calibration
+
+StudyOS now evaluates whether its weekly planning heuristics match actual semester execution instead of leaving P18/P19 fixed forever.
+
+- completed P19 weeks are reconstructed from the existing weekly plans, allocations, study sessions, and workflow milestones;
+- current partial weeks never influence calibration;
+- whole-week capacity realism is separated from course-specific allocation quality;
+- a missed course target is only called overallocated when the rest of the week was executed reasonably well;
+- repeated extra work can identify an underallocated course;
+- repeated protection-floor sacrifice is tracked even if a later P19 rebalance recovers the target;
+- paired planned/actual session minutes detect systematic estimate bias after at least four samples;
+- fewer than three completed course-weeks can never change a P18 protection floor;
+- supported floor corrections move only in 15-minute blocks and are capped at ±30 minutes;
+- weak-readiness courses are protected against automatic floor reductions based only on missed execution;
+- P18 browser and server scenarios use the same calibrated floor map;
+- new P19 commitments and rolling reallocations inherit the P20 floor corrections;
+- whole-week capacity suggestions are advisory only and never mutate P10 daily capacity;
+- /quality exposes adherence, sacrifice, rebalance, estimate-bias, and calibration evidence;
+- /week shows the current P20 evidence state;
+- P20 adds no new persistence or Supabase authorization surface.
+
+The next phase is **P21 — Closed-Loop Weekly Review, Next-Week Handoff & Semester Adaptation**.

@@ -8,7 +8,7 @@ import {
 type WeekPlanRow=Database["public"]["Tables"]["study_week_plans"]["Row"];
 type WeekAllocationRow=Database["public"]["Tables"]["study_week_allocations"]["Row"];
 
-const WORKFLOW_MINUTES={
+export const WORKFLOW_MINUTES={
   lecture_retrieval_completed_at:10,
   exercise_attempt_completed_at:60,
   solution_reconciled_at:30,
