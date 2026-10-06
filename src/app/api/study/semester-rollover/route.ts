@@ -6,6 +6,7 @@ export async function POST(request:Request){
   try{
     const body=await request.json() as Record<string,unknown>;
     const data=await rolloverSemester({
+      sourceSemesterId:String(body.sourceSemesterId??""),
       stableKey:String(body.stableKey??""),
       displayName:String(body.displayName??""),
       startsOn:String(body.startsOn??""),
