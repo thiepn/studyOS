@@ -29,6 +29,12 @@ export async function getSemesterCompletionData(semesterIdOverride?:string){
   if(error)throw new StudyServiceError("Could not load semester completion ledger",error.code||"semester_completion_read_failed",error);
 
   const nowIso=new Date().toISOString();
+  const timezone=String(semesterResult.data.timezone??calibrationData.timezone);
+  const archivedAt=semesterResult.data.archived_at==null?null:String(semesterResult.data.archived_at);
+  const effectiveNowIso=!semesterResult.data.active&&archivedAt?archivedAt:nowIso;
+  const effectiveToday=!semesterResult.data.active&&archivedAt
+    ?new Intl.DateTimeFormat("en-CA",{timeZone:timezone,year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(archivedAt))
+    :calibrationData.today;
   const courseRows=(courseResult.data??[]) as CourseRow[];
   const resultRows=(resultResult.data??[]) as ResultRow[];
 
@@ -39,7 +45,7 @@ export async function getSemesterCompletionData(semesterIdOverride?:string){
       shortName:course.short_name,
       examAt:course.exam_at,
       durationMinutes:course.exam_duration_minutes,
-    },nowIso);
+    },effectiveNowIso);
     return {
       id:course.id,
       displayName:course.display_name,
@@ -76,7 +82,7 @@ export async function getSemesterCompletionData(semesterIdOverride?:string){
   };
   const ledger=buildSemesterCompletionLedger({
     semester,
-    today:calibrationData.today,
+    today:effectiveToday,
     courses,
     results,
     calibration:calibrationData.profile,
@@ -84,10 +90,10 @@ export async function getSemesterCompletionData(semesterIdOverride?:string){
 
   return {
     ...ledger,
-    timezone:String(semesterResult.data.timezone??calibrationData.timezone),
+    timezone,
     semesterLifecycle:{
       active:Boolean(semesterResult.data.active),
-      archivedAt:semesterResult.data.archived_at==null?null:String(semesterResult.data.archived_at),
+      archivedAt,
       previousSemesterId:semesterResult.data.previous_semester_id==null?null:String(semesterResult.data.previous_semester_id),
     },
     nowIso,
