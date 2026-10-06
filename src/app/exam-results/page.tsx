@@ -21,7 +21,7 @@ export default async function ExamResultsPage(){
   const data=await getExamResultsData();
   const intake=data.courses.filter(course=>course.resultReady);
   const history=data.courses.filter(course=>course.history.length);
-  const timezone="Europe/Berlin";
+  const timezone=data.timezone;
 
   return <main className="shell">
     <header className="header">
