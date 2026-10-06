@@ -14,6 +14,7 @@ export default async function ProgressPage(){
   const sustainedDrift=learning.courses.filter((item)=>item.analytics.latestDrift.band==="drifting"||item.analytics.latestDrift.band==="critical").length;
   const transferByCourse=new Map<string,(typeof transfer.activeEvaluations)>();
   for(const item of transfer.activeEvaluations)transferByCourse.set(item.courseId,[...(transferByCourse.get(item.courseId)??[]),item]);
+  const longitudinalByKey=new Map(transfer.activeProfiles.map((item)=>[item.stableKey,item]));
   return <main className="shell">
     <header className="header"><div><p className="eyebrow">Longitudinal diagnostics</p><h1>Progress</h1></div><Nav /></header>
 
@@ -60,6 +61,7 @@ export default async function ProgressPage(){
         const learningProfile=learningByCourse.get(course.course_id);
         const driftProfile=learningProfile?.latestDrift;
         const transferProfiles=transferByCourse.get(course.course_id)??[];
+        const longitudinalProfile=longitudinalByKey.get(course.stable_key);
         return <article className="panel risk-course" id={"course-"+course.course_id} key={course.course_id}>
           <div className="risk-course-head">
             <div><p className="eyebrow">{course.operating_mode.replace("_"," ")} mode</p><h2>{course.display_name}</h2></div>
@@ -119,6 +121,20 @@ export default async function ProgressPage(){
               {transferProfiles.map((item)=><span key={item.priorId}><strong>{item.sourceSignal} → {item.currentSignal}</strong> {item.relation.replace("_"," ")} · {item.confidence} confidence</span>)}
             </div>
             {transferProfiles.map((item)=><p className="latest-intervention" key={item.priorId+"-note"}><strong>{item.sourceDisplayName}:</strong> {item.recommendation} ({item.baselineClassifications} baseline classifications · {item.independentAttempts} early independent attempts)</p>)}
+          </div> : null}
+
+          {longitudinalProfile ? <div className={"course-learning-panel difficulty-"+(longitudinalProfile.pattern==="recurring_weakness"?"persistent":longitudinalProfile.pattern==="durable_strength"?"responsive":"insufficient_evidence")}>
+            <div className="course-learning-head">
+              <div><span>Longitudinal profile</span><strong>{longitudinalProfile.pattern.replaceAll("_"," ")}</strong></div>
+              <b>{longitudinalProfile.usableTransitions} transition{longitudinalProfile.usableTransitions===1?"":"s"}</b>
+            </div>
+            <div className="course-learning-metrics">
+              <span><strong>{longitudinalProfile.positiveConfirmations}</strong> repeated strengths</span>
+              <span><strong>{longitudinalProfile.negativeConfirmations}</strong> repeated weaknesses</span>
+              <span><strong>{longitudinalProfile.contradictions}</strong> contradicted priors</span>
+            </div>
+            <p>{longitudinalProfile.recommendation}</p>
+            <p className="muted">Advisory history only. Current-semester attempts and mastery remain authoritative.</p>
           </div> : null}
 
           <div className="risk-detail-grid">
