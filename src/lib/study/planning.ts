@@ -65,7 +65,7 @@ export async function getDailyOrchestration(){
     getSemesterDrift(),
     getSemesterStrategyPortfolios(),
     db.from("study_current_capacity").select("*").eq("semester_id",semesterId).maybeSingle(),
-    db.from("study_semesters").select("starts_on,ends_on,timezone").eq("id",semesterId).single(),
+    db.from("study_semesters").select("starts_on,ends_on,timezone,bootstrap_certified_at").eq("id",semesterId).single(),
     db.from("study_planning_settings").select("*").eq("semester_id",semesterId).maybeSingle(),
     db.from("study_week_actions").select("*").eq("semester_id",semesterId),
     db.from("study_commitments").select("*").eq("semester_id",semesterId).eq("status","open").order("due_at"),
@@ -339,7 +339,9 @@ export async function getDailyOrchestration(){
     }
   }
 
+  const bootstrapCertified=Boolean(semesterResult.data?.bootstrap_certified_at);
   const operationalCandidates=weeklyCandidates.filter(candidate=>{
+    if(!bootstrapCertified)return candidate.kind==="commitment";
     if(!candidate.courseId||candidate.kind==="commitment")return true;
     if(resultBlockedCourses.has(candidate.courseId))return false;
     return !shouldFreezeCourseDiscretionary(examBoundaryMap.get(candidate.courseId));
@@ -352,7 +354,7 @@ export async function getDailyOrchestration(){
     const course=commitment.course_id?courseMap.get(commitment.course_id):null;
     return {...commitment,course_name:course?.display_name??null,course_short_name:course?.short_name??null};
   });
-  return {semesterId,today,pulse,drift,learningAnalytics,strategyPortfolios,forecast,examCommand,examOperations,examOutcomeState,weekRuntime,capacity,settings:settingsResult.data??null,courses,commitments:enrichedCommitments,candidates:operationalCandidates,plan,currentWeek};
+  return {semesterId,today,pulse,drift,learningAnalytics,strategyPortfolios,forecast,examCommand,examOperations,examOutcomeState,weekRuntime,capacity,settings:settingsResult.data??null,courses,commitments:enrichedCommitments,candidates:operationalCandidates,plan,currentWeek,bootstrapCertified};
 }
 
 export async function setDailyCapacity(input:{mode:string;customBudgetMinutes?:number|null;planDate?:string|null;note?:string|null}){
