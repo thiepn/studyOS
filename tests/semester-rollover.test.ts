@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { evaluateRolloverPreflight, validateNewSemester, type RolloverCourse } from "../src/lib/study/semester-rollover.ts";
 
-const course=(state:RolloverCourse["completionState"],id=state):RolloverCourse=>({
+const course=(state:RolloverCourse["completionState"],id:string=state):RolloverCourse=>({
   courseId:id,displayName:id,shortName:id,completionState:state,credits:6,
   nextExamAt:state==="retake_planned"?"2027-04-15T09:00:00Z":null,
 });
