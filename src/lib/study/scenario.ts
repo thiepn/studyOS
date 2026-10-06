@@ -226,7 +226,7 @@ export function buildScenario(input:ScenarioInput):ScenarioPlan{
     mandatoryDemandMinutes:mandatoryDemand,mandatoryShortfallMinutes:mandatoryShortfall,
     retentionReserveMinutes:retention,allocatableCourseMinutes:allocatable,allocatedCourseMinutes,
     unusedMinutes:Math.max(0,weekly-mandatory-retention-allocatedCourseMinutes),
-    feasibleProtection,totalProtectionFloorMinutes:totalFloor,totalFloorShortfallMinutes,
+    feasibleProtection,totalProtectionFloorMinutes:totalFloor,totalFloorShortfallMinutes:totalFloorShortfall,
     allocations:rows.sort((a,b)=>b.allocatedMinutes-a.allocatedMinutes||b.marginalScore-a.marginalScore),
     sacrificedCourses:sacrificed.length,summary,
   };
