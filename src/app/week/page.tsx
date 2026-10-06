@@ -65,7 +65,7 @@ export default async function WeekPage(){
         <div className="section-heading"><div><p className="eyebrow">Commit scenario</p><h2>Lock the remainder of this week</h2></div></div>
         <p className="muted">The capacity field cannot exceed the currently feasible remainder of the week. Course-floor shortfalls may be committed deliberately; mandatory-work deficits may not.</p>
         <WeeklyPlanControls activePlanId={null} baselineCapacityMinutes={envelope.feasibleCapacityMinutes} defaultObjective="balanced" canRebalance={false}/>
-        <div className="button-row"><Link className="secondary-button" href="/scenarios">Compare P18 scenarios</Link><Link className="secondary-button" href="/outlook">Review P17 outlook</Link></div>
+        <div className="button-row"><Link className="secondary-button" href="/scenarios">Compare P18 scenarios</Link><Link className="secondary-button" href="/handoff">Preview weekly handoff</Link><Link className="secondary-button" href="/outlook">Review P17 outlook</Link></div>
       </section>
     </main>;
   }
@@ -141,7 +141,7 @@ export default async function WeekPage(){
         <span><strong>{fmt(envelope.courseBudgetMinutes)}</strong> feasible future course work</span>
         <span><strong>{envelope.calendarFreeMinutes==null?"—":fmt(envelope.calendarFreeMinutes)}</strong> calendar free time</span>
       </div>
-      <div className="button-row"><Link className="secondary-button" href="/scenarios">Open P18 scenarios</Link><Link className="secondary-button" href="/outlook">Open P17 outlook</Link></div>
+      <div className="button-row"><Link className="secondary-button" href="/scenarios">Open P18 scenarios</Link><Link className="secondary-button" href="/handoff">Open weekly handoff</Link><Link className="secondary-button" href="/outlook">Open P17 outlook</Link></div>
     </section>
   </main>;
 }

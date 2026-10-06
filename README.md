@@ -2,9 +2,9 @@
 
 StudyOS is the WS26/27 retention and exam-readiness system for the THIEPN ecosystem. The application keeps raw university material in a dedicated Google Drive account, structured academic state in Supabase, and daily review/exam-readiness workflows in a Next.js frontend.
 
-## Current phase: P20
+## Current phase: P21
 
-Implemented through P20; the foundation includes:
+Implemented through P21; the foundation includes:
 
 - Next.js 16 App Router + Supabase SSR authentication
 - THIEPN Account shared identity with isolated `study_*` application data
@@ -398,3 +398,25 @@ StudyOS now evaluates whether its weekly planning heuristics match actual semest
 - P20 adds no new persistence or Supabase authorization surface.
 
 The next phase is **P21 — Closed-Loop Weekly Review, Next-Week Handoff & Semester Adaptation**.
+
+
+## P21 closed-loop weekly review and next-week handoff
+
+StudyOS now has an explicit boundary between one committed week and the next.
+
+- /handoff reconstructs the prior P19 week with the same session/workflow evidence used by the weekly runtime;
+- unfinished course-envelope minutes expire at week end and never become debt minutes;
+- unresolved real assignments/deadlines remain the same P10 commitments with their original IDs, dates, estimates and priorities;
+- unresolved commitments from before next Monday plus commitments due in the target week are reserved as mandatory next-week work;
+- P21 can evaluate an arbitrary Monday→Sunday P11 calendar runway instead of relying on a rolling today+6-day window;
+- previous/current P17 readiness snapshots are compared course by course;
+- the next P18 objective is recommended from exam runway, pass risk, prior sacrifice and the 80+ readiness gap;
+- P20 calibrated protection floors are carried directly into the handoff scenario;
+- a well-supported P20 over-commitment signal may produce a conservative lower course-work trial, while mandatory work and retention stay protected;
+- P20 under-commitment advice never lets P21 expand beyond the P10/P11 ceiling automatically;
+- an existing prior P19 week must finish and be explicitly closed before its normal successor can be committed;
+- closing a week uses the existing P19 status=completed state; no parallel review ledger was introduced;
+- committing the handoff writes an ordinary P19 plan/allocation set, which automatically becomes active when its Monday arrives;
+- no new database schema or authorization surface is introduced.
+
+The next phase is **P22 — Exam-Period Command Center, Multi-Exam Conflict Resolution & Final-Runway Scheduling**.
