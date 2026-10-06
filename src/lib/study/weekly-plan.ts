@@ -141,7 +141,11 @@ export function buildRollingProposal(input:{
   currentCourses:ScenarioCourse[];
   progress:WeeklyProgress;
 }):RollingProposal{
-  const completedMap=Object.fromEntries(input.completion.map(row=>[row.courseId,row.creditedMinutes]));
+  const rawCompletedMap=Object.fromEntries(input.completion.map(row=>[row.courseId,row.creditedMinutes]));
+  const completedMap=Object.fromEntries(input.allocations.map(allocation=>[
+    allocation.courseId,
+    Math.min(allocation.targetMinutes,Math.max(0,rawCompletedMap[allocation.courseId]??0)),
+  ]));
   const completedTotal=input.allocations.reduce((sum,row)=>sum+Math.max(0,completedMap[row.courseId]??0),0);
   const committedRemaining=Math.max(0,input.committedCourseBudgetMinutes-completedTotal);
   const feasibleRemaining=Math.max(0,Math.min(committedRemaining,Math.floor(input.currentRemainingCourseCapacityMinutes)));
