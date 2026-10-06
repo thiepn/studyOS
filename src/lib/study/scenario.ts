@@ -24,6 +24,8 @@ export type ScenarioCourse={
 export type ScenarioInput={
   weeklyCapacityMinutes:number;
   mandatoryCommitmentMinutes:number;
+  mandatoryDemandMinutes:number;
+  mandatoryShortfallMinutes:number;
   retentionReserveMinutes:number;
   objective:ScenarioObjective;
   courses:ScenarioCourse[];
@@ -145,7 +147,9 @@ export function courseFromForecast(forecast:CourseForecast):ScenarioCourse{
 
 export function buildScenario(input:ScenarioInput):ScenarioPlan{
   const weekly=Math.max(0,Math.floor(input.weeklyCapacityMinutes));
-  const mandatory=Math.max(0,Math.min(weekly,Math.floor(input.mandatoryCommitmentMinutes)));
+  const mandatoryDemand=Math.max(0,Math.floor(input.mandatoryCommitmentMinutes));
+  const mandatory=Math.max(0,Math.min(weekly,mandatoryDemand));
+  const mandatoryShortfall=Math.max(0,mandatoryDemand-mandatory);
   const afterMandatory=Math.max(0,weekly-mandatory);
   const retention=Math.max(0,Math.min(afterMandatory,Math.floor(input.retentionReserveMinutes)));
   const allocatable=Math.max(0,weekly-mandatory-retention);
@@ -204,8 +208,10 @@ export function buildScenario(input:ScenarioInput):ScenarioPlan{
   sacrificed.forEach((row,index)=>{row.sacrificeRank=index+1;});
   const totalFloorShortfall=sacrificed.reduce((sum,row)=>sum+row.floorShortfallMinutes,0);
   const allocatedCourseMinutes=rows.reduce((sum,row)=>sum+row.allocatedMinutes,0);
-  const feasibleProtection=totalFloorShortfall===0;
-  const summary=feasibleProtection
+  const feasibleProtection=mandatoryShortfall===0&&totalFloorShortfall===0;
+  const summary=mandatoryShortfall>0
+    ?"Mandatory commitments alone exceed weekly capacity by "+mandatoryShortfall+" minutes. No course-allocation scenario can be feasible until capacity rises or a commitment changes."
+    :feasibleProtection
     ?input.objective==="protect_passes"
       ?"All course protection floors fit. Remaining capacity is concentrated where pass-readiness risk has the highest marginal value."
       :input.objective==="target_performance"
@@ -217,6 +223,7 @@ export function buildScenario(input:ScenarioInput):ScenarioPlan{
 
   return {
     objective:input.objective,weeklyCapacityMinutes:weekly,mandatoryCommitmentMinutes:mandatory,
+    mandatoryDemandMinutes:mandatoryDemand,mandatoryShortfallMinutes:mandatoryShortfall,
     retentionReserveMinutes:retention,allocatableCourseMinutes:allocatable,allocatedCourseMinutes,
     unusedMinutes:Math.max(0,weekly-mandatory-retention-allocatedCourseMinutes),
     feasibleProtection,totalProtectionFloorMinutes:totalFloor,totalFloorShortfallMinutes,
