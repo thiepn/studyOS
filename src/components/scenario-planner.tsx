@@ -29,11 +29,13 @@ export function ScenarioPlanner({data}:{data:SemesterScenarioData}){
     retentionReserveMinutes:retention,
     objective,
     courses:data.courses,
+    floorAdjustments:data.calibration.floorAdjustments,
   }),[capacity,retention,objective,data]);
 
   const matrix=useMemo(()=>buildStandardScenarios({
     weeklyCapacityMinutes:capacity,mandatoryCommitmentMinutes:data.mandatoryCommitmentMinutes,
     retentionReserveMinutes:retention,courses:data.courses,
+    floorAdjustments:data.calibration.floorAdjustments,
   }),[capacity,retention,data]);
 
   return <>
@@ -47,6 +49,7 @@ export function ScenarioPlanner({data}:{data:SemesterScenarioData}){
         <span><strong>{fmt(retention)}</strong> retention reserve</span>
       </div>
       {data.calendarFreeMinutes!=null&&capacity>data.calendarFreeMinutes?<p className="scenario-warning"><strong>Counterfactual only:</strong> this scenario exceeds current seven-day calendar free time by {fmt(capacity-data.calendarFreeMinutes)} and would require freeing calendar time.</p>:null}
+      {data.calibration.completedWeeks>=3?<p className="scenario-calibration-note"><strong>P20 calibration active:</strong> {Object.keys(data.calibration.floorAdjustments).length} course floor{Object.keys(data.calibration.floorAdjustments).length===1?"":"s"} adjusted from completed-week execution evidence.</p>:null}
       <div className="scenario-objectives">
         {(Object.keys(labels) as ScenarioObjective[]).map(key=><button key={key} className={objective===key?"active":""} onClick={()=>setObjective(key)}>{labels[key]}</button>)}
       </div>
