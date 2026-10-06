@@ -36,7 +36,7 @@ export default async function ExamCommandPage(){
         <span><strong>{fmt(data.totalDailyBudget)}</strong> P10 today budget</span>
         <span><strong>{fmt(data.reviewReserveToday)}</strong> retention protected</span>
       </div>
-      <small>P22 coordinates timing and priority between exams. P9 remains authoritative for each course's current exam action.</small>
+      <small>P22 coordinates timing and priority between exams. P9 remains authoritative for each course's current exam action.{data.p23ExamInProgress?" P23 exam-in-progress freeze is active.":data.p23RecoveryLevel!=="none"?" P23 "+data.p23RecoveryLevel+" recovery is constraining Today.":""}</small>
     </section>
 
     {!command.active?<section className="panel">
