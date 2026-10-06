@@ -66,7 +66,7 @@ export default async function TodayPage() {
       {interventionConcern ? <section className={"panel intervention-alert difficulty-"+interventionConcern.analytics.difficultySignal}>
         <div><p className="eyebrow">P15 · intervention validation</p><h2>{interventionConcern.shortName ?? interventionConcern.displayName}</h2></div>
         <p>{interventionConcern.analytics.recommendation}</p>
-        <div className="button-row"><Link className="secondary-button" href={"/progress#course-"+interventionConcern.courseId}>Review intervention evidence</Link></div>
+        <div className="button-row"><Link className="primary-button" href={"/strategy?course="+interventionConcern.courseId}>Change strategy</Link><Link className="secondary-button" href={"/progress#course-"+interventionConcern.courseId}>Review evidence</Link></div>
       </section> : null}
 
       <CalendarAutopilotPanel data={calendar} />
