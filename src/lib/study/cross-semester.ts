@@ -79,6 +79,7 @@ export type LongitudinalCourseProfile={
 };
 
 const finite=(value:unknown)=>{
+  if(value==null||value==="")return null;
   const n=Number(value);
   return Number.isFinite(n)?n:null;
 };
@@ -201,9 +202,18 @@ export function summarizeRelationReliability(evaluations:PriorTransferEvaluation
 }
 
 export function buildLongitudinalProfiles(evaluations:PriorTransferEvaluation[]):LongitudinalCourseProfile[]{
-  const direct=evaluations.filter((row)=>row.relation==="direct_retake");
+  const confidenceRank:Record<TransferConfidence,number>={low:0,medium:1,high:2};
+  const transitionMap=new Map<string,PriorTransferEvaluation>();
+  for(const row of evaluations.filter((item)=>item.relation==="direct_retake")){
+    const key=row.stableKey+"::"+row.courseId;
+    const current=transitionMap.get(key);
+    if(!current
+      || (current.outcome==="insufficient_evidence"&&row.outcome!=="insufficient_evidence")
+      || confidenceRank[row.confidence]>confidenceRank[current.confidence]
+    ) transitionMap.set(key,row);
+  }
   const groups=new Map<string,PriorTransferEvaluation[]>();
-  for(const row of direct)groups.set(row.stableKey,[...(groups.get(row.stableKey)??[]),row]);
+  for(const row of transitionMap.values())groups.set(row.stableKey,[...(groups.get(row.stableKey)??[]),row]);
 
   return [...groups.entries()].map(([stableKey,rows])=>{
     const usable=rows.filter((row)=>row.outcome!=="insufficient_evidence");
