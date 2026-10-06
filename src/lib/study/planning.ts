@@ -97,7 +97,7 @@ export async function getDailyOrchestration(){
 
   const forecast=buildSemesterForecastFromEvidence({
     risks:pulse.risks,calibration,learning:learningAnalytics.courses,strategy:strategyPortfolios.courses,
-    courses,exams:(strategyResult.data??[]) as Array<any>,
+    courses,exams:(strategyResult.data??[]) as Array<any>,results:(resultResult.data??[]) as Array<any>,
   });
   const forecastMap=new Map(forecast.courses.map(course=>[course.courseId,course]));
   const examCommandInputs:ExamCommandInputCourse[]=((strategyResult.data??[]) as ExamStrategy[]).map(strategy=>{
