@@ -24,7 +24,20 @@ export async function getSemesterRolloverData(){
 
   const semesters=(semesterResult.data??[]) as Array<any>;
   const active=semesters.find(row=>row.active)??null;
-  const archives=semesters.filter(row=>!row.active).sort((a,b)=>String(b.archived_at??b.created_at).localeCompare(String(a.archived_at??a.created_at)));
+  const archivedRows=semesters.filter(row=>!row.active).sort((a,b)=>String(b.archived_at??b.created_at).localeCompare(String(a.archived_at??a.created_at)));
+  const archiveIds=archivedRows.map(row=>String(row.id));
+  let archivedFutureBlocks:Array<{semester_id:string}>=[];
+  if(archiveIds.length){
+    const archiveBlocks=await db.from("study_scheduled_blocks").select("semester_id")
+      .eq("user_id",userId).in("semester_id",archiveIds).eq("status","committed")
+      .gt("end_at",new Date().toISOString());
+    if(archiveBlocks.error)throw new StudyServiceError("Could not inspect archived calendar cleanup",archiveBlocks.error.code||"semester_history_failed",archiveBlocks.error);
+    archivedFutureBlocks=archiveBlocks.data??[];
+  }
+  const archives=archivedRows.map(row=>({
+    ...row,
+    futureBlockCount:archivedFutureBlocks.filter(block=>String(block.semester_id)===String(row.id)).length,
+  }));
 
   if(!active){
     return {activeSemester:null,archives,ledger:null,preflight:null,futureBlocks:[],openCommitments:[]};
