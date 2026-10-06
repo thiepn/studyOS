@@ -10,7 +10,7 @@ const allocation=(id:string,target=120,priority=60):WeeklyAllocationSnapshot=>({
 const course=(id:string,priority=60):ScenarioCourse=>({
   courseId:id,displayName:id.toUpperCase(),shortName:id.toUpperCase(),courseKind:"major",credits:9,
   readinessIndex:70,band:"pass_ready",confidence:"medium",trajectory:"stable",runway:"workable",
-  decisionPriority:priority,actionValue:80,actionTitle:"Work",actionMinutes:30,postExam:false,
+  decisionPriority:priority,actionValue:80,actionTitle:"Work",actionHref:"/courses/"+id,actionAuthority:"P17",actionMinutes:30,postExam:false,
 });
 
 test("credited minutes use the conservative larger evidence signal rather than summing",()=>{
