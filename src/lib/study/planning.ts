@@ -111,10 +111,16 @@ export async function getDailyOrchestration(){
       lastVerifiedScorePercent:strategy.last_verified_score_percent,
     };
   });
+  const commandNow=new Date();
+  const reviewReserve=Math.min(Number(capacity.effective_review_budget_minutes),Number(today.queueMinutes));
+  const urgentCommitmentReserve=((commitmentResult.data??[]) as CommitmentRow[])
+    .filter(commitment=>deadlinePressure(commitment.due_at,commandNow).urgent)
+    .reduce((sum,commitment)=>sum+Number(commitment.estimated_minutes),0);
+  const examTodayCapacity=Math.max(0,Number(capacity.total_budget_minutes)-reviewReserve-urgentCommitmentReserve);
   const examCommand=buildExamCommand({
-    nowIso:new Date().toISOString(),
+    nowIso:commandNow.toISOString(),
     courses:examCommandInputs,
-    dayCapacities:[{date:capacity.local_today,availableMinutes:Number(capacity.total_budget_minutes)}],
+    dayCapacities:[{date:capacity.local_today,availableMinutes:examTodayCapacity}],
   });
   const weekRuntime=await loadActiveWeekRuntime(
     db,userId,semesterId,capacity.local_today,capacity.timezone??semesterResult.data?.timezone??"Europe/Berlin",
@@ -149,7 +155,7 @@ export async function getDailyOrchestration(){
   }
 
   const commitments=(commitmentResult.data??[]) as CommitmentRow[];
-  const now=new Date();
+  const now=commandNow;
   for(const commitment of commitments){
     const pressure=deadlinePressure(commitment.due_at,now);
     const course=commitment.course_id?courseMap.get(commitment.course_id):null;
