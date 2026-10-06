@@ -15,7 +15,7 @@ const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]
 export type ExamResultRow=Database["public"]["Tables"]["study_exam_results"]["Row"];
 type CourseRow=Pick<
   Database["public"]["Tables"]["study_courses"]["Row"],
-  "id"|"display_name"|"short_name"|"course_kind"|"credits"|"exam_at"|"exam_duration_minutes"|"active"|"sort_order"
+  "id"|"stable_key"|"display_name"|"short_name"|"course_kind"|"credits"|"exam_at"|"exam_duration_minutes"|"active"|"sort_order"
 >;
 
 export type ExamResultCourse={
@@ -71,7 +71,7 @@ export async function getExamResultsData():Promise<ExamResultsData>{
   const [forecast,courseResult,resultResult,semesterResult]=await Promise.all([
     getSemesterForecast(),
     db.from("study_courses")
-      .select("id,display_name,short_name,course_kind,credits,exam_at,exam_duration_minutes,active,sort_order")
+      .select("id,stable_key,display_name,short_name,course_kind,credits,exam_at,exam_duration_minutes,active,sort_order")
       .eq("semester_id",semesterId).order("sort_order"),
     db.from("study_exam_results").select("*").eq("semester_id",semesterId)
       .order("course_id").order("attempt_no",{ascending:false}),
@@ -82,18 +82,39 @@ export async function getExamResultsData():Promise<ExamResultsData>{
 
   const forecastMap=new Map(forecast.courses.map(course=>[course.courseId,course]));
   const results=(resultResult.data??[]) as ExamResultRow[];
-  const historyMap=new Map<string,ExamResultRow[]>();
-  for(const row of results){
-    const key=String(row.course_id);
-    const list=historyMap.get(key)??[];
-    list.push(row);
-    historyMap.set(key,list);
-  }
-
   const nowIso=new Date().toISOString();
   const courseRows=(courseResult.data??[]) as CourseRow[];
+  const stableKeys=[...new Set(courseRows.map(course=>course.stable_key))];
+
+  let lineageCourses:Array<{id:string;stable_key:string}>=[];
+  let lineageResults:ExamResultRow[]=[];
+  if(stableKeys.length){
+    const lineageCourseResult=await db.from("study_courses").select("id,stable_key").in("stable_key",stableKeys);
+    if(lineageCourseResult.error)throw new StudyServiceError("Could not load retake lineage",lineageCourseResult.error.code||"exam_results_lineage_failed",lineageCourseResult.error);
+    lineageCourses=(lineageCourseResult.data??[]) as Array<{id:string;stable_key:string}>;
+    const lineageIds=lineageCourses.map(course=>course.id);
+    if(lineageIds.length){
+      const lineageResult=await db.from("study_exam_results").select("*").in("course_id",lineageIds).order("attempt_no",{ascending:false});
+      if(lineageResult.error)throw new StudyServiceError("Could not load retake attempt history",lineageResult.error.code||"exam_results_lineage_failed",lineageResult.error);
+      lineageResults=(lineageResult.data??[]) as ExamResultRow[];
+    }
+  }
+
+  const stableKeyByCourseId=new Map(lineageCourses.map(course=>[course.id,course.stable_key]));
+  const historyByStableKey=new Map<string,ExamResultRow[]>();
+  for(const row of lineageResults){
+    const key=stableKeyByCourseId.get(String(row.course_id));
+    if(!key)continue;
+    const list=historyByStableKey.get(key)??[];
+    list.push(row);
+    historyByStableKey.set(key,list);
+  }
+  for(const list of historyByStableKey.values()){
+    list.sort((a,b)=>Number(b.attempt_no)-Number(a.attempt_no)||Date.parse(b.exam_at)-Date.parse(a.exam_at));
+  }
+
   const courses:ExamResultCourse[]=courseRows.map((course)=>{
-    const history=historyMap.get(String(course.id))??[];
+    const history=historyByStableKey.get(course.stable_key)??[];
     const latest=history[0]??null;
     const latestOfficial=history.find(row=>row.result_status==="official")??null;
     const current=forecastMap.get(String(course.id))??null;
@@ -133,7 +154,7 @@ export async function recordExamResult(input:ExamResultInput){
   const course=data.courses.find(row=>row.courseId===input.courseId);
   if(!course)throw new StudyServiceError("Course not found","invalid_exam_result");
 
-  const existing=course.history.find(row=>Number(row.attempt_no)===Number(input.attemptNo))??null;
+  const existing=course.history.find(row=>row.course_id===input.courseId&&Number(row.attempt_no)===Number(input.attemptNo))??null;
   const examAt=existing?.exam_at??course.examAt;
   if(!examAt)throw new StudyServiceError("Configure the exam date before recording a new result","invalid_exam_result");
 
