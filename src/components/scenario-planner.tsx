@@ -46,6 +46,7 @@ export function ScenarioPlanner({data}:{data:SemesterScenarioData}){
         <span><strong>{fmt(data.mandatoryCommitmentMinutes)}</strong> mandatory commitments</span>
         <span><strong>{fmt(retention)}</strong> retention reserve</span>
       </div>
+      {data.calendarFreeMinutes!=null&&capacity>data.calendarFreeMinutes?<p className="scenario-warning"><strong>Counterfactual only:</strong> this scenario exceeds current seven-day calendar free time by {fmt(capacity-data.calendarFreeMinutes)} and would require freeing calendar time.</p>:null}
       <div className="scenario-objectives">
         {(Object.keys(labels) as ScenarioObjective[]).map(key=><button key={key} className={objective===key?"active":""} onClick={()=>setObjective(key)}>{labels[key]}</button>)}
       </div>
