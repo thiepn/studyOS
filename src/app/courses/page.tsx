@@ -15,7 +15,7 @@ export default async function CoursesPage() {
 
   return (
     <main className="shell">
-      <header className="header"><div><p className="eyebrow">WS26/27</p><h1>Courses</h1></div><Nav /></header>
+      <header className="header"><div><p className="eyebrow">Active semester</p><h1>Courses</h1></div><Nav /></header>
       <section className="course-stack">
         {data.courses.map((c) => {
           const weeks = (c.course_id ? byCourse.get(c.course_id) : undefined) ?? [];
