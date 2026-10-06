@@ -13,6 +13,7 @@ export function Nav() {
       <Link href="/exam-command">Exam Command</Link>
       <Link href="/exam-day">Exam Day</Link>
       <Link href="/exam-results">Results</Link>
+      <Link href="/semester">Semester</Link>
       <Link href="/scenarios">Scenarios</Link>
       <Link href="/week">Week</Link>
       <Link href="/handoff">Handoff</Link>
