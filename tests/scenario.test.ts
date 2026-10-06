@@ -80,3 +80,17 @@ test("standard scenarios preserve exactly the same fixed capacity",()=>{
   });
   for(const plan of Object.values(plans))assert.equal(plan.weeklyCapacityMinutes,720);
 });
+
+
+test("exam-period objective shifts discretionary capacity toward compressed runway",()=>{
+  const result=buildScenario({
+    weeklyCapacityMinutes:420,mandatoryCommitmentMinutes:0,retentionReserveMinutes:60,objective:"exam_period",
+    courses:[
+      course("near",{runway:"compressed",decisionPriority:60,band:"pass_ready",readinessIndex:72}),
+      course("far",{runway:"ample",decisionPriority:60,band:"pass_ready",readinessIndex:72}),
+    ],
+  });
+  const near=result.allocations.find((row)=>row.courseId==="near")!;
+  const far=result.allocations.find((row)=>row.courseId==="far")!;
+  assert.ok(near.allocatedMinutes>far.allocatedMinutes);
+});
