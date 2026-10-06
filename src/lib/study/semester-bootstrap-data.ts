@@ -5,6 +5,16 @@ import { evaluateSemesterBootstrap, parseBootstrapCourseDraft, type BootstrapRel
 
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+type BootstrapCourseDetail={
+  id:string;
+  credits:number|null;
+  professor:string|null;
+  exam_at:string|null;
+  exam_duration_minutes:number|null;
+  exam_format:string|null;
+  drive_folder_url:string|null;
+};
+
 export async function getSemesterBootstrapData(){
   const supabase=await createClient();
   const {semesterId,userId}=await ensureStudyWorkspace(supabase);
@@ -61,7 +71,8 @@ export async function getSemesterBootstrapData(){
     const detailResult=await db.from("study_courses").select("id,credits,professor,exam_at,exam_duration_minutes,exam_format,drive_folder_url")
       .in("id",courseIds);
     if(detailResult.error)throw new StudyServiceError("Could not load course metadata",detailResult.error.code||"semester_bootstrap_read_failed",detailResult.error);
-    const details=new Map((detailResult.data??[]).map((row:any)=>[String(row.id),row]));
+    const detailRows=(detailResult.data??[]) as BootstrapCourseDetail[];
+    const details=new Map<string,BootstrapCourseDetail>(detailRows.map(row=>[row.id,row]));
     for(const course of courses){
       const detail=details.get(course.courseId);
       course.credits=detail?.credits==null?null:Number(detail.credits);
