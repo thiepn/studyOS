@@ -145,7 +145,9 @@ export function deriveHandoffCapacity(input:{
   }
 
   const afterSelectedMandatory=Math.max(0,selected-Math.min(selected,mandatory));
-  const retention=round15(Math.min(input.maxRetentionMinutes,afterSelectedMandatory*clamp(input.reviewRatio,0,0.5)));
+  const retention=calibrationApplied
+    ?baselineRetention
+    :round15(Math.min(input.maxRetentionMinutes,afterSelectedMandatory*clamp(input.reviewRatio,0,0.5)));
   return {
     feasibleCapacityMinutes:feasible,selectedCapacityMinutes:selected,mandatoryMinutes:mandatory,
     retentionMinutes:retention,courseBudgetMinutes:Math.max(0,selected-Math.min(selected,mandatory)-retention),
