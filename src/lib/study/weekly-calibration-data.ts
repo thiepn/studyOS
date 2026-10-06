@@ -96,7 +96,7 @@ export async function getWeeklyCalibrationProfile(){
       const minutes=Math.max(0,Number(session.actual_minutes??session.planned_minutes??0));
       const current=courseCredits.get(session.course_id)!;
       current.session+=minutes;
-      if(session.planned_minutes!=null&&session.actual_minutes!=null&&Number(session.planned_minutes)>0&&Number(session.actual_minutes)>=0){
+      if(session.planned_minutes!=null&&session.actual_minutes!=null&&Number(session.planned_minutes)>0&&Number(session.actual_minutes)>0){
         estimateSamples.push({
           courseId:session.course_id,
           plannedMinutes:Number(session.planned_minutes),
