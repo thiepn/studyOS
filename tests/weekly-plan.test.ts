@@ -92,3 +92,25 @@ test("material evidence shift can rebalance remaining minutes without increasing
   assert.equal(proposal.proposedCourseBudgetMinutes,240);
   assert.ok(proposal.courses.find(row=>row.courseId==="dgl")!.proposedTargetMinutes>=proposal.courses.find(row=>row.courseId==="ti")!.proposedTargetMinutes);
 });
+
+
+test("post-exam course releases its unfinished weekly envelope under exam-period rebalance",()=>{
+  const allocations=[allocation("dgl",120,80),allocation("ti",120,70)];
+  const completion=[
+    {courseId:"dgl",sessionMinutes:30,workflowMinutes:0,creditedMinutes:30},
+    {courseId:"ti",sessionMinutes:60,workflowMinutes:0,creditedMinutes:60},
+  ];
+  const progress=buildWeeklyProgress({
+    periodStartsOn:"2026-10-05",periodEndsOn:"2026-10-11",committedAt:"2026-10-05T08:00:00Z",localToday:"2026-10-08",
+    allocations,completion,
+  });
+  const closed={...course("dgl",80),postExam:true};
+  const active={...course("ti",85),runway:"urgent" as const};
+  const proposal=buildRollingProposal({
+    objective:"exam_period",committedCourseBudgetMinutes:240,currentRemainingCourseCapacityMinutes:150,
+    allocations,completion,currentCourses:[closed,active],progress,
+  });
+  assert.equal(proposal.courses.find(row=>row.courseId==="dgl")?.proposedTargetMinutes,30);
+  assert.ok((proposal.courses.find(row=>row.courseId==="ti")?.proposedTargetMinutes??0)>=60);
+  assert.ok(proposal.proposedCourseBudgetMinutes<=240);
+});
