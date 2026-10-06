@@ -13,14 +13,15 @@ import {
 type CourseRow=Database["public"]["Tables"]["study_courses"]["Row"];
 type ResultRow=Database["public"]["Tables"]["study_exam_results"]["Row"];
 
-export async function getSemesterCompletionData(){
+export async function getSemesterCompletionData(semesterIdOverride?:string){
   const supabase=await createClient();
-  const {semesterId}=await ensureStudyWorkspace(supabase);
+  const workspace=await ensureStudyWorkspace(supabase);
+  const semesterId=semesterIdOverride??workspace.semesterId;
   const db=supabase as any;
 
   const [calibrationData,semesterResult,courseResult,resultResult]=await Promise.all([
-    getWeeklyCalibrationProfile(),
-    db.from("study_semesters").select("id,display_name,starts_on,ends_on,timezone").eq("id",semesterId).single(),
+    getWeeklyCalibrationProfile(semesterId),
+    db.from("study_semesters").select("id,display_name,starts_on,ends_on,timezone,active,archived_at,previous_semester_id").eq("id",semesterId).single(),
     db.from("study_courses").select("*").eq("semester_id",semesterId).order("sort_order"),
     db.from("study_exam_results").select("*").eq("semester_id",semesterId).order("course_id").order("attempt_no"),
   ]);
@@ -84,6 +85,11 @@ export async function getSemesterCompletionData(){
   return {
     ...ledger,
     timezone:String(semesterResult.data.timezone??calibrationData.timezone),
+    semesterLifecycle:{
+      active:Boolean(semesterResult.data.active),
+      archivedAt:semesterResult.data.archived_at==null?null:String(semesterResult.data.archived_at),
+      previousSemesterId:semesterResult.data.previous_semester_id==null?null:String(semesterResult.data.previous_semester_id),
+    },
     nowIso,
     calibration:calibrationData.profile,
   };
