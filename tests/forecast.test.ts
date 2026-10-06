@@ -103,3 +103,14 @@ test("missing P9 timed-paper duration uses the conservative 90-minute fallback",
   assert.equal(result.nextAction.authority,"P9");
   assert.equal(result.nextAction.estimatedMinutes,90);
 });
+
+
+test("post-exam courses leave the active semester decision queue",()=>{
+  const result=buildCourseForecast(base({
+    operatingMode:"post_exam",daysToExam:-2,riskScore:95,dueOrAtRiskSkills:8,actionableBacklog:5,
+  }));
+  assert.equal(result.decisionPriority,0);
+  assert.equal(result.nextAction.expectedValue,0);
+  assert.equal(result.nextAction.estimatedMinutes,0);
+  assert.match(result.nextAction.title,/exam complete/i);
+});
