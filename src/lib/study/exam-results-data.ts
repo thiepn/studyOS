@@ -148,7 +148,9 @@ export async function recordExamResult(input:ExamResultInput){
   let cleanupWarning:string|null=null;
   if(input.resultStatus==="official"){
     try{
-      cleanup=await closeExamAndReallocate(input.courseId);
+      cleanup=await closeExamAndReallocate(input.courseId,{
+        examAt:String(examAt),durationMinutes:course.examDurationMinutes,
+      });
     }catch(error){
       cleanupWarning=error instanceof Error?error.message:"Post-exam planning cleanup needs manual review.";
     }
