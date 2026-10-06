@@ -253,6 +253,13 @@ function examActionMinutes(input:ForecastInput){
 }
 
 function chooseNextAction(input:ForecastInput,readiness:number,evidence:number,runway:RunwayBand):DecisionAction{
+  if(input.operatingMode==="post_exam"||runway==="passed"){
+    return {
+      kind:"maintain",title:"Exam complete — no further allocation",
+      reason:"The configured exam has passed. P17 removes this course from active semester-allocation pressure.",
+      href:"/courses/"+input.courseId,estimatedMinutes:0,expectedValue:0,authority:"P17",
+    };
+  }
   const candidates:DecisionAction[]=[];
   const add=(action:DecisionAction)=>candidates.push({...action,expectedValue:Math.round(clamp(action.expectedValue))});
 
@@ -396,7 +403,8 @@ export function buildCourseForecast(input:ForecastInput):CourseForecast{
   const trajectoryPressure=currentTrajectory==="declining"?10:currentTrajectory==="improving"?-5:0;
   const structuralPressure=input.difficultySignal==="structural"?12:input.difficultySignal==="persistent"?7:0;
   const evidencePressure=evidence<35?12:0;
-  const decisionPriority=Math.round(clamp((100-provisional)*0.55+num(input.riskScore)*0.25+urgency+trajectoryPressure+structuralPressure+evidencePressure));
+  const activeDecisionPriority=Math.round(clamp((100-provisional)*0.55+num(input.riskScore)*0.25+urgency+trajectoryPressure+structuralPressure+evidencePressure));
+  const decisionPriority=input.operatingMode==="post_exam"||runway==="passed"?0:activeDecisionPriority;
 
   const nextAction=chooseNextAction(input,provisional,evidence,runway);
   const summary=band==="insufficient_evidence"
