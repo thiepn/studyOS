@@ -21,6 +21,9 @@ export async function getSemesterScenarioData(){
     ?calendar.weekly.reduce((sum,day)=>sum+Number(day.freeMinutes),0)
     :null;
   const baselineWeekly=calendarFree==null?nominalWeekly:round15(Math.min(nominalWeekly,calendarFree));
+  const todayRemainingFreeMinutes=calendar.connection?.status==="connected"
+    ?Math.max(0,Math.round(calendar.todayWindows.reduce((sum,window)=>sum+(Date.parse(window.endAt)-Date.parse(window.startAt))/60000,0)))
+    :null;
   const mandatoryCommitments=calendar.weekly.reduce((sum,day)=>sum+Number(day.commitmentMinutes),0);
 
   const normalBudget=Math.max(1,Number(orchestration.capacity.normal_budget_minutes));
@@ -64,7 +67,7 @@ export async function getSemesterScenarioData(){
 
   return {
     source:(calendar.connection?.status==="connected"?"calendar_capped":"planning_default") as "calendar_capped"|"planning_default",
-    dailyDefaultMinutes:dailyDefault,nominalWeeklyMinutes:nominalWeekly,calendarFreeMinutes:calendarFree,
+    dailyDefaultMinutes:dailyDefault,nominalWeeklyMinutes:nominalWeekly,calendarFreeMinutes:calendarFree,todayRemainingFreeMinutes,
     baselineWeeklyMinutes:baselineWeekly,mandatoryCommitmentMinutes:mandatoryCommitments,
     retentionReserveMinutes:retentionReserve,maxWeeklyRetentionMinutes,configuredReviewRatio,
     minCustomCapacity,maxCustomCapacity,courses,standard,stress,
