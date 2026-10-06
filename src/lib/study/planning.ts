@@ -13,7 +13,8 @@ import { loadActiveWeekRuntime } from "./weekly-runtime";
 import { weeklyPriorityAdjustment } from "./weekly-plan";
 import { buildExamCommand, classifyExamAction, examCommandDirective, type ExamCommandInputCourse } from "./exam-command";
 import { buildExamOperations, examRecoveryDirective, shouldFreezeCourseDiscretionary } from "./exam-operations";
-import { resultBlocksCoursePlanning } from "./exam-results";\nimport { bootstrapAllowsCandidate } from "./semester-bootstrap";
+import { resultBlocksCoursePlanning } from "./exam-results";
+import { bootstrapAllowsCandidate } from "./semester-bootstrap";
 
 const ACTIONS=new Set(["process_material","retrieve_lecture","attempt_exercise","reconcile_solution","repair_findings"]);
 const MODE_SET=new Set<PlanningMode>(["normal","light","recovery","intensive","custom"]);
