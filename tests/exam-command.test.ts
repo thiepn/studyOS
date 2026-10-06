@@ -104,3 +104,13 @@ test("simulation cooldown shifts preview placement off Today",()=>{
   });
   assert.notEqual(command.courses[0].scheduledDate,"2026-10-06");
 });
+
+
+test("distant multi-exam visibility does not distort P10 priorities",()=>{
+  const command=buildExamCommand({
+    nowIso:"2026-10-06T10:00:00Z",dayCapacities:days(),
+    courses:[c("dgl",35),c("ti",42)],
+  });
+  assert.equal(command.level,"multi_exam");
+  assert.ok(command.courses.every(row=>row.p10PriorityAdjustment===0));
+});
