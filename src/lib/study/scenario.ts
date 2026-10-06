@@ -24,8 +24,6 @@ export type ScenarioCourse={
 export type ScenarioInput={
   weeklyCapacityMinutes:number;
   mandatoryCommitmentMinutes:number;
-  mandatoryDemandMinutes:number;
-  mandatoryShortfallMinutes:number;
   retentionReserveMinutes:number;
   objective:ScenarioObjective;
   courses:ScenarioCourse[];
@@ -54,6 +52,8 @@ export type ScenarioPlan={
   objective:ScenarioObjective;
   weeklyCapacityMinutes:number;
   mandatoryCommitmentMinutes:number;
+  mandatoryDemandMinutes:number;
+  mandatoryShortfallMinutes:number;
   retentionReserveMinutes:number;
   allocatableCourseMinutes:number;
   allocatedCourseMinutes:number;
