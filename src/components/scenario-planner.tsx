@@ -96,7 +96,11 @@ export function ScenarioPlanner({data}:{data:SemesterScenarioData}){
     <section className="panel">
       <div className="section-heading"><div><p className="eyebrow">Capacity stress test</p><h2>What breaks when the week shrinks?</h2></div></div>
       <div className="scenario-stress-grid">{data.stress.map(item=><article key={item.key}>
-        <strong>{item.label}</strong><b>{fmt(item.minutes)}</b><span>{item.plan.feasibleProtection?"all floors protected":fmt(item.plan.totalFloorShortfallMinutes)+" shortfall"}</span>
+        <strong>{item.label}</strong><b>{fmt(item.minutes)}</b><span>{item.plan.feasibleProtection
+          ?"all floors protected"
+          :item.plan.mandatoryShortfallMinutes>0
+            ?fmt(item.plan.mandatoryShortfallMinutes)+" mandatory deficit"
+            :fmt(item.plan.totalFloorShortfallMinutes)+" course-floor shortfall"}</span>
       </article>)}</div>
     </section>
   </>;
