@@ -1,5 +1,5 @@
 export type ActivationSnapshot={
-  course_count:number;major_course_count:number;retake_course_count:number;
+  course_count:number;major_course_count:number;retake_course_count:number;bootstrap_certified:boolean;
   drive_connected:boolean;drive_tree_ready:boolean;calendar_connected:boolean;calendar_synced:boolean;
   majors_with_timetable:number;retake_baselines_completed:number;majors_with_week1_material:number;
   majors_with_study_map:number;majors_with_attempts:number;
@@ -25,6 +25,7 @@ export function evaluateActivation(platform:PlatformActivation,snapshot:Activati
   const platformBlockers=platformChecks.filter(([ok])=>!ok).map(([,message])=>message);
 
   const activationChecks=[
+    [snapshot.bootstrap_certified,"Complete and certify P27 new-semester bootstrap."],
     [snapshot.course_count>0,"Add the real courses for the active semester."],
     [snapshot.drive_connected,"Connect the intended Study Drive Google account."],
     [snapshot.drive_tree_ready,"Provision the active-semester Drive folder, inbox, and course folders."],
