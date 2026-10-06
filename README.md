@@ -2,9 +2,9 @@
 
 StudyOS is the WS26/27 retention and exam-readiness system for the THIEPN ecosystem. The application keeps raw university material in a dedicated Google Drive account, structured academic state in Supabase, and daily review/exam-readiness workflows in a Next.js frontend.
 
-## Current phase: P25
+## Current phase: P26
 
-Implemented through P25; the foundation includes:
+Implemented through P26; the foundation includes:
 
 - Next.js 16 App Router + Supabase SSR authentication
 - THIEPN Account shared identity with isolated `study_*` application data
@@ -512,3 +512,30 @@ StudyOS now aggregates actual P24 outcomes into a semester-level academic ledger
 - P25 adds no new database schema or persistence.
 
 The next phase is **P26 — Semester Archive, New-Semester Rollover & Retake Carry-Forward**.
+
+
+## P26 semester archive, rollover and retake carry-forward
+
+StudyOS can now transition cleanly from one semester to the next.
+
+- the active workspace is resolved from study_semesters.active instead of the old hard-coded ws26_27 key;
+- at most one semester may be active for a user;
+- archived semesters receive archived_at and explicit previous_semester_id lineage;
+- rollover is an atomic database transaction;
+- open real commitments block archive instead of being silently dropped or copied;
+- missing/provisional outcomes block archive;
+- pending retake decisions block archive and must be resolved first;
+- only explicitly planned retakes with future exam dates are copied into the new semester;
+- P10 capacity defaults and P11 calendar-planning preferences carry as configuration, with standard defaults created if no prior preference row exists;
+- carried retakes receive fresh course rows and fresh operational state;
+- weekly plans, unfinished study minutes, sessions, calendar planning, Drive semester folders and other stale execution state never carry;
+- remaining active P19 plan state is closed at archive time;
+- stale future Google Calendar StudyOS blocks are cancelled after the academic transaction and can be retried from Semester History if the external deletion fails;
+- P24 retake attempt history follows the explicit semester ancestry chain plus stable course identity, so attempt numbering continues without duplicating old result rows;
+- archived P25 ledgers freeze their time boundary at archived_at so historical state cannot mutate as future retake dates pass;
+- /semesters lists active and archived workspaces;
+- /semester/rollover provides preflight + rollover;
+- /semester/archive/[semesterId] provides read-only historical context;
+- P26 version is 0.24.0.
+
+The next phase is **P27 — New-Semester Course Intake, Curriculum Bootstrap & Historical Prior Transfer**.

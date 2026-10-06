@@ -168,6 +168,8 @@ export default async function SemesterPage(){
         <Link className="secondary-button" href="/exam-results">Open exam results</Link>
         <Link className="secondary-button" href="/quality">Inspect execution quality</Link>
         <Link className="secondary-button" href="/outlook">Review readiness model</Link>
+        <Link className="secondary-button" href="/semesters">Semester history</Link>
+        <Link className="secondary-button" href="/semester/rollover">Rollover semester</Link>
       </div>
     </section>
   </main>;

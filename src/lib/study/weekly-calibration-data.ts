@@ -18,9 +18,11 @@ function localDate(timezone:string){
   return new Intl.DateTimeFormat("en-CA",{timeZone:timezone,year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date());
 }
 
-export async function getWeeklyCalibrationProfile(){
+export async function getWeeklyCalibrationProfile(semesterIdOverride?:string){
   const supabase=await createClient();
-  const {semesterId,userId}=await ensureStudyWorkspace(supabase);
+  const workspace=await ensureStudyWorkspace(supabase);
+  const semesterId=semesterIdOverride??workspace.semesterId;
+  const userId=workspace.userId;
   const db=supabase as any;
   const [semesterResult,capacityResult]=await Promise.all([
     db.from("study_semesters").select("timezone").eq("id",semesterId).single(),
