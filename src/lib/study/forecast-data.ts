@@ -17,12 +17,20 @@ export function buildSemesterForecastFromEvidence(input:{
   strategy:Array<any>;
   courses:Array<any>;
   exams:Array<any>;
+  results?:Array<any>;
 }):SemesterForecast{
   const riskMap=new Map(input.risks.map((row)=>[String(row.course_id),row]));
   const calibrationMap=new Map(input.calibration.map((row)=>[String(row.courseId),row.profile]));
   const learningMap=new Map(input.learning.map((row)=>[String(row.courseId),row.analytics]));
   const strategyMap=new Map(input.strategy.map((row)=>[String(row.courseId),row]));
   const examMap=new Map(input.exams.map((row)=>[String(row.course_id),row]));
+  const resultMap=new Map<string,any>();
+  for(const row of input.results??[]){
+    if(row.result_status!=="official")continue;
+    const id=String(row.course_id);
+    const current=resultMap.get(id);
+    if(!current||Number(row.attempt_no)>Number(current.attempt_no))resultMap.set(id,row);
+  }
   const courses=input.courses.map((course)=>{
     const risk=riskMap.get(String(course.id))??{};
     const calibrated=calibrationMap.get(String(course.id));
@@ -75,7 +83,21 @@ export function buildSemesterForecastFromEvidence(input:{
       examNextActionReason:exam.next_action_reason==null?null:String(exam.next_action_reason),
       examStrategyDurationMinutes:exam.strategy_duration_minutes==null?null:Number(exam.strategy_duration_minutes),
     };
-    return {sortOrder:Number(course.sort_order??0),forecast:buildCourseForecast(forecastInput)};
+    let forecast=buildCourseForecast(forecastInput);
+    const outcome=resultMap.get(String(course.id));
+    if(outcome?.retake_decision==="pending"){
+      forecast={
+        ...forecast,
+        decisionPriority:0,
+        summary:"Official non-passing outcome recorded. Study allocation is paused until the retake decision is resolved.",
+        nextAction:{
+          kind:"retake_decision",title:"Resolve retake decision",
+          reason:"P24 blocks new study allocation until you explicitly choose whether and when this course will be retaken.",
+          href:"/exam-results",estimatedMinutes:5,expectedValue:100,authority:"P24",
+        },
+      };
+    }
+    return {sortOrder:Number(course.sort_order??0),forecast};
   }).sort((a,b)=>a.sortOrder-b.sortOrder).map((row)=>row.forecast);
   return {courses,summary:summarizeSemesterForecast(courses)};
 }
@@ -85,17 +107,20 @@ export async function getSemesterForecast():Promise<SemesterForecast>{
   const {semesterId}=await ensureStudyWorkspace(supabase);
   const db=supabase as any;
 
-  const [pulse,strategy,courseResult,examResult]=await Promise.all([
+  const [pulse,strategy,courseResult,examResult,resultResult]=await Promise.all([
     getSemesterPulse(),
     getSemesterStrategyPortfolios(),
     db.from("study_courses").select("id,display_name,short_name,sort_order,course_kind,credits").eq("semester_id",semesterId).eq("active",true).order("sort_order"),
     db.from("study_exam_strategy").select("*").eq("semester_id",semesterId),
+    db.from("study_exam_results").select("course_id,attempt_no,result_status,outcome,retake_decision")
+      .eq("semester_id",semesterId).eq("result_status","official").order("attempt_no",{ascending:false}),
   ]);
-  const error=courseResult.error||examResult.error;
+  const error=courseResult.error||examResult.error||resultResult.error;
   if(error)throw new StudyServiceError("Could not load semester forecast evidence",error.code||"forecast_read_failed",error);
 
   return buildSemesterForecastFromEvidence({
     risks:pulse.risks,calibration:strategy.calibration,learning:strategy.learning.courses,strategy:strategy.courses,
     courses:(courseResult.data??[]) as Array<any>,exams:(examResult.data??[]) as Array<any>,
+    results:(resultResult.data??[]) as Array<any>,
   });
 }
