@@ -25,21 +25,13 @@ export type ActiveWeekRuntime={
 
 function dayNumber(date:string){return Math.floor(Date.parse(date+"T00:00:00Z")/86_400_000);}
 
-export async function loadActiveWeekRuntime(
+export async function loadWeekRuntimeForPlan(
   db:any,
   userId:string,
-  semesterId:string,
+  plan:WeekPlanRow,
   localToday:string,
   timezone:string,
-):Promise<ActiveWeekRuntime|null>{
-  const planResult=await db.from("study_week_plans").select("*")
-    .eq("user_id",userId).eq("semester_id",semesterId).eq("status","active")
-    .lte("period_starts_on",localToday).gte("period_ends_on",localToday)
-    .order("period_ends_on",{ascending:true}).limit(1).maybeSingle();
-  if(planResult.error)throw new StudyServiceError("Could not load weekly commitment",planResult.error.code||"week_plan_read_failed",planResult.error);
-  const plan=(planResult.data??null) as WeekPlanRow|null;
-  if(!plan)return null;
-
+):Promise<ActiveWeekRuntime>{
   const allocationResult=await db.from("study_week_allocations").select("*")
     .eq("plan_id",plan.id).eq("user_id",userId);
   if(allocationResult.error)throw new StudyServiceError("Could not load weekly allocations",allocationResult.error.code||"week_allocation_read_failed",allocationResult.error);
@@ -101,6 +93,23 @@ export async function loadActiveWeekRuntime(
     periodStartsOn:plan.period_starts_on,periodEndsOn:plan.period_ends_on,committedAt:plan.committed_at,
     localToday,allocations,completion,
   });
-  const daysRemaining=Math.max(1,dayNumber(plan.period_ends_on)-dayNumber(localToday)+1);
+  const daysRemaining=Math.max(0,dayNumber(plan.period_ends_on)-dayNumber(localToday)+1);
   return {plan,allocations,completion,progress,daysRemaining};
+}
+
+export async function loadActiveWeekRuntime(
+  db:any,
+  userId:string,
+  semesterId:string,
+  localToday:string,
+  timezone:string,
+):Promise<ActiveWeekRuntime|null>{
+  const planResult=await db.from("study_week_plans").select("*")
+    .eq("user_id",userId).eq("semester_id",semesterId).eq("status","active")
+    .lte("period_starts_on",localToday).gte("period_ends_on",localToday)
+    .order("period_ends_on",{ascending:true}).limit(1).maybeSingle();
+  if(planResult.error)throw new StudyServiceError("Could not load weekly commitment",planResult.error.code||"week_plan_read_failed",planResult.error);
+  const plan=(planResult.data??null) as WeekPlanRow|null;
+  if(!plan)return null;
+  return loadWeekRuntimeForPlan(db,userId,plan,localToday,timezone);
 }
