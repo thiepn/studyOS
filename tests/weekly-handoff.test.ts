@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildWeekReview, deriveHandoffCapacity, isHandoffCommitWindow, isWeekClosable, mondayOnOrAfter, recommendHandoffObjective } from "../src/lib/study/weekly-handoff.ts";
+import { buildWeekReview, canCommitHandoff, deriveHandoffCapacity, isHandoffCommitWindow, isWeekClosable, mondayOnOrAfter, recommendHandoffObjective } from "../src/lib/study/weekly-handoff.ts";
 import type { ScenarioCourse } from "../src/lib/study/scenario.ts";
 import type { WeeklyCalibrationProfile } from "../src/lib/study/weekly-calibration.ts";
 import type { WeeklyProgress } from "../src/lib/study/weekly-plan.ts";
@@ -88,4 +88,20 @@ test("future-week commitment is allowed only at the Sunday/Monday handoff bounda
   assert.equal(isHandoffCommitWindow("2026-10-11","2026-10-12"),true);
   assert.equal(isHandoffCommitWindow("2026-10-12","2026-10-12"),true);
   assert.equal(isHandoffCommitWindow("2026-10-06","2026-10-12"),false);
+});
+
+
+test("handoff commitment requires prior review closure when a prior week exists",()=>{
+  assert.equal(canCommitHandoff({
+    today:"2026-10-11",targetStart:"2026-10-12",previousStatus:"active",targetStatus:null,
+  }),false);
+  assert.equal(canCommitHandoff({
+    today:"2026-10-12",targetStart:"2026-10-12",previousStatus:"completed",targetStatus:null,
+  }),true);
+  assert.equal(canCommitHandoff({
+    today:"2026-10-12",targetStart:"2026-10-12",previousStatus:null,targetStatus:null,
+  }),true);
+  assert.equal(canCommitHandoff({
+    today:"2026-10-12",targetStart:"2026-10-12",previousStatus:"completed",targetStatus:"active",
+  }),false);
 });
