@@ -156,3 +156,8 @@ export function deriveHandoffCapacity(input:{
 export function isWeekClosable(periodEndsOn:string,today:string){
   return dayNumber(periodEndsOn)<dayNumber(today);
 }
+
+export function isHandoffCommitWindow(today:string,targetStart:string){
+  const daysUntil=dayNumber(targetStart)-dayNumber(today);
+  return daysUntil===0||daysUntil===1;
+}
