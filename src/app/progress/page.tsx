@@ -43,9 +43,9 @@ export default async function ProgressPage(){
         <div><strong>{transfer.summary.activePriors}</strong><span>active priors</span></div>
         <div><strong>{transfer.summary.usable}</strong><span>validated / mixed</span></div>
         <div><strong>{transfer.summary.confirmed}</strong><span>confirmed</span></div>
+        <div><strong>{transfer.summary.partial}</strong><span>partial / mixed</span></div>
         <div><strong>{transfer.summary.contradicted}</strong><span>contradicted</span></div>
         <div><strong>{transfer.summary.insufficient}</strong><span>need evidence</span></div>
-        <div><strong>{transfer.activeProfiles.length}</strong><span>longitudinal profiles</span></div>
       </div>
       <div className="course-learning-metrics">
         {transfer.reliability.filter((item)=>item.total>0).map((item)=><span key={item.relation}><strong>{item.reliabilityPercent==null?"—":item.reliabilityPercent+"%"}</strong> {item.relation.replace("_"," ")} reliability · {item.usable}/{item.total} usable</span>)}
