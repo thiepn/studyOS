@@ -140,6 +140,7 @@ export function buildRollingProposal(input:{
   completion:CourseCompletionEvidence[];
   currentCourses:ScenarioCourse[];
   progress:WeeklyProgress;
+  floorAdjustments?:Record<string,number>;
 }):RollingProposal{
   const rawCompletedMap=Object.fromEntries(input.completion.map(row=>[row.courseId,row.creditedMinutes]));
   const completedMap=Object.fromEntries(input.allocations.map(allocation=>[
@@ -157,6 +158,7 @@ export function buildRollingProposal(input:{
     objective:input.objective,
     courses:input.currentCourses,
     completedCourseMinutes:completedMap,
+    floorAdjustments:input.floorAdjustments,
   });
   const planMap=new Map(plan.allocations.map(row=>[row.courseId,row]));
   const courses=input.allocations.map((allocation):RollingProposalCourse=>{
