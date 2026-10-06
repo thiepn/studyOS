@@ -116,7 +116,10 @@ export async function getCalendarRunwayForRange(startDate:string,days:number,orc
   const runway:WeeklyRunwayDay[]=[];
   for(let i=0;i<count;i++){
     const date=addDays(startDate,i);
-    const windows=computeFreeWindows(date,busy(date),scheduleSettings);
+    const baseWindows=computeFreeWindows(date,busy(date),scheduleSettings);
+    const windows=date===planData.capacity.local_today
+      ?clipFreeWindowsAfter(baseWindows,new Date(),scheduleSettings.minimumBlockMinutes)
+      :baseWindows;
     const due=planData.commitments.filter(commitment=>{
       const local=new Intl.DateTimeFormat("en-CA",{timeZone:timezone,year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(commitment.due_at));
       return local===date;
