@@ -163,3 +163,15 @@ export function isHandoffCommitWindow(today:string,targetStart:string){
   const daysUntil=dayNumber(targetStart)-dayNumber(today);
   return daysUntil===0||daysUntil===1;
 }
+
+export function canCommitHandoff(input:{
+  today:string;
+  targetStart:string;
+  previousStatus:string|null;
+  targetStatus:string|null;
+}){
+  if(!isHandoffCommitWindow(input.today,input.targetStart))return false;
+  if(input.previousStatus&&input.previousStatus!=="completed")return false;
+  if(input.targetStatus&&input.targetStatus!=="cancelled")return false;
+  return true;
+}
