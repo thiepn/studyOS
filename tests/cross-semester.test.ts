@@ -104,3 +104,20 @@ test("repeated contradiction is classified as context-sensitive rather than a st
   assert.equal(profile.contradictions,2);
   assert.equal(profile.pattern,"context_sensitive");
 });
+
+
+test("missing archived numeric values remain unknown instead of becoming zero",()=>{
+  const result=evaluatePriorTransfer(input({
+    snapshot:{latestOutcome:null,latestScorePercent:null,latestReadinessIndex:null,latestReadinessBand:null,unresolvedFindings:null},
+  }));
+  assert.equal(result.sourceSignal,"unknown");
+  assert.equal(result.outcome,"insufficient_evidence");
+});
+
+test("multiple priors for one target course count as one longitudinal transition",()=>{
+  const one=evaluatePriorTransfer(input({priorId:"a",courseId:"same-target"}));
+  const two=evaluatePriorTransfer(input({priorId:"b",courseId:"same-target",sourceCourseId:"older-source"}));
+  const profile=buildLongitudinalProfiles([one,two])[0];
+  assert.equal(profile.usableTransitions,1);
+  assert.equal(profile.pattern,"emerging");
+});
