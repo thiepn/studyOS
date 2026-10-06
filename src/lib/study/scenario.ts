@@ -27,6 +27,7 @@ export type ScenarioInput={
   retentionReserveMinutes:number;
   objective:ScenarioObjective;
   courses:ScenarioCourse[];
+  completedCourseMinutes?:Record<string,number>;
 };
 
 export type CourseAllocation={
@@ -155,6 +156,7 @@ export function buildScenario(input:ScenarioInput):ScenarioPlan{
   const allocatable=Math.max(0,weekly-mandatory-retention);
   const active=input.courses.filter((course)=>!course.postExam);
   const floors=new Map(active.map((course)=>[course.courseId,protectionFloor(course)]));
+  const priorMinutes=new Map(active.map((course)=>[course.courseId,Math.max(0,Math.floor(input.completedCourseMinutes?.[course.courseId]??0))]));
   const totalFloor=[...floors.values()].reduce((sum,n)=>sum+n,0);
   const allocations=new Map(active.map((course)=>[course.courseId,0]));
   const chunk=15;
@@ -162,14 +164,15 @@ export function buildScenario(input:ScenarioInput):ScenarioPlan{
 
   // First pass: protect each course floor. If impossible, each chunk goes to the
   // course with the highest marginal protection value; unmet floors remain explicit.
-  while(remaining>=chunk&&active.some((course)=>(allocations.get(course.courseId)??0)<(floors.get(course.courseId)??0))){
+  while(remaining>=chunk&&active.some((course)=>(priorMinutes.get(course.courseId)??0)+(allocations.get(course.courseId)??0)<(floors.get(course.courseId)??0))){
     const ranked=[...active].sort((a,b)=>{
-      const aAllocated=allocations.get(a.courseId)??0,bAllocated=allocations.get(b.courseId)??0;
+      const aAllocated=(priorMinutes.get(a.courseId)??0)+(allocations.get(a.courseId)??0);
+      const bAllocated=(priorMinutes.get(b.courseId)??0)+(allocations.get(b.courseId)??0);
       const aScore=objectiveScore(a,input.objective,aAllocated,floors.get(a.courseId)??0);
       const bScore=objectiveScore(b,input.objective,bAllocated,floors.get(b.courseId)??0);
       return bScore-aScore||b.decisionPriority-a.decisionPriority||a.courseId.localeCompare(b.courseId);
     });
-    const next=ranked.find((course)=>(allocations.get(course.courseId)??0)<(floors.get(course.courseId)??0));
+    const next=ranked.find((course)=>(priorMinutes.get(course.courseId)??0)+(allocations.get(course.courseId)??0)<(floors.get(course.courseId)??0));
     if(!next)break;
     allocations.set(next.courseId,(allocations.get(next.courseId)??0)+chunk);
     remaining-=chunk;
@@ -178,12 +181,12 @@ export function buildScenario(input:ScenarioInput):ScenarioPlan{
   // Second pass: distribute discretionary capacity by marginal value with diminishing returns.
   while(remaining>=chunk&&active.length){
     const ranked=[...active].sort((a,b)=>{
-      const aScore=objectiveScore(a,input.objective,allocations.get(a.courseId)??0,floors.get(a.courseId)??0);
-      const bScore=objectiveScore(b,input.objective,allocations.get(b.courseId)??0,floors.get(b.courseId)??0);
+      const aScore=objectiveScore(a,input.objective,(priorMinutes.get(a.courseId)??0)+(allocations.get(a.courseId)??0),floors.get(a.courseId)??0);
+      const bScore=objectiveScore(b,input.objective,(priorMinutes.get(b.courseId)??0)+(allocations.get(b.courseId)??0),floors.get(b.courseId)??0);
       return bScore-aScore||b.decisionPriority-a.decisionPriority||a.courseId.localeCompare(b.courseId);
     });
     const next=ranked[0];
-    const nextScore=objectiveScore(next,input.objective,allocations.get(next.courseId)??0,floors.get(next.courseId)??0);
+    const nextScore=objectiveScore(next,input.objective,(priorMinutes.get(next.courseId)??0)+(allocations.get(next.courseId)??0),floors.get(next.courseId)??0);
     if(!Number.isFinite(nextScore))break;
     allocations.set(next.courseId,(allocations.get(next.courseId)??0)+chunk);
     remaining-=chunk;
@@ -192,13 +195,14 @@ export function buildScenario(input:ScenarioInput):ScenarioPlan{
   // Keep a final sub-15-minute remainder unused instead of pretending it is a meaningful block.
   const rows:CourseAllocation[]=active.map((course)=>{
     const allocated=allocations.get(course.courseId)??0;
+    const prior=priorMinutes.get(course.courseId)??0;
     const floor=floors.get(course.courseId)??0;
-    const shortfall=Math.max(0,floor-allocated);
+    const shortfall=Math.max(0,floor-prior-allocated);
     return {
       courseId:course.courseId,displayName:course.displayName,shortName:course.shortName,courseKind:course.courseKind,
       allocatedMinutes:allocated,protectionFloorMinutes:floor,floorMet:shortfall===0,floorShortfallMinutes:shortfall,
       sharePercent:allocatable?Math.round(allocated/allocatable*100):0,
-      marginalScore:Math.round(clamp(objectiveScore(course,input.objective,allocated,floor))),
+      marginalScore:Math.round(clamp(objectiveScore(course,input.objective,prior+allocated,floor))),
       reason:reasonFor(course,input.objective,floor),sacrificeRank:null,
       readinessIndex:course.readinessIndex,band:course.band,runway:course.runway,actionTitle:course.actionTitle,
     };
