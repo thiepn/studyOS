@@ -9,6 +9,8 @@ import { getSemesterDrift } from "./drift-data";
 import { driftPriorityAdjustment } from "./drift";
 import { getSemesterLearningAnalytics } from "./analytics-data";
 import { getSemesterStrategyPortfolios } from "./strategy-data";
+import { getSemesterCalibration } from "./calibration-data";
+import { buildSemesterForecastFromEvidence } from "./forecast-data";
 
 const ACTIONS=new Set(["process_material","retrieve_lecture","attempt_exercise","reconcile_solution","repair_findings"]);
 const MODE_SET=new Set<PlanningMode>(["normal","light","recovery","intensive","custom"]);
@@ -54,12 +56,13 @@ export async function getDailyOrchestration(){
   const {semesterId}=await ensureStudyWorkspace(supabase);
   const db=supabase as any;
 
-  const [today,pulse,drift,learningAnalytics,strategyPortfolios,capacityResult,semesterResult,settingsResult,weekResult,commitmentResult,strategyResult,papersResult,coursesResult,baselineResult]=await Promise.all([
+  const [today,pulse,drift,learningAnalytics,strategyPortfolios,calibration,capacityResult,semesterResult,settingsResult,weekResult,commitmentResult,strategyResult,papersResult,coursesResult,baselineResult]=await Promise.all([
     getTodayData(),
     getSemesterPulse(),
     getSemesterDrift(),
     getSemesterLearningAnalytics(),
     getSemesterStrategyPortfolios(),
+    getSemesterCalibration(),
     db.from("study_current_capacity").select("*").eq("semester_id",semesterId).maybeSingle(),
     db.from("study_semesters").select("starts_on,ends_on,timezone").eq("id",semesterId).single(),
     db.from("study_planning_settings").select("*").eq("semester_id",semesterId).maybeSingle(),
@@ -67,7 +70,7 @@ export async function getDailyOrchestration(){
     db.from("study_commitments").select("*").eq("semester_id",semesterId).eq("status","open").order("due_at"),
     db.from("study_exam_strategy").select("*").eq("semester_id",semesterId),
     db.from("study_exam_paper_catalog").select("exam_id,course_id,exam_at,year_label,effective_weight,simulatable").eq("active",true).eq("simulatable",true).order("exam_at",{ascending:false,nullsFirst:false}),
-    db.from("study_courses").select("id,display_name,short_name,sort_order").eq("semester_id",semesterId).eq("active",true).order("sort_order"),
+    db.from("study_courses").select("id,display_name,short_name,sort_order,course_kind,credits").eq("semester_id",semesterId).eq("active",true).order("sort_order"),
     db.from("study_baseline_summary").select("*").eq("semester_id",semesterId),
   ]);
   const error=capacityResult.error||semesterResult.error||settingsResult.error||weekResult.error||commitmentResult.error||strategyResult.error||papersResult.error||coursesResult.error||baselineResult.error;
@@ -80,7 +83,7 @@ export async function getDailyOrchestration(){
     review_daily_budget_minutes:40,total_budget_minutes:120,effective_review_budget_minutes:40,effective_max_focus_items:4,
   }) as CurrentCapacity;
 
-  const courses=(coursesResult.data??[]) as Array<{id:string;display_name:string;short_name:string|null;sort_order:number}>;
+  const courses=(coursesResult.data??[]) as Array<{id:string;display_name:string;short_name:string|null;sort_order:number;course_kind:string;credits:number|null}>;
   const courseMap=new Map(courses.map((course)=>[course.id,course]));
   const riskMap=new Map(pulse.risks.map((risk)=>[risk.course_id,risk]));
   const paperMap=new Map<string,string>();
@@ -229,8 +232,12 @@ export async function getDailyOrchestration(){
     const course=commitment.course_id?courseMap.get(commitment.course_id):null;
     return {...commitment,course_name:course?.display_name??null,course_short_name:course?.short_name??null};
   });
+  const forecast=buildSemesterForecastFromEvidence({
+    risks:pulse.risks,calibration,learning:learningAnalytics.courses,strategy:strategyPortfolios.courses,
+    courses,exams:(strategyResult.data??[]) as Array<any>,
+  });
 
-  return {semesterId,today,pulse,drift,learningAnalytics,capacity,settings:settingsResult.data??null,courses,commitments:enrichedCommitments,candidates:correctedCandidates,plan,currentWeek};
+  return {semesterId,today,pulse,drift,learningAnalytics,strategyPortfolios,forecast,capacity,settings:settingsResult.data??null,courses,commitments:enrichedCommitments,candidates:correctedCandidates,plan,currentWeek};
 }
 
 export async function setDailyCapacity(input:{mode:string;customBudgetMinutes?:number|null;planDate?:string|null;note?:string|null}){
