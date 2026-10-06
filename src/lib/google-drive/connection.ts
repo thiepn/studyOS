@@ -75,4 +75,9 @@ export async function disconnectDrive(userId: string) {
     last_error: null,
   }).eq("user_id", userId);
   if (error) throw new Error(`Could not disconnect Drive: ${error.message}`);
+
+  const { error: certificationError } = await admin.from("study_semesters")
+    .update({ bootstrap_certified_at: null, updated_at: new Date().toISOString() })
+    .eq("user_id", userId).eq("active", true);
+  if (certificationError) throw new Error(`Could not invalidate semester bootstrap after Drive disconnect: ${certificationError.message}`);
 }
