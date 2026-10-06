@@ -2,9 +2,9 @@
 
 StudyOS is the WS26/27 retention and exam-readiness system for the THIEPN ecosystem. The application keeps raw university material in a dedicated Google Drive account, structured academic state in Supabase, and daily review/exam-readiness workflows in a Next.js frontend.
 
-## Current phase: P21
+## Current phase: P22
 
-Implemented through P21; the foundation includes:
+Implemented through P22; the foundation includes:
 
 - Next.js 16 App Router + Supabase SSR authentication
 - THIEPN Account shared identity with isolated `study_*` application data
@@ -420,3 +420,27 @@ StudyOS now has an explicit boundary between one committed week and the next.
 - no new database schema or authorization surface is introduced.
 
 The next phase is **P22 — Exam-Period Command Center, Multi-Exam Conflict Resolution & Final-Runway Scheduling**.
+
+
+## P22 exam-period command center and multi-exam conflict resolution
+
+StudyOS can now coordinate several simultaneous P9 exam strategies without creating a second exam-method engine.
+
+- active P9 transition/exam courses receive an explainable cross-exam command rank;
+- command rank combines runway urgency with existing P17 readiness/priority context but never becomes another readiness score;
+- P22 adds bounded priority pressure only to P10 exam-strategy candidates;
+- single-exam mode does not add conflict pressure;
+- exam-day preparation is withheld;
+- heavy exam work is withheld inside the final 24 hours;
+- recent timed simulations receive a roughly 36-hour recovery cooldown;
+- only one heavy exam action may own Today during a collision, and an oversized high-rank action cannot block a smaller heavy action that actually fits;
+- a seven-day preview places only each course's current P9 action and is rebuilt after P9 changes;
+- preview capacity protects P10 retention, real commitments and P11 free-time limits before allocating exam work;
+- heavy exam actions are separated by a clear calendar day when possible;
+- impossible actions remain visible as conflicts rather than being silently replaced;
+- P11 arbitrary runway calculations now clip Today after the current clock;
+- /exam-command exposes command rank, conflicts, P9 action identity, P10 selection state and the protected seven-day preview;
+- Today surfaces the leading exam command state whenever active;
+- P22 adds no database schema or authorization surface.
+
+The next phase is **P23 — Exam-Day Operations, Post-Exam Closure & Cross-Exam Recovery**.
