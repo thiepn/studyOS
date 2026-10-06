@@ -61,6 +61,9 @@ export async function getExamResultsData(){
       examAt:course.exam_at,durationMinutes:course.exam_duration_minutes,
     },nowIso);
     const maxAttempt=history.reduce((max,row)=>Math.max(max,Number(row.attempt_no??0)),0);
+    const sameConfiguredAttempt=Boolean(course.exam_at&&latest?.exam_at&&Date.parse(course.exam_at)===Date.parse(latest.exam_at));
+    const provisionalUpgrade=sameConfiguredAttempt&&latest?.result_status==="provisional";
+    const newAttemptReady=Boolean(course.active&&boundary.closureEligible&&(!sameConfiguredAttempt||provisionalUpgrade));
     return {
       courseId:String(course.id),displayName:String(course.display_name),shortName:course.short_name,
       courseKind:String(course.course_kind),credits:course.credits==null?null:Number(course.credits),
@@ -68,7 +71,7 @@ export async function getExamResultsData(){
       examDurationMinutes:course.exam_duration_minutes==null?null:Number(course.exam_duration_minutes),
       boundary,history,latest,latestOfficial,
       pendingRetake:Boolean(latestOfficial&&resultBlocksCoursePlanning(latestOfficial)),
-      resultReady:Boolean(boundary.closureEligible)||Boolean(latestOfficial?.retake_decision==="pending"),
+      resultReady:newAttemptReady||Boolean(latestOfficial?.retake_decision==="pending"),
       nextAttemptNo:Math.min(10,Math.max(1,maxAttempt+1)),
       currentReadiness:current?.readinessIndex??null,currentBand:current?.band??null,
       currentConfidence:current?.confidence??null,currentDecisionPriority:current?.decisionPriority??null,
