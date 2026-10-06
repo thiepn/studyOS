@@ -9533,6 +9533,7 @@ export type Database = {
       }
       study_activation_snapshot: {
         Row: {
+          bootstrap_certified: boolean | null
           calendar_connected: boolean | null
           calendar_synced: boolean | null
           course_count: number | null
@@ -9553,6 +9554,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          bootstrap_certified?: never
           calendar_connected?: never
           calendar_synced?: never
           course_count?: never
@@ -9573,6 +9575,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          bootstrap_certified?: never
           calendar_connected?: never
           calendar_synced?: never
           course_count?: never
