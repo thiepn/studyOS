@@ -13,6 +13,7 @@ import { loadActiveWeekRuntime } from "./weekly-runtime";
 import { weeklyPriorityAdjustment } from "./weekly-plan";
 import { buildExamCommand, classifyExamAction, examCommandDirective, type ExamCommandInputCourse } from "./exam-command";
 import { buildExamOperations, examRecoveryDirective, shouldFreezeCourseDiscretionary } from "./exam-operations";
+import { resultBlocksCoursePlanning } from "./exam-results";
 
 const ACTIONS=new Set(["process_material","retrieve_lecture","attempt_exercise","reconcile_solution","repair_findings"]);
 const MODE_SET=new Set<PlanningMode>(["normal","light","recovery","intensive","custom"]);
@@ -58,7 +59,7 @@ export async function getDailyOrchestration(){
   const {semesterId,userId}=await ensureStudyWorkspace(supabase);
   const db=supabase as any;
 
-  const [today,pulse,drift,strategyPortfolios,capacityResult,semesterResult,settingsResult,weekResult,commitmentResult,strategyResult,papersResult,coursesResult,baselineResult]=await Promise.all([
+  const [today,pulse,drift,strategyPortfolios,capacityResult,semesterResult,settingsResult,weekResult,commitmentResult,strategyResult,papersResult,coursesResult,baselineResult,resultResult]=await Promise.all([
     getTodayData(),
     getSemesterPulse(),
     getSemesterDrift(),
@@ -72,8 +73,10 @@ export async function getDailyOrchestration(){
     db.from("study_exam_paper_catalog").select("exam_id,course_id,exam_at,year_label,effective_weight,simulatable").eq("active",true).eq("simulatable",true).order("exam_at",{ascending:false,nullsFirst:false}),
     db.from("study_courses").select("id,display_name,short_name,sort_order,course_kind,credits,exam_at,exam_duration_minutes").eq("semester_id",semesterId).eq("active",true).order("sort_order"),
     db.from("study_baseline_summary").select("*").eq("semester_id",semesterId),
+    db.from("study_exam_results").select("course_id,attempt_no,result_status,outcome,retake_decision")
+      .eq("semester_id",semesterId).eq("result_status","official").order("attempt_no",{ascending:false}),
   ]);
-  const error=capacityResult.error||semesterResult.error||settingsResult.error||weekResult.error||commitmentResult.error||strategyResult.error||papersResult.error||coursesResult.error||baselineResult.error;
+  const error=capacityResult.error||semesterResult.error||settingsResult.error||weekResult.error||commitmentResult.error||strategyResult.error||papersResult.error||coursesResult.error||baselineResult.error||resultResult.error;
   if(error) throw new StudyServiceError("Could not build daily study plan",error.code||"daily_plan_failed",error);
 
   const learningAnalytics=strategyPortfolios.learning;
@@ -121,6 +124,14 @@ export async function getDailyOrchestration(){
     })),
   });
   const examBoundaryMap=new Map(examOperations.courses.map(course=>[course.courseId,course]));
+  const latestOfficialResult=new Map<string,any>();
+  for(const row of resultResult.data??[]){
+    const id=String(row.course_id);
+    if(!latestOfficialResult.has(id))latestOfficialResult.set(id,row);
+  }
+  const resultBlockedCourses=new Set(
+    [...latestOfficialResult.entries()].filter(([,row])=>resultBlocksCoursePlanning(row)).map(([id])=>id)
+  );
   const reviewReserve=Math.min(Number(capacity.effective_review_budget_minutes),Number(today.queueMinutes));
   const urgentCommitmentReserve=((commitmentResult.data??[]) as CommitmentRow[])
     .filter(commitment=>deadlinePressure(commitment.due_at,commandNow).urgent)
@@ -321,6 +332,7 @@ export async function getDailyOrchestration(){
 
   const operationalCandidates=weeklyCandidates.filter(candidate=>{
     if(!candidate.courseId||candidate.kind==="commitment")return true;
+    if(resultBlockedCourses.has(candidate.courseId))return false;
     return !shouldFreezeCourseDiscretionary(examBoundaryMap.get(candidate.courseId));
   });
   const plan=buildDailyPlan(operationalCandidates,{
