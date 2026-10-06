@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildWeekReview, deriveHandoffCapacity, isWeekClosable, mondayOnOrAfter, recommendHandoffObjective } from "../src/lib/study/weekly-handoff.ts";
+import { buildWeekReview, deriveHandoffCapacity, isHandoffCommitWindow, isWeekClosable, mondayOnOrAfter, recommendHandoffObjective } from "../src/lib/study/weekly-handoff.ts";
 import type { ScenarioCourse } from "../src/lib/study/scenario.ts";
 import type { WeeklyCalibrationProfile } from "../src/lib/study/weekly-calibration.ts";
 import type { WeeklyProgress } from "../src/lib/study/weekly-plan.ts";
@@ -81,4 +81,11 @@ test("P20 low-adherence signal may reduce next-week envelope but never expand th
 test("Sunday plan cannot be closed before its calendar week actually ends",()=>{
   assert.equal(isWeekClosable("2026-10-11","2026-10-11"),false);
   assert.equal(isWeekClosable("2026-10-11","2026-10-12"),true);
+});
+
+
+test("future-week commitment is allowed only at the Sunday/Monday handoff boundary",()=>{
+  assert.equal(isHandoffCommitWindow("2026-10-11","2026-10-12"),true);
+  assert.equal(isHandoffCommitWindow("2026-10-12","2026-10-12"),true);
+  assert.equal(isHandoffCommitWindow("2026-10-06","2026-10-12"),false);
 });
