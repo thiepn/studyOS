@@ -30,6 +30,7 @@ export default async function OutlookPage(){
         </div>
       </div>
       <p className="forecast-disclaimer">The readiness index is a StudyOS evidence composite, not a predicted exam percentage or probability of passing. Low-evidence courses remain unclassified instead of receiving false precision.</p>
+      <div className="button-row"><Link className="secondary-button" href="/scenarios">Plan capacity scenarios</Link></div>
     </section>
 
     {top ? <section className={"panel forecast-decision forecast-band-"+top.band}>
