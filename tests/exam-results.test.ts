@@ -52,3 +52,13 @@ test("passed results cannot retain retake state",()=>{
   });
   assert.ok(error);
 });
+
+
+test("persisted snake-case result rows enforce the same planning block",()=>{
+  assert.equal(resultBlocksCoursePlanning({
+    result_status:"official",outcome:"failed",retake_decision:"pending",
+  }),true);
+  assert.equal(resultBlocksCoursePlanning({
+    result_status:"official",outcome:"failed",retake_decision:"planned",
+  }),false);
+});
