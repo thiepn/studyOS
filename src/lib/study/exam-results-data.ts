@@ -75,7 +75,7 @@ export async function getExamResultsData():Promise<ExamResultsData>{
       .eq("semester_id",semesterId).order("sort_order"),
     db.from("study_exam_results").select("*").eq("semester_id",semesterId)
       .order("course_id").order("attempt_no",{ascending:false}),
-    db.from("study_semesters").select("timezone").eq("id",semesterId).single(),
+    db.from("study_semesters").select("timezone,previous_semester_id").eq("id",semesterId).single(),
   ]);
   const error=courseResult.error||resultResult.error||semesterResult.error;
   if(error)throw new StudyServiceError("Could not load exam outcomes",error.code||"exam_results_read_failed",error);
@@ -89,7 +89,20 @@ export async function getExamResultsData():Promise<ExamResultsData>{
   let lineageCourses:Array<{id:string;stable_key:string}>=[];
   let lineageResults:ExamResultRow[]=[];
   if(stableKeys.length){
-    const lineageCourseResult=await db.from("study_courses").select("id,stable_key").in("stable_key",stableKeys);
+    const semesterLineageResult=await db.from("study_semesters").select("id,previous_semester_id");
+    if(semesterLineageResult.error)throw new StudyServiceError("Could not load semester lineage",semesterLineageResult.error.code||"exam_results_lineage_failed",semesterLineageResult.error);
+    const previousBySemester=new Map<string,string|null>(
+      (semesterLineageResult.data??[]).map((row:any)=>[String(row.id),row.previous_semester_id==null?null:String(row.previous_semester_id)])
+    );
+    const lineageSemesterIds:string[]=[];
+    const seen=new Set<string>();
+    let cursor:string|null=semesterId;
+    while(cursor&&!seen.has(cursor)){
+      seen.add(cursor);lineageSemesterIds.push(cursor);
+      cursor=previousBySemester.get(cursor)??null;
+    }
+    const lineageCourseResult=await db.from("study_courses").select("id,stable_key")
+      .in("semester_id",lineageSemesterIds).in("stable_key",stableKeys);
     if(lineageCourseResult.error)throw new StudyServiceError("Could not load retake lineage",lineageCourseResult.error.code||"exam_results_lineage_failed",lineageCourseResult.error);
     lineageCourses=(lineageCourseResult.data??[]) as Array<{id:string;stable_key:string}>;
     const lineageIds=lineageCourses.map(course=>course.id);
