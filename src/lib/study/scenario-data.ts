@@ -66,6 +66,7 @@ export async function getSemesterScenarioData(){
   const minCustomCapacity=baselineWeekly===0?0:Math.min(maxCustomCapacity,Math.max(60,round15(Math.min(baselineWeekly,mandatoryCommitments+60))));
 
   return {
+    today:calendar.today,timezone:calendar.timezone,
     source:(calendar.connection?.status==="connected"?"calendar_capped":"planning_default") as "calendar_capped"|"planning_default",
     dailyDefaultMinutes:dailyDefault,nominalWeeklyMinutes:nominalWeekly,calendarFreeMinutes:calendarFree,todayRemainingFreeMinutes,
     baselineWeeklyMinutes:baselineWeekly,mandatoryCommitmentMinutes:mandatoryCommitments,
