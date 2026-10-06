@@ -54,14 +54,31 @@ export function structuralResultAction(input:{
   return "none";
 }
 
-export function resultBlocksCoursePlanning(input:{
-  resultStatus:string;
+export function normalizeStoredExamResult(input:{
+  result_status:string;
   outcome:string;
-  retakeDecision:string;
-}){
-  if(input.resultStatus!=="official")return false;
-  if(input.outcome==="passed")return true;
-  return input.retakeDecision==="pending"||input.retakeDecision==="declined";
+  retake_decision:string;
+}):{resultStatus:ExamResultStatus;outcome:ExamOutcome;retakeDecision:RetakeDecision}{
+  if(input.result_status!=="provisional"&&input.result_status!=="official")throw new Error("Invalid stored exam result status");
+  if(!["passed","failed","absent","withdrawn"].includes(input.outcome))throw new Error("Invalid stored exam outcome");
+  if(!["not_applicable","pending","planned","declined"].includes(input.retake_decision))throw new Error("Invalid stored retake decision");
+  return {
+    resultStatus:input.result_status,
+    outcome:input.outcome as ExamOutcome,
+    retakeDecision:input.retake_decision as RetakeDecision,
+  };
+}
+
+export function resultBlocksCoursePlanning(input:
+  |{resultStatus:string;outcome:string;retakeDecision:string}
+  |{result_status:string;outcome:string;retake_decision:string}
+){
+  const normalized="result_status" in input
+    ?normalizeStoredExamResult(input)
+    :input;
+  if(normalized.resultStatus!=="official")return false;
+  if(normalized.outcome==="passed")return true;
+  return normalized.retakeDecision==="pending"||normalized.retakeDecision==="declined";
 }
 
 export function validateResultDraft(input:{
