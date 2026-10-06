@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Nav } from "@/components/nav";
 import { ExamResultForm } from "@/components/exam-result-form";
 import { getExamResultsData } from "@/lib/study/exam-results-data";
-import { reconcileExamOutcome, structuralResultAction } from "@/lib/study/exam-results";
+import { normalizeStoredExamResult, reconcileExamOutcome, structuralResultAction } from "@/lib/study/exam-results";
 
 export const dynamic="force-dynamic";
 
@@ -58,17 +58,17 @@ export default async function ExamResultsPage(){
     {history.length?<section className="exam-result-course-grid">
       {history.map(course=>{
         const latest=course.latest;
-        const reconciliation=latest?reconcileExamOutcome({
-          resultStatus:latest.result_status,outcome:latest.outcome,
+        if(!latest)return null;
+        const stored=normalizeStoredExamResult(latest);
+        const reconciliation=reconcileExamOutcome({
+          resultStatus:stored.resultStatus,outcome:stored.outcome,
           snapshot:{
             readinessIndex:latest.readiness_index_snapshot==null?null:Number(latest.readiness_index_snapshot),
             readinessBand:latest.readiness_band_snapshot,
             decisionPriority:latest.decision_priority_snapshot==null?null:Number(latest.decision_priority_snapshot),
           },
-        }):null;
-        const action=latest?structuralResultAction({
-          resultStatus:latest.result_status,outcome:latest.outcome,retakeDecision:latest.retake_decision,
-        }):"none";
+        });
+        const action=structuralResultAction(stored);
         return <article className={"panel exam-result-course outcome-"+latest.outcome} key={course.courseId}>
           <div className="exam-result-course-head">
             <div><p className="eyebrow">{pretty(latest.result_status)} · attempt {latest.attempt_no}</p><h2>{course.shortName??course.displayName}</h2></div>
