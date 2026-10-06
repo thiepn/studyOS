@@ -19,9 +19,23 @@ function fmt(min:number){
   return h?(m?h+"h "+m+"m":h+"h"):m+"m";
 }
 
+function CalibrationSummary({profile}:{profile:Awaited<ReturnType<typeof getWeeklyCommitmentData>>["scenarioData"]["calibration"]}){
+  const adjusted=profile.courses.filter(course=>course.adjustmentApplied).length;
+  return <section className="panel week-calibration-summary">
+    <div className="section-heading"><div><p className="eyebrow">P20 · allocation calibration</p><h2>{profile.completedWeeks} completed week{profile.completedWeeks===1?"":"s"}</h2></div><span>{profile.evidence}</span></div>
+    <p>{profile.completedWeeks<3
+      ?"P18/P19 still use the original course-floor heuristics until three completed weekly commitments exist."
+      :adjusted
+        ?adjusted+" course protection floor"+(adjusted===1?" is":"s are")+" calibrated from repeated execution evidence."
+        :"Enough history exists to evaluate allocation quality, but no floor correction is currently supported."}</p>
+    <div className="button-row"><Link className="secondary-button" href="/quality">Inspect execution quality</Link></div>
+  </section>;
+}
+
 export default async function WeekPage(){
   const data=await getWeeklyCommitmentData();
   const {envelope,runtime,proposal}=data;
+  const calibration=data.scenarioData.calibration;
 
   if(!runtime){
     const preview=data.preview;
@@ -38,6 +52,8 @@ export default async function WeekPage(){
           <span><strong>{fmt(envelope.courseBudgetMinutes)}</strong> course budget</span>
         </div>
       </section>
+
+      <CalibrationSummary profile={calibration}/>
 
       <section className={"panel "+(preview.feasibleProtection?"week-preview-ok":"week-preview-warning")}>
         <div className="section-heading"><div><p className="eyebrow">Balanced preview</p><h2>{preview.feasibleProtection?"Protection floors fit":"Explicit trade-off required"}</h2></div><span>{fmt(preview.allocatedCourseMinutes)}</span></div>
@@ -78,6 +94,8 @@ export default async function WeekPage(){
         <span><strong>{fmt(progress.totalRemainingMinutes)}</strong> course minutes remaining</span>
       </div>
     </section>
+
+    <CalibrationSummary profile={calibration}/>
 
     <section className="week-course-list">
       {progress.courses.map(row=>{
