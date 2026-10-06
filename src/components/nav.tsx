@@ -10,6 +10,7 @@ export function Nav() {
       <Link href="/resources">Resources</Link>
       <Link href="/progress">Progress</Link>
       <Link href="/outlook">Outlook</Link>
+      <Link href="/scenarios">Scenarios</Link>
       <Link href="/setup">Setup</Link>
       <StudySyncBridge />
     </nav>

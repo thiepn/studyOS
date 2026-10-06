@@ -2,9 +2,9 @@
 
 StudyOS is the WS26/27 retention and exam-readiness system for the THIEPN ecosystem. The application keeps raw university material in a dedicated Google Drive account, structured academic state in Supabase, and daily review/exam-readiness workflows in a Next.js frontend.
 
-## Current phase: P17
+## Current phase: P18
 
-Implemented through P17; the foundation includes:
+Implemented through P18; the foundation includes:
 
 - Next.js 16 App Router + Supabase SSR authentication
 - THIEPN Account shared identity with isolated `study_*` application data
@@ -333,3 +333,24 @@ StudyOS now has a cross-course decision layer above the individual learning engi
 - Today surfaces the highest-priority P17 decision while P10 remains the daily capacity authority.
 
 The next phase is **P18 — Semester Scenario Planning, Capacity Trade-offs & Exam-Period Allocation**.
+
+
+## P18 semester scenario planning and capacity trade-offs
+
+StudyOS can now model a fixed weekly capacity across all active courses without inventing more time.
+
+- baseline weekly capacity comes from the configured P10 default budget and is capped by real seven-day P11 Calendar free time when connected;
+- explicit commitments due this week are reserved first;
+- retention uses the existing P10 review-to-total budget ratio rather than a separate policy;
+- every active course gets an explainable protection floor based on P17 readiness, exam runway, trajectory, and retake status;
+- mandatory-work deficits and course-floor shortfalls are surfaced explicitly instead of hidden by overbooking;
+- allocation uses 15-minute blocks with diminishing returns after each course floor;
+- four objectives are available: Protect passes, Balanced, Target 80+, and Exam period;
+- a trade-off matrix shows where minutes move when the objective changes;
+- a 75% / baseline / 125% capacity stress test shows what breaks first;
+- counterfactual capacity above current Calendar free time is clearly marked as requiring time to be freed;
+- post-exam courses receive no allocation;
+- P18 never treats allocated study minutes as predicted exam-score gains;
+- P9 remains the exam-action authority and P10 remains the daily-capacity authority.
+
+The next phase is **P19 — Weekly Commitment, Scenario-to-Plan Translation & Rolling Reallocation**.
