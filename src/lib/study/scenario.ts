@@ -17,6 +17,8 @@ export type ScenarioCourse={
   decisionPriority:number;
   actionValue:number;
   actionTitle:string;
+  actionHref:string;
+  actionAuthority:string;
   actionMinutes:number;
   postExam:boolean;
 };
@@ -141,6 +143,7 @@ export function courseFromForecast(forecast:CourseForecast):ScenarioCourse{
     credits:forecast.credits,readinessIndex:forecast.readinessIndex,band:forecast.band,confidence:forecast.confidence,
     trajectory:forecast.trajectory,runway:forecast.runway,decisionPriority:forecast.decisionPriority,
     actionValue:forecast.nextAction.expectedValue,actionTitle:forecast.nextAction.title,
+    actionHref:forecast.nextAction.href,actionAuthority:forecast.nextAction.authority,
     actionMinutes:forecast.nextAction.estimatedMinutes,
     postExam:forecast.runway==="passed"||forecast.decisionPriority===0,
   };
