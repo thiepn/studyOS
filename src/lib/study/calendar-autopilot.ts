@@ -72,6 +72,67 @@ export async function getCalendarAutopilot(orchestration?:Orchestration){
   return {connection,sources,settings,timezone,today,todayWindows,proposal,weekly,courseEvents,scheduledBlocks:blocksResult.data??[],stale:Boolean(connection?.last_sync_at&&Date.now()-Date.parse(connection.last_sync_at)>6*3600_000)};
 }
 
+export async function getCalendarRunwayForRange(startDate:string,days:number,orchestration?:Orchestration){
+  const planData=orchestration??await getDailyOrchestration();
+  const supabase=await createClient();
+  const {semesterId}=await ensureStudyWorkspace(supabase);
+  const db=supabase as any;
+  const [connResult,sourcesResult,settingsResult,semesterResult]=await Promise.all([
+    db.from("study_calendar_connections").select("*").maybeSingle(),
+    db.from("study_calendar_sources").select("*").order("is_primary",{ascending:false}).order("summary"),
+    db.from("study_calendar_planning_settings").select("*").eq("semester_id",semesterId).maybeSingle(),
+    db.from("study_semesters").select("timezone").eq("id",semesterId).single(),
+  ]);
+  const error=connResult.error||sourcesResult.error||settingsResult.error||semesterResult.error;
+  if(error)throw new StudyServiceError("Could not load calendar runway",error.code||"calendar_runway_failed",error);
+  const connection=(connResult.data??null) as CalendarConnectionRow|null;
+  const sources=(sourcesResult.data??[]) as CalendarSourceRow[];
+  const settings:CalendarPlanningSettings={...defaults(),...(settingsResult.data??{})};
+  const timezone=connection?.timezone||semesterResult.data?.timezone||"Europe/Berlin";
+  const selectedIds=sources.filter(source=>source.selected).map(source=>source.calendar_id);
+  const count=Math.max(1,Math.min(21,Math.floor(days)));
+  const rangeEndDate=addDays(startDate,count);
+  const rangeStart=zonedDateTimeToUtc(startDate,"00:00",timezone).toISOString();
+  const rangeEnd=zonedDateTimeToUtc(rangeEndDate,"00:00",timezone).toISOString();
+  let events:any[]=[];
+  if(connection?.status==="connected"&&selectedIds.length){
+    const eventResult=await db.from("study_calendar_events").select("*")
+      .in("calendar_id",selectedIds).lt("start_at",rangeEnd).gt("end_at",rangeStart).order("start_at");
+    if(eventResult.error)throw new StudyServiceError("Could not load calendar runway events",eventResult.error.code||"calendar_runway_events_failed",eventResult.error);
+    events=eventResult.data??[];
+  }
+  const busy=(date:string)=>events.filter(event=>{
+    const start=zonedDateTimeToUtc(date,"00:00",timezone).getTime();
+    const end=zonedDateTimeToUtc(addDays(date,1),"00:00",timezone).getTime();
+    return Date.parse(event.start_at)<end&&Date.parse(event.end_at)>start;
+  }).map(event=>({
+    startAt:event.start_at,endAt:event.end_at,status:event.status,transparency:event.transparency,allDay:event.all_day,
+  }) satisfies CalendarBusyEvent);
+  const scheduleSettings:CalendarScheduleSettings={
+    timezone,dayStart:hhmm(settings.day_start),dayEnd:hhmm(settings.day_end),
+    minimumBlockMinutes:Number(settings.minimum_block_minutes),calendarBufferMinutes:Number(settings.calendar_buffer_minutes),
+    maxBlockMinutes:Number(settings.max_block_minutes),includeWeekends:Boolean(settings.include_weekends),
+  };
+  const runway:WeeklyRunwayDay[]=[];
+  for(let i=0;i<count;i++){
+    const date=addDays(startDate,i);
+    const windows=computeFreeWindows(date,busy(date),scheduleSettings);
+    const due=planData.commitments.filter(commitment=>{
+      const local=new Intl.DateTimeFormat("en-CA",{timeZone:timezone,year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(commitment.due_at));
+      return local===date;
+    });
+    runway.push({
+      date,weekday:weekday(date,timezone),freeMinutes:freeMinutes(windows),
+      busyEvents:busy(date).filter(event=>event.status!=="cancelled"&&event.transparency!=="transparent").length,
+      commitmentsDue:due.length,commitmentMinutes:due.reduce((sum,commitment)=>sum+Number(commitment.estimated_minutes),0),
+    });
+  }
+  return {
+    connection,sources,settings,timezone,startDate,endDate:addDays(startDate,count-1),days:runway,
+    stale:Boolean(connection?.last_sync_at&&Date.now()-Date.parse(connection.last_sync_at)>6*3600_000),
+  };
+}
+
 export async function updateCalendarSources(selectedIds:string[]){
   const supabase=await createClient(); const {data}=await supabase.auth.getClaims(); const userId=data?.claims?.sub?String(data.claims.sub):null;
   if(!userId)throw new StudyServiceError("Authentication required","auth_required");
