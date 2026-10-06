@@ -126,11 +126,12 @@ export async function getWeeklyHandoffData(){
     today,timezone,targetStart,targetEnd,previousEnd,source,dailyDefaultMinutes:dailyDefault,
     nominalWeeklyMinutes:nominalWeekly,calendarFreeMinutes:calendarFree,reviewRatio,maxRetentionMinutes,
     runway:runway.days,calendarConnected:runway.connection?.status==="connected",calendarStale:runway.stale,
-    calibration,previousPlan,previousRuntime,review,targetPlan,
+    calibration,courses,previousPlan,previousRuntime,review,targetPlan,
+    previousEnded:Boolean(previousPlan&&isWeekClosable(previousPlan.period_ends_on,today)),
     carryoverCommitments:carryover,dueInTargetCommitments:dueInTarget,mandatoryCommitments,
     capacity,recommendation,scenario,
     closeAllowed:Boolean(previousPlan&&previousPlan.status!=="completed"&&isWeekClosable(previousPlan.period_ends_on,today)),
-    commitAllowed:isHandoffCommitWindow(today,targetStart)&&targetPlan?.status!=="active",
+    commitAllowed:isHandoffCommitWindow(today,targetStart)&&(!targetPlan||targetPlan.status==="cancelled"),
   };
 }
 
@@ -175,7 +176,7 @@ export async function commitHandoffWeek(input:{objective:string;capacityMinutes?
   const mandatory=data.mandatoryCommitments.reduce((sum,row)=>sum+Number(row.estimated_minutes),0);
   const afterMandatory=Math.max(0,selected-Math.min(selected,mandatory));
   const retention=round15(Math.min(data.maxRetentionMinutes,afterMandatory*data.reviewRatio));
-  const courses=(await getDailyOrchestration()).forecast.courses.map(courseFromForecast);
+  const courses=data.courses;
   const scenario=buildScenario({
     weeklyCapacityMinutes:selected,mandatoryCommitmentMinutes:mandatory,retentionReserveMinutes:retention,
     objective,courses,floorAdjustments:data.calibration.floorAdjustments,
