@@ -2,8 +2,6 @@ import { createClient } from "@/lib/supabase/server";
 import { ensureStudyWorkspace } from "./bootstrap";
 import { StudyServiceError } from "./errors";
 import { getSemesterPulse } from "./pulse";
-import { getSemesterCalibration } from "./calibration-data";
-import { getSemesterLearningAnalytics } from "./analytics-data";
 import { getSemesterStrategyPortfolios } from "./strategy-data";
 import { buildCourseForecast, summarizeSemesterForecast, type CourseForecast, type ForecastInput } from "./forecast";
 
@@ -87,10 +85,8 @@ export async function getSemesterForecast():Promise<SemesterForecast>{
   const {semesterId}=await ensureStudyWorkspace(supabase);
   const db=supabase as any;
 
-  const [pulse,calibration,learning,strategy,courseResult,examResult]=await Promise.all([
+  const [pulse,strategy,courseResult,examResult]=await Promise.all([
     getSemesterPulse(),
-    getSemesterCalibration(),
-    getSemesterLearningAnalytics(),
     getSemesterStrategyPortfolios(),
     db.from("study_courses").select("id,display_name,short_name,sort_order,course_kind,credits").eq("semester_id",semesterId).eq("active",true).order("sort_order"),
     db.from("study_exam_strategy").select("*").eq("semester_id",semesterId),
@@ -99,7 +95,7 @@ export async function getSemesterForecast():Promise<SemesterForecast>{
   if(error)throw new StudyServiceError("Could not load semester forecast evidence",error.code||"forecast_read_failed",error);
 
   return buildSemesterForecastFromEvidence({
-    risks:pulse.risks,calibration,learning:learning.courses,strategy:strategy.courses,
+    risks:pulse.risks,calibration:strategy.calibration,learning:strategy.learning.courses,strategy:strategy.courses,
     courses:(courseResult.data??[]) as Array<any>,exams:(examResult.data??[]) as Array<any>,
   });
 }
