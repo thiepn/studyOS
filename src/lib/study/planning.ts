@@ -13,7 +13,7 @@ import { loadActiveWeekRuntime } from "./weekly-runtime";
 import { weeklyPriorityAdjustment } from "./weekly-plan";
 import { buildExamCommand, classifyExamAction, examCommandDirective, type ExamCommandInputCourse } from "./exam-command";
 import { buildExamOperations, examRecoveryDirective, shouldFreezeCourseDiscretionary } from "./exam-operations";
-import { resultBlocksCoursePlanning } from "./exam-results";
+import { resultBlocksCoursePlanning } from "./exam-results";\nimport { bootstrapAllowsCandidate } from "./semester-bootstrap";
 
 const ACTIONS=new Set(["process_material","retrieve_lecture","attempt_exercise","reconcile_solution","repair_findings"]);
 const MODE_SET=new Set<PlanningMode>(["normal","light","recovery","intensive","custom"]);
@@ -341,7 +341,7 @@ export async function getDailyOrchestration(){
 
   const bootstrapCertified=Boolean(semesterResult.data?.bootstrap_certified_at);
   const operationalCandidates=weeklyCandidates.filter(candidate=>{
-    if(!bootstrapCertified)return candidate.kind==="commitment";
+    if(!bootstrapAllowsCandidate(bootstrapCertified,candidate.kind))return false;
     if(!candidate.courseId||candidate.kind==="commitment")return true;
     if(resultBlockedCourses.has(candidate.courseId))return false;
     return !shouldFreezeCourseDiscretionary(examBoundaryMap.get(candidate.courseId));
