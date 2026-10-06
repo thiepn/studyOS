@@ -57,7 +57,9 @@ export default async function HandoffPage(){
           <span><strong>{review.adherencePercent}%</strong> adherence</span>
           <span><strong>{fmt(review.droppedEnvelopeMinutes)}</strong> expired envelope</span>
         </div>
-        <p className="handoff-debt-rule"><strong>{fmt(review.droppedEnvelopeMinutes)} unfinished study minutes do not carry forward as debt.</strong> Current P17/P20 evidence determines next week's allocation instead.</p>
+        <p className="handoff-debt-rule">{data.previousEnded
+          ? <><strong>{fmt(review.droppedEnvelopeMinutes)} unfinished study minutes expired with the weekly envelope and do not carry forward as debt.</strong> Current P17/P20 evidence determines next week's allocation instead.</>
+          : <><strong>{fmt(review.droppedEnvelopeMinutes)} course minutes are still unfilled in the current week.</strong> They expire rather than becoming debt only after this Sunday ends.</>}</p>
         <div className="handoff-course-grid">
           {review.courses.map(course=><article key={course.courseId}>
             <div><strong>{course.shortName??course.displayName}</strong><span>{course.adherencePercent}%</span></div>
@@ -75,7 +77,7 @@ export default async function HandoffPage(){
       </div>
       <p>Open assignments/deadlines are not copied into a new debt bucket. They remain the same P10 commitments with the same IDs and original due dates.</p>
       {data.carryoverCommitments.length?<div className="handoff-obligation-group">
-        <h3>Unresolved before next Monday</h3>
+        <h3>{data.previousEnded?"Carried unresolved obligations":"Currently open before next Monday"}</h3>
         {data.carryoverCommitments.map(item=><article key={item.id}>
           <div><strong>{item.title}</strong><span>{fmt(Number(item.estimated_minutes))}</span></div>
           <small>{item.course_short_name??item.course_name??"General"} · due {dueLabel(item.due_at)} · priority {item.priority}/5</small>
