@@ -221,8 +221,8 @@ export function buildLongitudinalProfiles(evaluations:PriorTransferEvaluation[])
     const negativeConfirmations=usable.filter((row)=>row.outcome==="confirmed"&&row.sourceSignal==="negative"&&row.currentSignal==="negative").length;
     const contradictions=usable.filter((row)=>row.outcome==="contradicted").length;
     let pattern:LongitudinalPattern=usable.length?"emerging":"insufficient_evidence";
-    if(usable.length>=2&&positiveConfirmations/usable.length>=.67)pattern="durable_strength";
-    else if(usable.length>=2&&negativeConfirmations/usable.length>=.67)pattern="recurring_weakness";
+    if(usable.length>=2&&positiveConfirmations/usable.length>=2/3)pattern="durable_strength";
+    else if(usable.length>=2&&negativeConfirmations/usable.length>=2/3)pattern="recurring_weakness";
     else if(usable.length>=2&&contradictions/usable.length>=.5)pattern="context_sensitive";
 
     let recommendation="Collect another cross-semester transition before treating this as a durable pattern.";
