@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Semester OS",
-  description: "Retention and exam-readiness system for WS26/27",
+  description: "Semester learning, retention, exam-readiness, and academic outcome system",
   robots: { index: false, follow: false, nocache: true },
 };
 
