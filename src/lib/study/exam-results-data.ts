@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import type { Database } from "@/lib/supabase/database.types";
 import { ensureStudyWorkspace } from "./bootstrap";
 import { StudyServiceError } from "./errors";
 import { getSemesterForecast } from "./forecast-data";
@@ -10,6 +11,45 @@ import {
 } from "./exam-results";
 
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+export type ExamResultRow=Database["public"]["Tables"]["study_exam_results"]["Row"];
+type CourseRow=Pick<
+  Database["public"]["Tables"]["study_courses"]["Row"],
+  "id"|"display_name"|"short_name"|"course_kind"|"credits"|"exam_at"|"exam_duration_minutes"|"active"|"sort_order"
+>;
+
+export type ExamResultCourse={
+  courseId:string;
+  displayName:string;
+  shortName:string|null;
+  courseKind:string;
+  credits:number|null;
+  active:boolean;
+  examAt:string|null;
+  examDurationMinutes:number|null;
+  boundary:ReturnType<typeof examBoundaryState>;
+  history:ExamResultRow[];
+  latest:ExamResultRow|null;
+  latestOfficial:ExamResultRow|null;
+  pendingRetake:boolean;
+  resultReady:boolean;
+  nextAttemptNo:number;
+  currentReadiness:number|null;
+  currentBand:string|null;
+  currentConfidence:string|null;
+  currentDecisionPriority:number|null;
+};
+
+export type ExamResultsData={
+  semesterId:string;
+  nowIso:string;
+  timezone:string;
+  courses:ExamResultCourse[];
+  results:ExamResultRow[];
+  completedCourses:ExamResultCourse[];
+  pendingRetakes:ExamResultCourse[];
+  plannedRetakes:ExamResultCourse[];
+};
 
 export type ExamResultInput={
   courseId:string;
@@ -24,7 +64,7 @@ export type ExamResultInput={
   sourceUrl?:string|null;
 };
 
-export async function getExamResultsData(){
+export async function getExamResultsData():Promise<ExamResultsData>{
   const supabase=await createClient();
   const {semesterId}=await ensureStudyWorkspace(supabase);
   const db=supabase as any;
@@ -41,8 +81,8 @@ export async function getExamResultsData(){
   if(error)throw new StudyServiceError("Could not load exam outcomes",error.code||"exam_results_read_failed",error);
 
   const forecastMap=new Map(forecast.courses.map(course=>[course.courseId,course]));
-  const results=(resultResult.data??[]) as Array<any>;
-  const historyMap=new Map<string,Array<any>>();
+  const results=(resultResult.data??[]) as ExamResultRow[];
+  const historyMap=new Map<string,ExamResultRow[]>();
   for(const row of results){
     const key=String(row.course_id);
     const list=historyMap.get(key)??[];
@@ -51,7 +91,8 @@ export async function getExamResultsData(){
   }
 
   const nowIso=new Date().toISOString();
-  const courses=(courseResult.data??[]).map((course:any)=>{
+  const courseRows=(courseResult.data??[]) as CourseRow[];
+  const courses:ExamResultCourse[]=courseRows.map((course)=>{
     const history=historyMap.get(String(course.id))??[];
     const latest=history[0]??null;
     const latestOfficial=history.find(row=>row.result_status==="official")??null;
