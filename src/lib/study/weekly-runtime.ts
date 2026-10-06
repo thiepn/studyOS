@@ -2,7 +2,7 @@ import type { Database } from "@/lib/supabase/database.types";
 import { StudyServiceError } from "./errors";
 import { zonedDateTimeToUtc } from "./calendar-scheduler";
 import {
-  buildWeeklyProgress,creditedMinutes,type CourseCompletionEvidence,type WeeklyAllocationSnapshot,
+  addDays,buildWeeklyProgress,creditedMinutes,type CourseCompletionEvidence,type WeeklyAllocationSnapshot,
 } from "./weekly-plan";
 
 type WeekPlanRow=Database["public"]["Tables"]["study_week_plans"]["Row"];
@@ -50,16 +50,12 @@ export async function loadActiveWeekRuntime(
   let sessions:Array<any>=[];
   let workflows:Array<any>=[];
   if(courseIds.length){
-    const endExclusive=zonedDateTimeToUtc(
-      new Date(plan.period_ends_on+"T12:00:00Z").toISOString().slice(0,10),
-      "23:59",
-      timezone,
-    ).toISOString();
+    const endExclusive=zonedDateTimeToUtc(addDays(plan.period_ends_on,1),"00:00",timezone).toISOString();
     const [courseResult,sessionResult,workflowResult]=await Promise.all([
       db.from("study_courses").select("id,display_name,short_name").in("id",courseIds),
       db.from("study_sessions").select("course_id,actual_minutes,planned_minutes,started_at,ended_at")
         .eq("user_id",userId).in("course_id",courseIds)
-        .gte("started_at",plan.committed_at).lte("started_at",endExclusive).not("ended_at","is",null),
+        .gte("started_at",plan.committed_at).lt("started_at",endExclusive).not("ended_at","is",null),
       db.from("study_week_workflow").select("course_id,lecture_retrieval_completed_at,exercise_attempt_completed_at,solution_reconciled_at,checkpoint_completed_at")
         .eq("user_id",userId).in("course_id",courseIds),
     ]);
@@ -76,7 +72,7 @@ export async function loadActiveWeekRuntime(
   }
   const workflowMinutes=new Map<string,number>();
   const start=Date.parse(plan.committed_at);
-  const end=Date.parse(zonedDateTimeToUtc(plan.period_ends_on,"23:59",timezone).toISOString())+60_000;
+  const end=Date.parse(zonedDateTimeToUtc(addDays(plan.period_ends_on,1),"00:00",timezone).toISOString());
   for(const workflow of workflows){
     const id=String(workflow.course_id);let minutes=0;
     for(const [field,value] of Object.entries(WORKFLOW_MINUTES)){
