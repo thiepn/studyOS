@@ -158,7 +158,8 @@ export function buildExamCommand(input:{
 
   // Only one heavy exam action may enter Today. Lower-ranked heavy actions remain P9-authoritative,
   // but P22 defers their execution to avoid cross-exam fatigue collisions.
-  const todayHeavy=courses.filter(course=>course.todayEligible&&course.heavy);
+  const todayCapacity=input.dayCapacities[0]?.availableMinutes??0;
+  const todayHeavy=courses.filter(course=>course.todayEligible&&course.heavy&&course.nextActionMinutes<=todayCapacity);
   for(const course of todayHeavy.slice(1)){
     course.todayEligible=false;
     course.conflict="cross_exam_heavy";
@@ -177,8 +178,10 @@ export function buildExamCommand(input:{
   for(const course of courses){
     if(course.conflict==="exam_today")continue;
     const latestOffset=Math.max(0,(course.daysToExam??days.length)-1);
+    const sinceLastSimulation=daysSince(course.lastSimulationAt,input.nowIso);
+    const earliestOffset=course.actionClass==="simulation"&&sinceLastSimulation<1.5?1:0;
     let placed=false;
-    for(let i=0;i<days.length&&i<=latestOffset;i++){
+    for(let i=earliestOffset;i<days.length&&i<=latestOffset;i++){
       const day=days[i];
       if(day.remainingMinutes<course.nextActionMinutes)continue;
       if(course.heavy){
