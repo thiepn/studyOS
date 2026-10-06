@@ -2,9 +2,9 @@
 
 StudyOS is the WS26/27 retention and exam-readiness system for the THIEPN ecosystem. The application keeps raw university material in a dedicated Google Drive account, structured academic state in Supabase, and daily review/exam-readiness workflows in a Next.js frontend.
 
-## Current phase: P18
+## Current phase: P19
 
-Implemented through P18; the foundation includes:
+Implemented through P19; the foundation includes:
 
 - Next.js 16 App Router + Supabase SSR authentication
 - THIEPN Account shared identity with isolated `study_*` application data
@@ -354,3 +354,23 @@ StudyOS can now model a fixed weekly capacity across all active courses without 
 - P9 remains the exam-action authority and P10 remains the daily-capacity authority.
 
 The next phase is **P19 — Weekly Commitment, Scenario-to-Plan Translation & Rolling Reallocation**.
+
+
+## P19 weekly commitment and rolling reallocation
+
+StudyOS can now turn a P18 scenario into a durable operational commitment for the remainder of the current calendar week.
+
+- weekly plans persist the chosen objective, fixed capacity/reserves, revision, and scenario snapshot;
+- per-course allocations preserve both original committed minutes and the current target;
+- progress is derived from recorded study sessions plus conservative workflow milestone credit, using the larger signal per course to avoid double counting;
+- each course is classified as not started, behind, on track, ahead, or met;
+- P19 changes only discretionary course-work priority inside P10; commitments, P9 exam strategy, and retention are untouched;
+- if a committed course has no ordinary candidate, P19 may add one bounded fallback pointing to its current P17 action;
+- rolling reallocation detects lost capacity, material P17 priority shifts, and meaningful pace problems;
+- proposals are automatic but application is explicit, preserving the original weekly commitment for audit;
+- rebalancing can shrink targets when the week genuinely loses capacity but cannot silently manufacture additional workload;
+- the new /week dashboard shows progress, evidence sources, original/current/proposed targets, and the live remaining-week capacity;
+- P18 scenarios link directly into weekly commitment;
+- live Supabase schema changes use owner RLS and were checked with security/performance advisors.
+
+The next phase is **P20 — Weekly Execution Quality, Plan Adherence & Allocation Calibration**.
