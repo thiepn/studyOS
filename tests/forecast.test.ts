@@ -93,3 +93,13 @@ test("semester summary is credit-weighted and identifies highest-priority course
   assert.equal(summary.topPriorityCourseId,"b");
   assert.ok(summary.weightedReadinessIndex!=null);
 });
+
+
+test("missing P9 timed-paper duration uses the conservative 90-minute fallback",()=>{
+  const result=buildCourseForecast(base({
+    operatingMode:"exam",daysToExam:6,examNextAction:"timed_paper",
+    examStrategyDurationMinutes:null,
+  }));
+  assert.equal(result.nextAction.authority,"P9");
+  assert.equal(result.nextAction.estimatedMinutes,90);
+});
