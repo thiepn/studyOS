@@ -120,7 +120,7 @@ export type SemesterForecastSummary={
 };
 
 const clamp=(value:number,min=0,max=100)=>Math.min(max,Math.max(min,value));
-const num=(value:number|null|undefined,fallback=0)=>Number.isFinite(Number(value))?Number(value):fallback;
+const num=(value:number|null|undefined,fallback=0)=>value==null||!Number.isFinite(Number(value))?fallback:Number(value);
 
 function confidenceFromEvidence(score:number):ForecastConfidence{
   if(score<25)return "very_low";
