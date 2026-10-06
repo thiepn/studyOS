@@ -46,7 +46,7 @@ export async function getExamOperationsData(){
   };
 }
 
-export async function closeExamAndReallocate(courseId:string){
+export async function closeExamAndReallocate(courseId:string,boundaryOverride?:{examAt:string;durationMinutes:number|null}){
   if(!UUID.test(courseId))throw new StudyServiceError("Invalid course ID","invalid_course");
   const supabase=await createClient();
   const {semesterId,userId}=await ensureStudyWorkspace(supabase);
@@ -57,8 +57,8 @@ export async function closeExamAndReallocate(courseId:string){
   if(courseResult.error||!courseResult.data)throw new StudyServiceError("Course exam not found",courseResult.error?.code||"invalid_course",courseResult.error);
   const boundary=examBoundaryState({
     courseId:String(courseResult.data.id),displayName:String(courseResult.data.display_name),
-    shortName:courseResult.data.short_name,examAt:courseResult.data.exam_at,
-    durationMinutes:courseResult.data.exam_duration_minutes,
+    shortName:courseResult.data.short_name,examAt:boundaryOverride?.examAt??courseResult.data.exam_at,
+    durationMinutes:boundaryOverride?.durationMinutes??courseResult.data.exam_duration_minutes,
   },new Date().toISOString());
   if(!boundary.closureEligible)throw new StudyServiceError("Exam closure is available only after the configured exam duration has ended","invalid_exam_not_finished");
 
