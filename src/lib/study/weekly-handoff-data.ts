@@ -131,7 +131,9 @@ export async function getWeeklyHandoffData(){
     carryoverCommitments:carryover,dueInTargetCommitments:dueInTarget,mandatoryCommitments,
     capacity,recommendation,scenario,
     closeAllowed:Boolean(previousPlan&&previousPlan.status!=="completed"&&isWeekClosable(previousPlan.period_ends_on,today)),
-    commitAllowed:isHandoffCommitWindow(today,targetStart)&&(!targetPlan||targetPlan.status==="cancelled"),
+    commitAllowed:isHandoffCommitWindow(today,targetStart)
+      &&(!previousPlan||previousPlan.status==="completed")
+      &&(!targetPlan||targetPlan.status==="cancelled"),
   };
 }
 
@@ -166,6 +168,10 @@ export async function commitHandoffWeek(input:{objective:string;capacityMinutes?
     "The next full week can only be committed on Sunday or Monday. Use the current Week view for midweek planning.",
     "invalid_handoff_window",
   );
+  if(data.previousPlan&&data.previousPlan.status!=="completed")throw new StudyServiceError(
+    "Close the prior weekly review before committing the next week.",
+    "invalid_handoff_review_required",
+  );
   if(data.targetPlan?.status==="active")throw new StudyServiceError("The handoff week already has an active commitment","invalid_week_plan_exists");
   if(data.targetPlan?.status==="completed")throw new StudyServiceError("The target week is already completed","invalid_week_plan_status");
 
@@ -175,7 +181,9 @@ export async function commitHandoffWeek(input:{objective:string;capacityMinutes?
   );
   const mandatory=data.mandatoryCommitments.reduce((sum,row)=>sum+Number(row.estimated_minutes),0);
   const afterMandatory=Math.max(0,selected-Math.min(selected,mandatory));
-  const retention=round15(Math.min(data.maxRetentionMinutes,afterMandatory*data.reviewRatio));
+  const retention=selected===data.capacity.selectedCapacityMinutes
+    ?data.capacity.retentionMinutes
+    :round15(Math.min(data.maxRetentionMinutes,afterMandatory*data.reviewRatio));
   const courses=data.courses;
   const scenario=buildScenario({
     weeklyCapacityMinutes:selected,mandatoryCommitmentMinutes:mandatory,retentionReserveMinutes:retention,
