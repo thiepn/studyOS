@@ -146,7 +146,7 @@ export function directionalOutcomeAlignment(result:SemesterResultInput):OutcomeA
   return "mixed";
 }
 
-function completionState(course:SemesterCourseInput,attempts:SemesterResultInput[]):SemesterCompletionState{
+function completionState(course:SemesterCourseInput,attempts:SemesterResultInput[],today:string):SemesterCompletionState{
   const latestAny=latest(attempts);
   const latestOfficial=latest(attempts.filter(result=>result.resultStatus==="official"));
   if(latestOfficial){
@@ -156,7 +156,7 @@ function completionState(course:SemesterCourseInput,attempts:SemesterResultInput
     if(latestOfficial.retakeDecision==="declined")return "closed_without_pass";
   }
   if(latestAny?.resultStatus==="provisional")return "provisional_result";
-  if(course.examAt&&Date.parse(course.examAt)<=Date.now())return "awaiting_result";
+  if(course.examAt&&Date.parse(course.examAt)<Date.parse(today+"T23:59:59Z"))return "awaiting_result";
   if(course.active)return "ongoing";
   return "inactive_unresolved";
 }
@@ -174,7 +174,7 @@ export function buildSemesterCompletionLedger(input:{
       const latestResult=latest(attempts);
       const latestOfficial=latest(attempts.filter(result=>result.resultStatus==="official"));
       const pass=attempts.find(result=>result.resultStatus==="official"&&result.outcome==="passed")??null;
-      const state=completionState(course,attempts);
+      const state=completionState(course,attempts,input.today);
       return {
         courseId:course.id,displayName:course.displayName,shortName:course.shortName,courseKind:course.courseKind,
         credits:course.credits,active:course.active,completionState:state,attempts,latestResult,latestOfficial,
