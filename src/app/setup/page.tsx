@@ -59,9 +59,14 @@ export default async function SetupPage(){
             <span className={course.week1_verified_resource_count>0?"ok":""}>W1 source {course.week1_verified_resource_count||"—"}</span>
             <span className={course.skill_count>0&&course.question_count>0?"ok":""}>Map {course.skill_count}/{course.question_count}</span>
             <span className={course.attempt_count>0?"ok":""}>Attempt {course.attempt_count||"—"}</span>
-          </div>:<div className="retake-activation">
-            <div className="activation-check-grid"><span className={course.skill_count>0?"ok":""}>Skills {course.skill_count||"—"}</span><span className={course.question_count>0?"ok":""}>Questions {course.question_count||"—"}</span><span className={course.baseline_status==="completed"?"ok":""}>Baseline {course.baseline_classified_count}/{course.baseline_skill_count}</span></div>
+          </div>:course.course_kind==="retake"?<div className="retake-activation">
+            <div className="activation-check-grid"><span className={course.drive_folder_ready?"ok":""}>Drive folder</span><span className={course.skill_count>0?"ok":""}>Skills {course.skill_count||"—"}</span><span className={course.question_count>0?"ok":""}>Questions {course.question_count||"—"}</span><span className={course.baseline_status==="completed"?"ok":""}>Baseline {course.baseline_classified_count}/{course.baseline_skill_count}</span></div>
             <Link className="secondary-button" href={"/diagnostics/"+course.course_id}>{course.baseline_status==="completed"?"Review baseline":"Run baseline"}</Link>
+          </div>:<div className="activation-check-grid">
+            <span className={course.drive_folder_ready?"ok":""}>Drive folder</span>
+            <span className={course.resource_count>0?"ok":""}>Sources {course.resource_count||"—"}</span>
+            <span className={course.skill_count>0&&course.question_count>0?"ok":""}>Map {course.skill_count}/{course.question_count}</span>
+            <span className={course.attempt_count>0?"ok":""}>Attempt {course.attempt_count||"—"}</span>
           </div>}
         </article>;
       })}</div>
