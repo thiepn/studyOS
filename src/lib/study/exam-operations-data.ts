@@ -86,7 +86,7 @@ export async function closeExamAndReallocate(courseId:string){
   if(orchestration.weekRuntime&&releasedMinutes>0){
     const remainingExamPressure=orchestration.examCommand.courses.some(course=>course.courseId!==courseId&&(course.daysToExam??999)<=21);
     const objective=(remainingExamPressure?"exam_period":orchestration.weekRuntime.plan.objective) as ScenarioObjective;
-    rebalance=await applyWeeklyRebalance(orchestration.weekRuntime.plan.id,objective);
+    rebalance=await applyWeeklyRebalance(orchestration.weekRuntime.plan.id,objective,"exam_closure:"+courseId);
   }
 
   return {
