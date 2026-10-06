@@ -12,28 +12,20 @@ export type SemesterForecast={
   summary:ReturnType<typeof summarizeSemesterForecast>;
 };
 
-export async function getSemesterForecast():Promise<SemesterForecast>{
-  const supabase=await createClient();
-  const {semesterId}=await ensureStudyWorkspace(supabase);
-  const db=supabase as any;
-
-  const [pulse,calibration,learning,strategy,courseResult,examResult]=await Promise.all([
-    getSemesterPulse(),
-    getSemesterCalibration(),
-    getSemesterLearningAnalytics(),
-    getSemesterStrategyPortfolios(),
-    db.from("study_courses").select("id,display_name,short_name,sort_order,course_kind,credits").eq("semester_id",semesterId).eq("active",true).order("sort_order"),
-    db.from("study_exam_strategy").select("*").eq("semester_id",semesterId),
-  ]);
-  const error=courseResult.error||examResult.error;
-  if(error)throw new StudyServiceError("Could not load semester forecast evidence",error.code||"forecast_read_failed",error);
-
-  const riskMap=new Map(pulse.risks.map((row)=>[row.course_id,row as any]));
-  const calibrationMap=new Map(calibration.map((row)=>[row.courseId,row.profile]));
-  const learningMap=new Map(learning.courses.map((row)=>[row.courseId,row.analytics]));
-  const strategyMap=new Map(strategy.courses.map((row)=>[row.courseId,row]));
-  const examMap=new Map(((examResult.data??[]) as Array<any>).map((row)=>[String(row.course_id),row]));
-  const courses=((courseResult.data??[]) as Array<any>).map((course)=>{
+export function buildSemesterForecastFromEvidence(input:{
+  risks:Array<any>;
+  calibration:Array<any>;
+  learning:Array<any>;
+  strategy:Array<any>;
+  courses:Array<any>;
+  exams:Array<any>;
+}):SemesterForecast{
+  const riskMap=new Map(input.risks.map((row)=>[String(row.course_id),row]));
+  const calibrationMap=new Map(input.calibration.map((row)=>[String(row.courseId),row.profile]));
+  const learningMap=new Map(input.learning.map((row)=>[String(row.courseId),row.analytics]));
+  const strategyMap=new Map(input.strategy.map((row)=>[String(row.courseId),row]));
+  const examMap=new Map(input.exams.map((row)=>[String(row.course_id),row]));
+  const courses=input.courses.map((course)=>{
     const risk=riskMap.get(String(course.id))??{};
     const calibrated=calibrationMap.get(String(course.id));
     const learned=learningMap.get(String(course.id));
@@ -41,7 +33,7 @@ export async function getSemesterForecast():Promise<SemesterForecast>{
     const exam=examMap.get(String(course.id))??{};
     const statuses=portfolio?.recommendation.statusByKey?Object.values(portfolio.recommendation.statusByKey):[];
 
-    const input:ForecastInput={
+    const forecastInput:ForecastInput={
       courseId:String(course.id),displayName:String(course.display_name),shortName:course.short_name==null?null:String(course.short_name),
       courseKind:String(course.course_kind??risk.course_kind??"major"),credits:course.credits==null?null:Number(course.credits),
       totalSkills:Number(risk.total_skills??0),testedSkills:Number(risk.tested_skills??0),
@@ -85,8 +77,29 @@ export async function getSemesterForecast():Promise<SemesterForecast>{
       examNextActionReason:exam.next_action_reason==null?null:String(exam.next_action_reason),
       examStrategyDurationMinutes:exam.strategy_duration_minutes==null?null:Number(exam.strategy_duration_minutes),
     };
-    return {sortOrder:Number(course.sort_order??0),forecast:buildCourseForecast(input)};
+    return {sortOrder:Number(course.sort_order??0),forecast:buildCourseForecast(forecastInput)};
   }).sort((a,b)=>a.sortOrder-b.sortOrder).map((row)=>row.forecast);
-
   return {courses,summary:summarizeSemesterForecast(courses)};
+}
+
+export async function getSemesterForecast():Promise<SemesterForecast>{
+  const supabase=await createClient();
+  const {semesterId}=await ensureStudyWorkspace(supabase);
+  const db=supabase as any;
+
+  const [pulse,calibration,learning,strategy,courseResult,examResult]=await Promise.all([
+    getSemesterPulse(),
+    getSemesterCalibration(),
+    getSemesterLearningAnalytics(),
+    getSemesterStrategyPortfolios(),
+    db.from("study_courses").select("id,display_name,short_name,sort_order,course_kind,credits").eq("semester_id",semesterId).eq("active",true).order("sort_order"),
+    db.from("study_exam_strategy").select("*").eq("semester_id",semesterId),
+  ]);
+  const error=courseResult.error||examResult.error;
+  if(error)throw new StudyServiceError("Could not load semester forecast evidence",error.code||"forecast_read_failed",error);
+
+  return buildSemesterForecastFromEvidence({
+    risks:pulse.risks,calibration,learning:learning.courses,strategy:strategy.courses,
+    courses:(courseResult.data??[]) as Array<any>,exams:(examResult.data??[]) as Array<any>,
+  });
 }
