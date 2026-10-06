@@ -13,9 +13,10 @@ export async function getTodayData(): Promise<TodayData> {
     (supabase as any).from("study_current_capacity").select("effective_review_budget_minutes").eq("semester_id", semesterId).maybeSingle(),
     supabase.from("study_course_progress").select("*").eq("semester_id", semesterId).order("sort_order"),
     supabase.from("study_due_skills").select("*").eq("semester_id", semesterId).eq("is_due", true).order("priority_score", { ascending: false }),
+    supabase.from("study_course_operating_mode").select("course_id,operating_mode").eq("semester_id", semesterId),
   ]);
 
-  const error = semesterResult.error || capacityResult.error || courseResult.error || dueResult.error;
+  const operatingModeResult = arguments.length ? undefined : undefined;
   if (error) throw new StudyServiceError("Could not load Semester OS state", error.code || "study_read_failed", error);
 
   const dueSkills = (dueResult.data ?? []) as DueSkill[];
