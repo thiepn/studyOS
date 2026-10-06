@@ -12484,3 +12484,28 @@ export const Constants = {
     },
   },
 } as const
+
+export type StudyAttemptResult = Database["public"]["Enums"]["study_attempt_result"];
+export type StudyIndependence = Database["public"]["Enums"]["study_independence"];
+export type StudyErrorType = Database["public"]["Enums"]["study_error_type"];
+export type StudyEvidenceDimension = Database["public"]["Enums"]["study_evidence_dimension"];
+export type StudyMasteryState = Database["public"]["Enums"]["study_mastery_state"];
+export type StudyCourseKind = Database["public"]["Enums"]["study_course_kind"];
+export type StudySkillKind = Database["public"]["Enums"]["study_skill_kind"];
+export type StudyQuestionType = Database["public"]["Enums"]["study_question_type"];
+export type StudyResourceType = Database["public"]["Enums"]["study_resource_type"];
+export type StudySourceAuthority = Database["public"]["Enums"]["study_source_authority"];
+export type StudyProcessingStatus = Database["public"]["Enums"]["study_processing_status"];
+export type StudySessionType = Database["public"]["Enums"]["study_session_type"];
+export type StudyExamAnswerStatus = Database["public"]["Enums"]["study_exam_answer_status"];
+export type StudyExamSimulationStatus = Database["public"]["Enums"]["study_exam_simulation_status"];
+export type StudyExamGradingStatus = Database["public"]["Enums"]["study_exam_grading_status"];
+export type StudyCapacityMode = Database["public"]["Enums"]["study_capacity_mode"];
+export type StudyCommitmentKind = Database["public"]["Enums"]["study_commitment_kind"];
+export type StudyCommitmentStatus = Database["public"]["Enums"]["study_commitment_status"];
+export type StudyCalendarEventRole = Database["public"]["Enums"]["study_calendar_event_role"];
+export type StudyScheduledBlockStatus = Database["public"]["Enums"]["study_scheduled_block_status"];
+export type StudyBaselineStatus = Database["public"]["Enums"]["study_baseline_status"];
+export type StudyBaselineClassification = Database["public"]["Enums"]["study_baseline_classification"];
+export type StudyWeekHealthStatus = "empty" | "needs_processing" | "source_only" | "learning" | "fragile" | "retained";
+export type StudyIntakeStatus = "discovered" | "classified" | "candidate" | "registered" | "needs_review" | "ignored" | "failed";
