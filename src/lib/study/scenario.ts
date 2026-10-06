@@ -190,7 +190,7 @@ export function buildScenario(input:ScenarioInput):ScenarioPlan{
   }
 
   // Keep a final sub-15-minute remainder unused instead of pretending it is a meaningful block.
-  const rows=active.map((course)=>{
+  const rows:CourseAllocation[]=active.map((course)=>{
     const allocated=allocations.get(course.courseId)??0;
     const floor=floors.get(course.courseId)??0;
     const shortfall=Math.max(0,floor-allocated);
@@ -201,7 +201,7 @@ export function buildScenario(input:ScenarioInput):ScenarioPlan{
       marginalScore:Math.round(clamp(objectiveScore(course,input.objective,allocated,floor))),
       reason:reasonFor(course,input.objective,floor),sacrificeRank:null,
       readinessIndex:course.readinessIndex,band:course.band,runway:course.runway,actionTitle:course.actionTitle,
-    } satisfies CourseAllocation;
+    };
   });
 
   const sacrificed=[...rows].filter((row)=>!row.floorMet).sort((a,b)=>b.floorShortfallMinutes-a.floorShortfallMinutes||a.marginalScore-b.marginalScore);
