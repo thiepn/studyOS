@@ -3,14 +3,17 @@ import { Nav } from "@/components/nav";
 import { getSemesterPulse, topRiskDrivers } from "@/lib/study/pulse";
 import { getSemesterCalibration } from "@/lib/study/calibration-data";
 import { getSemesterLearningAnalytics } from "@/lib/study/analytics-data";
+import { getCrossSemesterTransferData } from "@/lib/study/cross-semester-data";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProgressPage(){
-  const [pulse,calibration,learning]=await Promise.all([getSemesterPulse(),getSemesterCalibration(),getSemesterLearningAnalytics()]);
+  const [pulse,calibration,learning,transfer]=await Promise.all([getSemesterPulse(),getSemesterCalibration(),getSemesterLearningAnalytics(),getCrossSemesterTransferData()]);
   const calibrationByCourse=new Map(calibration.map((item)=>[item.courseId,item.profile]));
   const learningByCourse=new Map(learning.courses.map((item)=>[item.courseId,item.analytics]));
   const sustainedDrift=learning.courses.filter((item)=>item.analytics.latestDrift.band==="drifting"||item.analytics.latestDrift.band==="critical").length;
+  const transferByCourse=new Map<string,(typeof transfer.activeEvaluations)>();
+  for(const item of transfer.activeEvaluations)transferByCourse.set(item.courseId,[...(transferByCourse.get(item.courseId)??[]),item]);
   return <main className="shell">
     <header className="header"><div><p className="eyebrow">Longitudinal diagnostics</p><h1>Progress</h1></div><Nav /></header>
 
@@ -33,6 +36,22 @@ export default async function ProgressPage(){
       <p className="muted">P15 judges a repair only from later independent attempts. Performance inside the repair session itself is excluded, so the metric measures transfer rather than practice-set success.</p>
     </section>
 
+    <section className="panel intervention-summary">
+      <div className="section-heading"><div><p className="eyebrow">P28 · cross-semester transfer</p><h2>Did historical evidence actually transfer?</h2></div><span>{transfer.summary.usable}/{transfer.summary.activePriors}</span></div>
+      <div className="intervention-summary-grid">
+        <div><strong>{transfer.summary.activePriors}</strong><span>active priors</span></div>
+        <div><strong>{transfer.summary.usable}</strong><span>validated / mixed</span></div>
+        <div><strong>{transfer.summary.confirmed}</strong><span>confirmed</span></div>
+        <div><strong>{transfer.summary.contradicted}</strong><span>contradicted</span></div>
+        <div><strong>{transfer.summary.insufficient}</strong><span>need evidence</span></div>
+        <div><strong>{transfer.activeProfiles.length}</strong><span>longitudinal profiles</span></div>
+      </div>
+      <div className="course-learning-metrics">
+        {transfer.reliability.filter((item)=>item.total>0).map((item)=><span key={item.relation}><strong>{item.reliabilityPercent==null?"—":item.reliabilityPercent+"%"}</strong> {item.relation.replace("_"," ")} reliability · {item.usable}/{item.total} usable</span>)}
+      </div>
+      <p className="muted">P28 compares immutable historical-prior signals with fresh baseline classifications and independent attempts from the first 21 days. It only calibrates how much diagnostic attention a prior deserves; it never restores mastery, schedules reviews, or overrides current-semester evidence.</p>
+    </section>
+
     <section className="risk-course-list">
       {pulse.risks.map((course)=>{
         const drivers=topRiskDrivers(course,3);
@@ -40,6 +59,7 @@ export default async function ProgressPage(){
         const calibrationProfile=calibrationByCourse.get(course.course_id);
         const learningProfile=learningByCourse.get(course.course_id);
         const driftProfile=learningProfile?.latestDrift;
+        const transferProfiles=transferByCourse.get(course.course_id)??[];
         return <article className="panel risk-course" id={"course-"+course.course_id} key={course.course_id}>
           <div className="risk-course-head">
             <div><p className="eyebrow">{course.operating_mode.replace("_"," ")} mode</p><h2>{course.display_name}</h2></div>
@@ -91,6 +111,14 @@ export default async function ProgressPage(){
             </div>
             {learningProfile.interventions[0] ? <p className="latest-intervention"><strong>Latest:</strong> {learningProfile.interventions[0].outcome.replace("_"," ")} · {learningProfile.interventions[0].baselineAccuracyPercent==null?"—":learningProfile.interventions[0].baselineAccuracyPercent+"%"} → {learningProfile.interventions[0].followupAccuracyPercent==null?"—":learningProfile.interventions[0].followupAccuracyPercent+"%"} · {learningProfile.interventions[0].evidenceWindow}</p> : null}
             <p>{learningProfile.recommendation}</p>
+          </div> : null}
+
+          {transferProfiles.length ? <div className="course-learning-panel">
+            <div className="course-learning-head"><div><span>Cross-semester transfer</span><strong>{transferProfiles.map((item)=>item.outcome.replaceAll("_"," ")).join(" · ")}</strong></div><b>{transferProfiles.length} prior{transferProfiles.length===1?"":"s"}</b></div>
+            <div className="course-learning-metrics">
+              {transferProfiles.map((item)=><span key={item.priorId}><strong>{item.sourceSignal} → {item.currentSignal}</strong> {item.relation.replace("_"," ")} · {item.confidence} confidence</span>)}
+            </div>
+            {transferProfiles.map((item)=><p className="latest-intervention" key={item.priorId+"-note"}><strong>{item.sourceDisplayName}:</strong> {item.recommendation} ({item.baselineClassifications} baseline classifications · {item.independentAttempts} early independent attempts)</p>)}
           </div> : null}
 
           <div className="risk-detail-grid">
