@@ -114,7 +114,7 @@ function commandLevel(active:ExamCommandInputCourse[]):ExamCommandLevel{
 }
 
 function priorityAdjustment(rank:number,days:number|null,level:ExamCommandLevel){
-  if(level==="inactive"||level==="single_exam")return 0;
+  if(level!=="compressed_conflict"&&level!=="critical_conflict")return 0;
   const base=rank===1?18:rank===2?10:rank===3?5:2;
   const urgentBoost=days!=null&&days<=3?4:days!=null&&days<=7?2:0;
   return base+urgentBoost;
