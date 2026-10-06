@@ -2,9 +2,9 @@
 
 StudyOS is the WS26/27 retention and exam-readiness system for the THIEPN ecosystem. The application keeps raw university material in a dedicated Google Drive account, structured academic state in Supabase, and daily review/exam-readiness workflows in a Next.js frontend.
 
-## Current phase: P24
+## Current phase: P25
 
-Implemented through P24; the foundation includes:
+Implemented through P25; the foundation includes:
 
 - Next.js 16 App Router + Supabase SSR authentication
 - THIEPN Account shared identity with isolated `study_*` application data
@@ -491,3 +491,24 @@ StudyOS now has durable state for real university exam outcomes.
 - Today surfaces result-ready exams and unresolved retake decisions.
 
 The next phase is **P25 — Semester Completion Ledger, Credit/Pass Progress & End-of-Semester Review**.
+
+
+## P25 semester completion ledger and end-of-semester review
+
+StudyOS now aggregates actual P24 outcomes into a semester-level academic ledger without introducing another durable source of truth.
+
+- /semester shows terminal-course progress and credit/pass progress;
+- credits are counted once per course, never once per exam attempt;
+- planned retakes, pending retake decisions, missing/provisional results, ongoing courses, passes, and closed-without-pass courses remain distinct;
+- completed retake exams move to awaiting-result state through the P23 boundary model;
+- courses with unknown credits are surfaced and excluded from the credit denominator rather than guessed;
+- complete attempt history remains visible;
+- first-attempt passes and eventual later-attempt passes are distinguished;
+- P17 snapshots are reconciled directionally only: aligned, positive surprise, negative surprise, mixed, or insufficient evidence;
+- no grade prediction, pass-probability calibration, or readiness-minus-grade metric is introduced;
+- P19/P20 weekly adherence, capacity calibration, rebalances, protection sacrifices, and course allocation signals feed the end-of-semester execution review;
+- the retrospective derives supported strengths, open concerns, and bounded next-semester actions;
+- semester completion is flagged incomplete if the semester has ended while active/unresolved academic state remains;
+- P25 adds no new database schema or persistence.
+
+The next phase is **P26 — Semester Archive, New-Semester Rollover & Retake Carry-Forward**.
