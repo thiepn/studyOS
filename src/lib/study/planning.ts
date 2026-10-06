@@ -9,6 +9,8 @@ import { getSemesterDrift } from "./drift-data";
 import { driftPriorityAdjustment } from "./drift";
 import { getSemesterStrategyPortfolios } from "./strategy-data";
 import { buildSemesterForecastFromEvidence } from "./forecast-data";
+import { loadActiveWeekRuntime } from "./weekly-runtime";
+import { weeklyPriorityAdjustment } from "./weekly-plan";
 
 const ACTIONS=new Set(["process_material","retrieve_lecture","attempt_exercise","reconcile_solution","repair_findings"]);
 const MODE_SET=new Set<PlanningMode>(["normal","light","recovery","intensive","custom"]);
@@ -51,7 +53,7 @@ function examEstimate(strategy:ExamStrategy){
 
 export async function getDailyOrchestration(){
   const supabase=await createClient();
-  const {semesterId}=await ensureStudyWorkspace(supabase);
+  const {semesterId,userId}=await ensureStudyWorkspace(supabase);
   const db=supabase as any;
 
   const [today,pulse,drift,strategyPortfolios,capacityResult,semesterResult,settingsResult,weekResult,commitmentResult,strategyResult,papersResult,coursesResult,baselineResult]=await Promise.all([
@@ -87,6 +89,16 @@ export async function getDailyOrchestration(){
   const riskMap=new Map(pulse.risks.map((risk)=>[risk.course_id,risk]));
   const paperMap=new Map<string,string>();
   for(const paper of papersResult.data??[]) if(!paperMap.has(paper.course_id)) paperMap.set(paper.course_id,paper.exam_id);
+
+  const forecast=buildSemesterForecastFromEvidence({
+    risks:pulse.risks,calibration,learning:learningAnalytics.courses,strategy:strategyPortfolios.courses,
+    courses,exams:(strategyResult.data??[]) as Array<any>,
+  });
+  const weekRuntime=await loadActiveWeekRuntime(
+    db,userId,semesterId,capacity.local_today,capacity.timezone??semesterResult.data?.timezone??"Europe/Berlin",
+  );
+  const weekProgressMap=new Map((weekRuntime?.progress.courses??[]).map(course=>[course.courseId,course]));
+  const forecastMap=new Map(forecast.courses.map(course=>[course.courseId,course]));
 
   const candidates:PlanningCandidate[]=[];
   if(today.queueMinutes>0){
@@ -223,7 +235,42 @@ export async function getDailyOrchestration(){
     };
   });
 
-  const plan=buildDailyPlan(correctedCandidates,{
+  const weeklyCandidates=correctedCandidates.map((candidate)=>{
+    if(!candidate.courseId)return candidate;
+    const progress=weekProgressMap.get(candidate.courseId);
+    const adjustment=weeklyPriorityAdjustment(progress,candidate.kind);
+    if(!adjustment)return candidate;
+    return {
+      ...candidate,
+      priority:candidate.priority+adjustment,
+      reason:candidate.reason+" · P19 "+(progress?.paceStatus??"weekly")+" envelope "+(adjustment>0?"+":"")+adjustment,
+      metadata:{...(candidate.metadata??{}),weeklyPace:progress?.paceStatus,weeklyPriorityAdjustment:adjustment},
+    };
+  });
+
+  if(weekRuntime){
+    for(const progress of weekRuntime.progress.courses){
+      if(progress.remainingMinutes<=0)continue;
+      const hasDiscretionary=weeklyCandidates.some(candidate=>
+        candidate.courseId===progress.courseId&&!["commitment","exam_strategy","review"].includes(candidate.kind)
+      );
+      if(hasDiscretionary)continue;
+      const current=forecastMap.get(progress.courseId);
+      const perDay=Math.max(15,Math.ceil(progress.remainingMinutes/Math.max(1,weekRuntime.daysRemaining)/15)*15);
+      const minutes=Math.min(progress.remainingMinutes,45,perDay);
+      weeklyCandidates.push({
+        id:"weekly-envelope:"+progress.courseId,kind:"weekly_envelope",courseId:progress.courseId,
+        courseName:progress.displayName,title:"Weekly envelope · "+(progress.shortName??progress.displayName),
+        reason:progress.remainingMinutes+" min remain across "+weekRuntime.daysRemaining+" day"+(weekRuntime.daysRemaining===1?"":"s")+" · "+progress.paceStatus+" pace",
+        href:current?.nextAction.href??progress.actionHref,estimatedMinutes:Math.max(1,minutes),
+        priority:64+weeklyPriorityAdjustment(progress,"weekly_envelope")+Number(current?.decisionPriority??0)*0.12,
+        heavy:false,splittable:true,allowedInRecovery:true,
+        metadata:{weeklyPace:progress.paceStatus,weeklyRemainingMinutes:progress.remainingMinutes},
+      });
+    }
+  }
+
+  const plan=buildDailyPlan(weeklyCandidates,{
     mode:capacity.mode,budgetMinutes:Number(capacity.total_budget_minutes),maxFocusItems:Number(capacity.effective_max_focus_items),
   });
 
@@ -231,12 +278,7 @@ export async function getDailyOrchestration(){
     const course=commitment.course_id?courseMap.get(commitment.course_id):null;
     return {...commitment,course_name:course?.display_name??null,course_short_name:course?.short_name??null};
   });
-  const forecast=buildSemesterForecastFromEvidence({
-    risks:pulse.risks,calibration,learning:learningAnalytics.courses,strategy:strategyPortfolios.courses,
-    courses,exams:(strategyResult.data??[]) as Array<any>,
-  });
-
-  return {semesterId,today,pulse,drift,learningAnalytics,strategyPortfolios,forecast,capacity,settings:settingsResult.data??null,courses,commitments:enrichedCommitments,candidates:correctedCandidates,plan,currentWeek};
+  return {semesterId,today,pulse,drift,learningAnalytics,strategyPortfolios,forecast,weekRuntime,capacity,settings:settingsResult.data??null,courses,commitments:enrichedCommitments,candidates:weeklyCandidates,plan,currentWeek};
 }
 
 export async function setDailyCapacity(input:{mode:string;customBudgetMinutes?:number|null;planDate?:string|null;note?:string|null}){
