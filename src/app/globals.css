@@ -228,3 +228,24 @@ h2{letter-spacing:-.02em}
 .archive-ledger-hero{border-left:4px solid #7e827f}.archive-course-list{display:grid;gap:14px;margin-bottom:18px}.archive-course{border-top:3px solid #999}.archive-course.state-passed{border-top-color:#708a75}.archive-course.state-retake_planned{border-top-color:#a48562}.archive-course.state-closed_without_pass{border-top-color:#a45f5f}
 @media(max-width:780px){.rollover-summary-grid,.archive-summary-grid{grid-template-columns:1fr 1fr}.rollover-boundary-grid,.semester-rollover-form{grid-template-columns:1fr}.rollover-wide{grid-column:auto}.semester-history-head,.carry-preview>div{flex-direction:column}}
 @media(max-width:500px){.rollover-summary-grid,.archive-summary-grid{grid-template-columns:1fr}}
+
+
+/* P27 — new-semester course intake, priors and bootstrap certification */
+.bootstrap-hero,.bootstrap-intake,.bootstrap-priors,.bootstrap-contract{margin-bottom:18px}
+.bootstrap-hero{border-left:4px solid #a47462}.bootstrap-hero.ready{border-left-color:#6f8c76}
+.bootstrap-summary-grid,.bootstrap-contract-grid,.bootstrap-prior-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:14px 0}
+.bootstrap-summary-grid span,.bootstrap-contract-grid span,.bootstrap-prior-metrics span{padding:10px 11px;border-radius:9px;background:#f4f4f0;color:#666;font-size:.72rem}
+.bootstrap-summary-grid strong,.bootstrap-contract-grid strong,.bootstrap-prior-metrics strong{display:block;color:#171717;font-size:.9rem;margin-bottom:2px}
+.bootstrap-blockers{margin:12px 0;padding-left:20px}.bootstrap-blockers li{margin:6px 0}
+.bootstrap-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:12px}.bootstrap-actions .form-message{flex-basis:100%}
+.bootstrap-course-form,.bootstrap-prior-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
+.bootstrap-course-form label,.bootstrap-prior-form label{display:grid;gap:6px;font-size:.82rem;font-weight:700}
+.bootstrap-course-form input,.bootstrap-course-form select,.bootstrap-course-form textarea,.bootstrap-prior-form input,.bootstrap-prior-form select,.bootstrap-prior-form textarea{width:100%;border:1px solid #cecec7;border-radius:10px;padding:10px 11px;background:#fbfbf8;color:#171717}
+.bootstrap-course-form .wide,.bootstrap-prior-form .wide{grid-column:1/-1}.bootstrap-course-form .check{display:flex;align-items:center;gap:8px;font-weight:600}.bootstrap-course-form .check input{width:auto}
+.bootstrap-course-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:18px}.bootstrap-course{border-top:3px solid #a66f61}.bootstrap-course.ready{border-top-color:#6f8c76}
+.bootstrap-course-head{display:flex;justify-content:space-between;gap:12px;align-items:start}.bootstrap-course-head h2{margin:4px 0}.bootstrap-course-head>span{font-size:.72rem;text-transform:uppercase;border:1px solid #ddd8cf;border-radius:999px;padding:6px 9px}
+.bootstrap-course-checks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:12px 0}.bootstrap-course-checks span{padding:7px 8px;border-radius:8px;background:#f5ece8;color:#795c52;font-size:.72rem}.bootstrap-course-checks span.ok{background:#edf4ee;color:#4d6e53}
+.bootstrap-ok{padding:9px 10px;border-radius:9px;background:#edf4ee}.bootstrap-prior-list{display:grid;gap:10px;margin-top:14px}.bootstrap-prior-list>article{padding:12px;border:1px solid #e0e0d9;border-radius:10px;background:#fafaf7}.bootstrap-prior-list>article>p{line-height:1.45}
+.bootstrap-today-warning{margin:18px 0;border-left:4px solid #a47462}.baseline-prior-context{margin-bottom:18px;border-left:4px solid #858c9b}
+@media(max-width:800px){.bootstrap-course-grid{grid-template-columns:1fr}.bootstrap-summary-grid,.bootstrap-contract-grid,.bootstrap-prior-metrics{grid-template-columns:1fr 1fr}.bootstrap-course-form,.bootstrap-prior-form{grid-template-columns:1fr}.bootstrap-course-form .wide,.bootstrap-prior-form .wide{grid-column:auto}.bootstrap-course-head{flex-direction:column}}
+@media(max-width:520px){.bootstrap-summary-grid,.bootstrap-contract-grid,.bootstrap-prior-metrics,.bootstrap-course-checks{grid-template-columns:1fr}}
