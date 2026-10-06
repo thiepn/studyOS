@@ -69,7 +69,9 @@ test("P20 low-adherence signal may reduce next-week envelope but never expand th
     calibration:calibration({capacitySignal:"commitment_too_high",capacityRecommendationFactor:0.9}),
   });
   assert.ok(lower.selectedCapacityMinutes<840);
-  assert.ok(lower.selectedCapacityMinutes>=lower.mandatoryMinutes+lower.retentionMinutes);
+  assert.equal(lower.retentionMinutes,240);
+  assert.equal(lower.courseBudgetMinutes,435);
+  assert.equal(lower.selectedCapacityMinutes,795);
 
   const higher=deriveHandoffCapacity({
     feasibleCapacityMinutes:840,mandatoryMinutes:120,reviewRatio:1/3,maxRetentionMinutes:280,
