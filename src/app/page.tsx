@@ -7,12 +7,13 @@ import { getDailyOrchestration } from "@/lib/study/planning";
 import { getCalendarAutopilot } from "@/lib/study/calendar-autopilot";
 import { CalendarAutopilotPanel } from "@/components/calendar-autopilot-panel";
 import { topRiskDrivers } from "@/lib/study/pulse";
+import { getSemesterForecast } from "@/lib/study/forecast-data";
 import type { PlanningMode } from "@/lib/study/planner";
 
 export const dynamic = "force-dynamic";
 
 export default async function TodayPage() {
-  const orchestration=await getDailyOrchestration();
+  const [orchestration,outlook]=await Promise.all([getDailyOrchestration(),getSemesterForecast()]);
   const calendar=await getCalendarAutopilot(orchestration);
   const {today:data,pulse,capacity,plan,commitments,courses,settings}=orchestration;
   const topRisk=pulse.risks[0] ?? null;
@@ -25,6 +26,7 @@ export default async function TodayPage() {
   const interventionConcern=[...orchestration.learningAnalytics.courses]
     .filter((course)=>course.analytics.difficultySignal==="structural"||course.analytics.difficultySignal==="persistent")
     .sort((a,b)=>Number(b.analytics.difficultySignal==="structural")-Number(a.analytics.difficultySignal==="structural"))[0]??null;
+  const topForecast=[...outlook.courses].sort((a,b)=>b.decisionPriority-a.decisionPriority)[0]??null;
   const configured=String(settings?.default_mode??"normal");
   const defaultMode=(configured==="light"||configured==="recovery"||configured==="intensive"?configured:"normal") as Exclude<PlanningMode,"custom">;
 
@@ -47,6 +49,22 @@ export default async function TodayPage() {
       </section>
 
       <DailyPlan plan={plan} />
+
+      {topForecast ? <section className={"panel semester-decision forecast-band-"+topForecast.band}>
+        <div className="semester-decision-head">
+          <div><p className="eyebrow">P17 · semester decision</p><h2>{topForecast.shortName??topForecast.displayName}</h2></div>
+          <span>{topForecast.decisionPriority}/100 priority</span>
+        </div>
+        <p><strong>{topForecast.nextAction.title}</strong> — {topForecast.nextAction.reason}</p>
+        <div className="semester-decision-metrics">
+          <span><strong>{topForecast.readinessIndex==null?"—":topForecast.readinessIndex+"/100"}</strong> readiness</span>
+          <span><strong>{topForecast.confidence.replace("_"," ")}</strong> confidence</span>
+          <span><strong>{topForecast.trajectory}</strong> trajectory</span>
+          <span><strong>{topForecast.nextAction.expectedValue}/100</strong> action value</span>
+        </div>
+        <div className="button-row"><Link className="primary-button" href={topForecast.nextAction.href}>Open action</Link><Link className="secondary-button" href="/outlook">View semester outlook</Link></div>
+        <small>P17 ranks strategic value; the daily plan above remains the capacity authority.</small>
+      </section> : null}
 
       {topDrift ? <section className={"panel drift-correction drift-"+topDrift.profile.band}>
         <div className="drift-correction-head">
