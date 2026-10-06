@@ -4,7 +4,7 @@ export type ForecastTrajectory="unknown"|"improving"|"stable"|"declining";
 export type RunwayBand="unknown"|"ample"|"workable"|"compressed"|"urgent"|"passed";
 export type DecisionActionKind=
   |"collect_evidence"|"coursework"|"retention"|"drift_repair"|"strategy_experiment"
-  |"change_source"|"external_support"|"exam_strategy"|"maintain";
+  |"change_source"|"external_support"|"exam_strategy"|"retake_decision"|"maintain";
 
 export type ForecastComponent={
   key:string;
@@ -21,7 +21,7 @@ export type DecisionAction={
   href:string;
   estimatedMinutes:number;
   expectedValue:number;
-  authority:"P17"|"P16"|"P14"|"P13"|"P9"|"P8";
+  authority:"P24"|"P17"|"P16"|"P14"|"P13"|"P9"|"P8";
 };
 
 export type ForecastInput={
