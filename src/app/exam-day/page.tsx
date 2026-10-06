@@ -21,9 +21,13 @@ export default async function ExamDayPage(){
   const data=await getExamOperationsData();
   const timezone=String(data.capacity.timezone??"Europe/Berlin");
   const operations=data.examOperations;
-  const relevant=data.examOperationCourses.filter(course=>
-    ["final_window","in_progress","recovery_full","recovery_light","post_exam"].includes(course.phase)
-  );
+  const now=Date.parse(data.nowIso);
+  const relevant=data.examOperationCourses.filter(course=>{
+    if(["final_window","in_progress","recovery_full","recovery_light"].includes(course.phase))return true;
+    if(course.phase!=="post_exam")return false;
+    const recent=course.examEndsAt?now-Date.parse(course.examEndsAt)<=7*86_400_000:false;
+    return !course.closureComplete||recent;
+  });
   const upcoming=data.examOperationCourses.filter(course=>course.phase==="upcoming").slice(0,4);
   const lead=relevant.find(course=>["in_progress","recovery_full","recovery_light"].includes(course.phase))
     ??relevant.find(course=>course.phase==="final_window")
