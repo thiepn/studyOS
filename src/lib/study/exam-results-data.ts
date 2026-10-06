@@ -28,15 +28,16 @@ export async function getExamResultsData(){
   const supabase=await createClient();
   const {semesterId}=await ensureStudyWorkspace(supabase);
   const db=supabase as any;
-  const [forecast,courseResult,resultResult]=await Promise.all([
+  const [forecast,courseResult,resultResult,semesterResult]=await Promise.all([
     getSemesterForecast(),
     db.from("study_courses")
       .select("id,display_name,short_name,course_kind,credits,exam_at,exam_duration_minutes,active,sort_order")
       .eq("semester_id",semesterId).order("sort_order"),
     db.from("study_exam_results").select("*").eq("semester_id",semesterId)
       .order("course_id").order("attempt_no",{ascending:false}),
+    db.from("study_semesters").select("timezone").eq("id",semesterId).single(),
   ]);
-  const error=courseResult.error||resultResult.error;
+  const error=courseResult.error||resultResult.error||semesterResult.error;
   if(error)throw new StudyServiceError("Could not load exam outcomes",error.code||"exam_results_read_failed",error);
 
   const forecastMap=new Map(forecast.courses.map(course=>[course.courseId,course]));
@@ -75,7 +76,7 @@ export async function getExamResultsData(){
   });
 
   return {
-    semesterId,nowIso,courses,results,
+    semesterId,nowIso,timezone:semesterResult.data?.timezone??"Europe/Berlin",courses,results,
     completedCourses:courses.filter(course=>course.latestOfficial?.outcome==="passed"),
     pendingRetakes:courses.filter(course=>course.latestOfficial?.retake_decision==="pending"),
     plannedRetakes:courses.filter(course=>course.latestOfficial?.retake_decision==="planned"),
