@@ -108,3 +108,25 @@ test("mandatory commitments exceeding capacity are surfaced as a separate infeas
   assert.equal(result.feasibleProtection,false);
   assert.match(result.summary,/Mandatory commitments alone exceed/i);
 });
+
+
+test("P20 floor calibration is bounded and changes protection without expanding capacity",()=>{
+  const result=buildScenario({
+    weeklyCapacityMinutes:180,mandatoryCommitmentMinutes:0,retentionReserveMinutes:0,objective:"balanced",
+    courses:[course("dgl",{band:"pass_ready",runway:"workable"})],
+    floorAdjustments:{dgl:45},
+  });
+  const dgl=result.allocations[0];
+  assert.equal(dgl.floorCalibrationMinutes,30);
+  assert.equal(dgl.protectionFloorMinutes,90);
+  assert.ok(result.allocatedCourseMinutes<=180);
+});
+
+test("negative P20 floor calibration cannot make a floor negative",()=>{
+  const result=buildScenario({
+    weeklyCapacityMinutes:60,mandatoryCommitmentMinutes:0,retentionReserveMinutes:0,objective:"balanced",
+    courses:[course("strong",{band:"strong",runway:"ample"})],
+    floorAdjustments:{strong:-30},
+  });
+  assert.equal(result.allocations[0].protectionFloorMinutes,0);
+});
