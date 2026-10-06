@@ -11,7 +11,8 @@ import { getSemesterStrategyPortfolios } from "./strategy-data";
 import { buildSemesterForecastFromEvidence } from "./forecast-data";
 import { loadActiveWeekRuntime } from "./weekly-runtime";
 import { weeklyPriorityAdjustment } from "./weekly-plan";
-import { buildExamCommand, examCommandDirective, type ExamCommandInputCourse } from "./exam-command";
+import { buildExamCommand, classifyExamAction, examCommandDirective, type ExamCommandInputCourse } from "./exam-command";
+import { buildExamOperations, examRecoveryDirective, shouldFreezeCourseDiscretionary } from "./exam-operations";
 
 const ACTIONS=new Set(["process_material","retrieve_lecture","attempt_exercise","reconcile_solution","repair_findings"]);
 const MODE_SET=new Set<PlanningMode>(["normal","light","recovery","intensive","custom"]);
@@ -69,7 +70,7 @@ export async function getDailyOrchestration(){
     db.from("study_commitments").select("*").eq("semester_id",semesterId).eq("status","open").order("due_at"),
     db.from("study_exam_strategy").select("*").eq("semester_id",semesterId),
     db.from("study_exam_paper_catalog").select("exam_id,course_id,exam_at,year_label,effective_weight,simulatable").eq("active",true).eq("simulatable",true).order("exam_at",{ascending:false,nullsFirst:false}),
-    db.from("study_courses").select("id,display_name,short_name,sort_order,course_kind,credits").eq("semester_id",semesterId).eq("active",true).order("sort_order"),
+    db.from("study_courses").select("id,display_name,short_name,sort_order,course_kind,credits,exam_at,exam_duration_minutes").eq("semester_id",semesterId).eq("active",true).order("sort_order"),
     db.from("study_baseline_summary").select("*").eq("semester_id",semesterId),
   ]);
   const error=capacityResult.error||semesterResult.error||settingsResult.error||weekResult.error||commitmentResult.error||strategyResult.error||papersResult.error||coursesResult.error||baselineResult.error;
@@ -85,7 +86,7 @@ export async function getDailyOrchestration(){
     review_daily_budget_minutes:40,total_budget_minutes:120,effective_review_budget_minutes:40,effective_max_focus_items:4,
   }) as CurrentCapacity;
 
-  const courses=(coursesResult.data??[]) as Array<{id:string;display_name:string;short_name:string|null;sort_order:number;course_kind:string;credits:number|null}>;
+  const courses=(coursesResult.data??[]) as Array<{id:string;display_name:string;short_name:string|null;sort_order:number;course_kind:string;credits:number|null;exam_at:string|null;exam_duration_minutes:number|null}>;
   const courseMap=new Map(courses.map((course)=>[course.id,course]));
   const riskMap=new Map(pulse.risks.map((risk)=>[risk.course_id,risk]));
   const paperMap=new Map<string,string>();
@@ -112,6 +113,14 @@ export async function getDailyOrchestration(){
     };
   });
   const commandNow=new Date();
+  const examOperations=buildExamOperations({
+    nowIso:commandNow.toISOString(),
+    courses:courses.map(course=>({
+      courseId:course.id,displayName:course.display_name,shortName:course.short_name,
+      examAt:course.exam_at,durationMinutes:course.exam_duration_minutes,
+    })),
+  });
+  const examBoundaryMap=new Map(examOperations.courses.map(course=>[course.courseId,course]));
   const reviewReserve=Math.min(Number(capacity.effective_review_budget_minutes),Number(today.queueMinutes));
   const urgentCommitmentReserve=((commitmentResult.data??[]) as CommitmentRow[])
     .filter(commitment=>deadlinePressure(commitment.due_at,commandNow).urgent)
@@ -200,16 +209,25 @@ export async function getDailyOrchestration(){
     if(!directive.eligible) continue;
     const risk=riskMap.get(strategy.course_id);
     const timed=["baseline_timed_paper","timed_paper"].includes(strategy.next_action);
+    const estimate=examEstimate(strategy);
+    const actionShape=classifyExamAction(strategy.next_action,estimate);
+    const recoveryDirective=examRecoveryDirective({
+      operations:examOperations,courseId:strategy.course_id,heavy:actionShape.heavy,
+    });
+    if(!recoveryDirective.eligible) continue;
     const days=Number(strategy.days_to_exam??999);
     candidates.push({
       id:"exam:"+strategy.course_id+":"+strategy.next_action,kind:"exam_strategy",courseId:strategy.course_id,
       courseName:strategy.display_name,title:examActionLabel(strategy.next_action)+" · "+(strategy.short_name??strategy.display_name),
       reason:strategy.next_action_reason+(directive.priorityAdjustment?" · P22 cross-exam priority +"+directive.priorityAdjustment:""),
       href:timed&&paperMap.get(strategy.course_id)?"/practice/exam/"+paperMap.get(strategy.course_id):"/courses/"+strategy.course_id,
-      estimatedMinutes:examEstimate(strategy),
-      priority:(strategy.operating_mode==="exam"?86:72)+Math.max(0,12-Math.max(0,days))+Number(risk?.risk_score??0)*0.15+directive.priorityAdjustment,
-      urgent:days<=3,heavy:timed,splittable:!timed,allowedInRecovery:!timed,
-      metadata:{action:strategy.next_action,daysToExam:strategy.days_to_exam,p22PriorityAdjustment:directive.priorityAdjustment},
+      estimatedMinutes:estimate,
+      priority:(strategy.operating_mode==="exam"?86:72)+Math.max(0,12-Math.max(0,days))+Number(risk?.risk_score??0)*0.15+directive.priorityAdjustment+recoveryDirective.priorityAdjustment,
+      urgent:days<=3,heavy:actionShape.heavy,splittable:!actionShape.heavy,allowedInRecovery:!actionShape.heavy,
+      metadata:{
+        action:strategy.next_action,daysToExam:strategy.days_to_exam,
+        p22PriorityAdjustment:directive.priorityAdjustment,p23RecoveryAdjustment:recoveryDirective.priorityAdjustment,
+      },
     });
   }
 
@@ -301,7 +319,11 @@ export async function getDailyOrchestration(){
     }
   }
 
-  const plan=buildDailyPlan(weeklyCandidates,{
+  const operationalCandidates=weeklyCandidates.filter(candidate=>{
+    if(!candidate.courseId||candidate.kind==="commitment")return true;
+    return !shouldFreezeCourseDiscretionary(examBoundaryMap.get(candidate.courseId));
+  });
+  const plan=buildDailyPlan(operationalCandidates,{
     mode:capacity.mode,budgetMinutes:Number(capacity.total_budget_minutes),maxFocusItems:Number(capacity.effective_max_focus_items),
   });
 
@@ -309,7 +331,7 @@ export async function getDailyOrchestration(){
     const course=commitment.course_id?courseMap.get(commitment.course_id):null;
     return {...commitment,course_name:course?.display_name??null,course_short_name:course?.short_name??null};
   });
-  return {semesterId,today,pulse,drift,learningAnalytics,strategyPortfolios,forecast,examCommand,weekRuntime,capacity,settings:settingsResult.data??null,courses,commitments:enrichedCommitments,candidates:weeklyCandidates,plan,currentWeek};
+  return {semesterId,today,pulse,drift,learningAnalytics,strategyPortfolios,forecast,examCommand,examOperations,weekRuntime,capacity,settings:settingsResult.data??null,courses,commitments:enrichedCommitments,candidates:operationalCandidates,plan,currentWeek};
 }
 
 export async function setDailyCapacity(input:{mode:string;customBudgetMinutes?:number|null;planDate?:string|null;note?:string|null}){
