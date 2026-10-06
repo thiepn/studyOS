@@ -132,6 +132,15 @@ export async function getDailyOrchestration(){
   const resultBlockedCourses=new Set(
     [...latestOfficialResult.entries()].filter(([,row])=>resultBlocksCoursePlanning(row)).map(([id])=>id)
   );
+  const examOutcomeState={
+    ready:examOperations.courses.filter(course=>course.closureEligible&&!latestOfficialResult.has(course.courseId)).map(course=>({
+      courseId:course.courseId,displayName:course.displayName,shortName:course.shortName,
+    })),
+    pendingRetakes:[...latestOfficialResult.entries()].filter(([,row])=>row.retake_decision==="pending").map(([courseId])=>{
+      const course=courseMap.get(courseId);
+      return {courseId,displayName:course?.display_name??"Course",shortName:course?.short_name??null};
+    }),
+  };
   const reviewReserve=Math.min(Number(capacity.effective_review_budget_minutes),Number(today.queueMinutes));
   const urgentCommitmentReserve=((commitmentResult.data??[]) as CommitmentRow[])
     .filter(commitment=>deadlinePressure(commitment.due_at,commandNow).urgent)
@@ -343,7 +352,7 @@ export async function getDailyOrchestration(){
     const course=commitment.course_id?courseMap.get(commitment.course_id):null;
     return {...commitment,course_name:course?.display_name??null,course_short_name:course?.short_name??null};
   });
-  return {semesterId,today,pulse,drift,learningAnalytics,strategyPortfolios,forecast,examCommand,examOperations,weekRuntime,capacity,settings:settingsResult.data??null,courses,commitments:enrichedCommitments,candidates:operationalCandidates,plan,currentWeek};
+  return {semesterId,today,pulse,drift,learningAnalytics,strategyPortfolios,forecast,examCommand,examOperations,examOutcomeState,weekRuntime,capacity,settings:settingsResult.data??null,courses,commitments:enrichedCommitments,candidates:operationalCandidates,plan,currentWeek};
 }
 
 export async function setDailyCapacity(input:{mode:string;customBudgetMinutes?:number|null;planDate?:string|null;note?:string|null}){
