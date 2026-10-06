@@ -267,7 +267,11 @@ export function buildSemesterCompletionLedger(input:{
   const concerns:string[]=[];
   const nextSemesterActions:string[]=[];
 
-  if(summary.passedCourses)strengths.push(summary.passedCourses+" course"+(summary.passedCourses===1?"":"s")+" passed for "+passedCredits+" configured credit"+(passedCredits===1?"":"s")+".");
+  if(summary.passedCourses)strengths.push(
+    summary.passedCourses+" course"+(summary.passedCourses===1?"":"s")+" passed"
+    +(passedCredits>0?" for "+passedCredits+" configured credit"+(passedCredits===1?"":"s"):"")
+    +"."
+  );
   if(summary.eventualRetakePasses)strengths.push(summary.eventualRetakePasses+" course"+(summary.eventualRetakePasses===1?"":"s")+" eventually passed after more than one official attempt.");
   if(forecastReview.negativeSurprises===0&&forecastReview.evaluatedAttempts>=2)strengths.push("No target-ready/strong P17 snapshot ended in a non-pass among sufficiently evidenced attempts.");
   if(calibration.completedWeeks>=3&&calibration.capacitySignal==="aligned")strengths.push("P19/P20 weekly capacity was broadly executable across completed weeks.");
