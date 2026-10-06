@@ -27,7 +27,12 @@ export default async function TodayPage() {
     .sort((a,b)=>Number(b.analytics.difficultySignal==="structural")-Number(a.analytics.difficultySignal==="structural"))[0]??null;
   const topForecast=[...orchestration.forecast.courses].sort((a,b)=>b.decisionPriority-a.decisionPriority)[0]??null;
   const examCommand=orchestration.examCommand;
+  const examOperations=orchestration.examOperations;
   const topExamCommand=examCommand.courses[0]??null;
+  const activeExamBoundary=examOperations.inProgress[0]
+    ??examOperations.latestCompleted
+    ??examOperations.courses.find(course=>course.phase==="final_window")
+    ??null;
   const weekRuntime=orchestration.weekRuntime;
   const weekConcern=weekRuntime?.progress.courses
     .filter(course=>course.remainingMinutes>0)
@@ -57,6 +62,23 @@ export default async function TodayPage() {
       </section>
 
       <DailyPlan plan={plan} />
+
+      {activeExamBoundary ? <section className={"panel exam-day-today phase-"+activeExamBoundary.phase}>
+        <div className="exam-day-today-head">
+          <div><p className="eyebrow">P23 · exam-day operations</p><h2>{activeExamBoundary.shortName??activeExamBoundary.displayName} · {activeExamBoundary.phase.replaceAll("_"," ")}</h2></div>
+          <span>{examOperations.recoveryLevel==="none"?"boundary":examOperations.recoveryLevel+" recovery"}</span>
+        </div>
+        <p>{activeExamBoundary.phase==="in_progress"
+          ?"Exam in progress. Discretionary preparation is frozen until the scheduled end."
+          :examOperations.recoveryLevel==="full"
+            ?"Immediate post-exam recovery is active; competing exam-strategy work is withheld."
+            :examOperations.recoveryLevel==="light"
+              ?"Light recovery is active; heavy exam work remains deferred."
+              :activeExamBoundary.phase==="post_exam"
+                ?"Pre-exam work is obsolete; close the exam to release any remaining weekly envelope."
+                :"Final exam window is active."}</p>
+        <div className="button-row"><Link className="secondary-button" href="/exam-day">Open exam-day operations</Link></div>
+      </section> : null}
 
       {examCommand.active ? <section className={"panel exam-command-today level-"+examCommand.level}>
         <div className="exam-command-today-head">
