@@ -83,3 +83,24 @@ test("P22 never changes the P9 action identity",()=>{
   assert.equal(command.courses[0].nextActionTitle,"Verify solutions");
   assert.equal(command.courses[0].nextActionHref,"/courses/dgl");
 });
+
+
+test("a heavy action that cannot fit Today does not block a smaller heavy exam action",()=>{
+  const command=buildExamCommand({
+    nowIso:"2026-10-06T10:00:00Z",
+    dayCapacities:[{date:"2026-10-06",availableMinutes:90},...days().slice(1)],
+    courses:[
+      c("dgl",6,{nextAction:"timed_paper",nextActionTitle:"DGL timed",nextActionMinutes:120,decisionPriority:90}),
+      c("ti",8,{nextAction:"repair_weaknesses",nextActionTitle:"TI repair",nextActionMinutes:75,decisionPriority:60}),
+    ],
+  });
+  assert.equal(command.courses.find(row=>row.courseId==="ti")?.todayEligible,true);
+});
+
+test("simulation cooldown shifts preview placement off Today",()=>{
+  const command=buildExamCommand({
+    nowIso:"2026-10-06T10:00:00Z",dayCapacities:days(),
+    courses:[c("dgl",6,{nextAction:"timed_paper",nextActionTitle:"Timed paper",nextActionMinutes:120,lastSimulationAt:"2026-10-05T12:00:00Z"})],
+  });
+  assert.notEqual(command.courses[0].scheduledDate,"2026-10-06");
+});
