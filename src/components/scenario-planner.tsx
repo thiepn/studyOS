@@ -19,7 +19,7 @@ export function ScenarioPlanner({data}:{data:SemesterScenarioData}){
   const retention=useMemo(()=>{
     const after=Math.max(0,capacity-data.mandatoryCommitmentMinutes);
     return Math.max(0,Math.round(Math.min(
-      data.retentionReserveMinutes/data.baselineWeeklyMinutes*capacity,
+      data.maxWeeklyRetentionMinutes,
       after*data.configuredReviewRatio,
     )/15)*15);
   },[capacity,data]);
@@ -60,7 +60,8 @@ export function ScenarioPlanner({data}:{data:SemesterScenarioData}){
         <span><strong>{fmt(plan.allocatedCourseMinutes)}</strong> course allocation</span>
         <span><strong>{fmt(plan.unusedMinutes)}</strong> unused</span>
       </div>
-      {!plan.feasibleProtection?<p className="scenario-warning"><strong>{fmt(plan.totalFloorShortfallMinutes)} protection shortfall</strong> across {plan.sacrificedCourses} course{plan.sacrificedCourses===1?"":"s"}.</p>:null}
+      {plan.mandatoryShortfallMinutes>0?<p className="scenario-warning"><strong>{fmt(plan.mandatoryShortfallMinutes)} mandatory-work deficit.</strong> Commitments alone exceed the selected capacity.</p>:null}
+      {plan.totalFloorShortfallMinutes>0?<p className="scenario-warning"><strong>{fmt(plan.totalFloorShortfallMinutes)} course-protection shortfall</strong> across {plan.sacrificedCourses} course{plan.sacrificedCourses===1?"":"s"}.</p>:null}
     </section>
 
     <section className="scenario-allocation-list">
