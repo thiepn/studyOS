@@ -21,6 +21,7 @@ export type SemesterCourseInput={
   credits:number|null;
   active:boolean;
   examAt:string|null;
+  examFinished:boolean;
   sortOrder:number;
 };
 
@@ -146,17 +147,26 @@ export function directionalOutcomeAlignment(result:SemesterResultInput):OutcomeA
   return "mixed";
 }
 
-function completionState(course:SemesterCourseInput,attempts:SemesterResultInput[],today:string):SemesterCompletionState{
+function completionState(course:SemesterCourseInput,attempts:SemesterResultInput[]):SemesterCompletionState{
   const latestAny=latest(attempts);
   const latestOfficial=latest(attempts.filter(result=>result.resultStatus==="official"));
+  const latestIsNewerProvisional=latestAny?.resultStatus==="provisional"
+    &&(!latestOfficial||latestAny.attemptNo>latestOfficial.attemptNo);
+  if(latestIsNewerProvisional)return "provisional_result";
+  if(latestOfficial?.outcome==="passed")return "passed";
+
+  const latestMatchesCurrentExam=Boolean(
+    course.examAt&&latestAny?.examAt&&Date.parse(course.examAt)===Date.parse(latestAny.examAt)
+  );
+  if(course.examFinished&&!latestMatchesCurrentExam)return "awaiting_result";
+  if(latestAny?.resultStatus==="provisional")return "provisional_result";
+
   if(latestOfficial){
-    if(latestOfficial.outcome==="passed")return "passed";
     if(latestOfficial.retakeDecision==="planned")return "retake_planned";
     if(latestOfficial.retakeDecision==="pending")return "retake_pending";
     if(latestOfficial.retakeDecision==="declined")return "closed_without_pass";
   }
-  if(latestAny?.resultStatus==="provisional")return "provisional_result";
-  if(course.examAt&&Date.parse(course.examAt)<Date.parse(today+"T23:59:59Z"))return "awaiting_result";
+  if(course.examFinished)return "awaiting_result";
   if(course.active)return "ongoing";
   return "inactive_unresolved";
 }
@@ -174,7 +184,7 @@ export function buildSemesterCompletionLedger(input:{
       const latestResult=latest(attempts);
       const latestOfficial=latest(attempts.filter(result=>result.resultStatus==="official"));
       const pass=attempts.find(result=>result.resultStatus==="official"&&result.outcome==="passed")??null;
-      const state=completionState(course,attempts,input.today);
+      const state=completionState(course,attempts);
       return {
         courseId:course.id,displayName:course.displayName,shortName:course.shortName,courseKind:course.courseKind,
         credits:course.credits,active:course.active,completionState:state,attempts,latestResult,latestOfficial,
@@ -233,14 +243,13 @@ export function buildSemesterCompletionLedger(input:{
       :"There are not yet enough official attempts with usable P17 snapshots for a meaningful outcome review.",
   };
 
-  const ended=input.semester.endsOn!=null&&input.today>input.semester.endsOn;
   const pendingResults=summary.provisionalCourses+summary.awaitingResultCourses;
   const retakes=summary.retakePendingCourses+summary.retakePlannedCourses;
   let status:SemesterReviewStatus="in_progress";
   if(summary.inactiveUnresolvedCourses>0)status="incomplete_data";
   else if(pendingResults>0)status="results_pending";
   else if(retakes>0)status="retakes_open";
-  else if(ended&&summary.terminalCourses===summary.totalCourses)status="complete";
+  else if(summary.totalCourses>0&&summary.terminalCourses===summary.totalCourses)status="complete";
 
   const calibration=input.calibration;
   const executionSummary=calibration.completedWeeks<3
