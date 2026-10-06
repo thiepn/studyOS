@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { evaluateSemesterBootstrap, historicalPriorUse, parseBootstrapCourseDraft } from "../src/lib/study/semester-bootstrap.ts";
+import { bootstrapAllowsCandidate, evaluateSemesterBootstrap, historicalPriorUse, parseBootstrapCourseDraft } from "../src/lib/study/semester-bootstrap.ts";
 
 const course=(overrides:Record<string,unknown>={})=>({
   courseId:"c1",stableKey:"dgl",displayName:"Differentialgleichungen",shortName:"DGL",courseKind:"major" as const,
@@ -51,4 +51,12 @@ test("course parser accepts reusable workflow expectations but rejects unsafe id
 test("historical prior language explicitly keeps mastery current-semester authoritative",()=>{
   assert.match(historicalPriorUse("prerequisite"),/Current-semester evidence remains authoritative/);
   assert.match(historicalPriorUse("direct_retake"),/Do not restore old mastery/);
+});
+
+
+test("uncertified semester preserves real commitments but blocks discretionary candidates",()=>{
+  assert.equal(bootstrapAllowsCandidate(false,"commitment"),true);
+  assert.equal(bootstrapAllowsCandidate(false,"review"),false);
+  assert.equal(bootstrapAllowsCandidate(false,"workflow"),false);
+  assert.equal(bootstrapAllowsCandidate(true,"workflow"),true);
 });
