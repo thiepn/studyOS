@@ -12,6 +12,7 @@ export function Nav() {
       <Link href="/outlook">Outlook</Link>
       <Link href="/exam-command">Exam Command</Link>
       <Link href="/exam-day">Exam Day</Link>
+      <Link href="/exam-results">Results</Link>
       <Link href="/scenarios">Scenarios</Link>
       <Link href="/week">Week</Link>
       <Link href="/handoff">Handoff</Link>
