@@ -19,9 +19,8 @@ export default async function SemesterBootstrapPage(){
 
   if(!entry.activeSemester){
     return <main className="shell">
-      <header className="header">
-        <div><p className="eyebrow">Semester setup</p><h1>{entry.hasAnySemester?"No active semester":"Create your first semester"}</h1></div>
-        <Nav />
+      <header className="header setup-only-header">
+        <div><p className="eyebrow">StudyOS · Semester setup</p><h1>{entry.hasAnySemester?"No active semester":"Create your first semester"}</h1></div>
       </header>
       {entry.hasAnySemester ? <section className="panel bootstrap-hero blocked">
         <div className="section-heading"><div><p className="eyebrow">Semester lifecycle</p><h2>Choose the next workspace</h2></div><span>inactive</span></div>
@@ -81,7 +80,7 @@ export default async function SemesterBootstrapPage(){
           <span className={course.driveFolderReady?"ok":""}>Drive</span>
           <span className={course.curriculumReady?"ok":""}>Curriculum</span>
           <span className={course.baselineReady?"ok":""}>{course.courseKind==="retake"?"Baseline":"Baseline n/a"}</span>
-          <span className={course.historicalPriorCount>0?"ok":""}>Priors {course.historicalPriorCount||"—"}</span>
+          <span className={course.historicalPriorCount>0?"ok":""}>Previous links {course.historicalPriorCount||"—"}</span>
         </div>
         <p>{course.verifiedResourceCount} verified source{course.verifiedResourceCount===1?"":"s"} · {course.skillCount} skills · {course.questionCount} questions</p>
         {course.blockers.length?<ul>{course.blockers.map(item=><li key={item}>{item}</li>)}</ul>:<p className="bootstrap-ok">Current curriculum baseline is independently anchored.</p>}
