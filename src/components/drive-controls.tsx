@@ -32,7 +32,7 @@ export function DriveControls({ connected, email, inboxUrl, lastScanAt, lastScan
     <div className="drive-card">
       <div><strong>Google Drive not connected</strong><p>Connect the Google account you want to use for university material. This is independent of your THIEPN Account login.</p></div>
       <a className="primary-button" href="/api/integrations/google-drive/start">Connect Google Drive</a>
-      <p className="muted tiny">Google will show an account chooser. StudyOS creates and uses its own Semester OS tree in the account you select.</p>
+      <p className="muted tiny">Google will show an account chooser. StudyOS creates and uses its own StudyOS folder tree in the account you select.</p>
     </div>
   );
 
