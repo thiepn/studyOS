@@ -38,7 +38,7 @@ export default async function PracticePage({ searchParams }: { searchParams: Pro
     const data=await getCalibrationPractice(course);
     return (
       <main className="shell practice-shell">
-        <header className="header"><div><p className="eyebrow">P13 · adaptive calibration</p><h1>{data.course?.displayName ?? "Calibration"}</h1></div><Nav /></header>
+        <header className="header"><div><p className="eyebrow">Adaptive calibration</p><h1>{data.course?.displayName ?? "Calibration"}</h1></div><Nav /></header>
         {data.profile ? <section className="panel calibration-session-context">
           <div><p className="eyebrow">{data.profile.status}</p><h2>{data.profile.independentAttempts} independent attempts · {data.profile.distinctSkills} skills sampled</h2></div>
           <p>{data.profile.recommendation}</p>
@@ -59,7 +59,7 @@ export default async function PracticePage({ searchParams }: { searchParams: Pro
     const data=await getCalibrationPractice(course);
     return (
       <main className="shell practice-shell">
-        <header className="header"><div><p className="eyebrow">P14 → P15 · drift repair</p><h1>{data.course?.displayName ?? "Drift repair"}</h1></div><Nav /></header>
+        <header className="header"><div><p className="eyebrow">Drift repair</p><h1>{data.course?.displayName ?? "Drift repair"}</h1></div><Nav /></header>
         {data.profile ? <section className="panel calibration-session-context">
           <div><p className="eyebrow">bounded intervention</p><h2>{data.profile.status} calibration · {data.profile.independentAttempts} independent attempts</h2></div>
           <p>{data.profile.recommendation}</p>
@@ -69,8 +69,8 @@ export default async function PracticePage({ searchParams }: { searchParams: Pro
           plannedMinutes={Math.max(1,data.queueMinutes)}
           sessionType="relearning"
           courseId={data.course?.courseId}
-          eyebrow="P14 targeted drift repair"
-          intro="This is a bounded correction inside your existing daily capacity. Work independently and closed-book. P15 will judge the intervention only from later independent evidence, not from performance inside this repair session itself."
+          eyebrow="Targeted drift repair"
+          intro="This is a bounded correction inside your existing daily capacity. Work independently and closed-book. StudyOS will judge the intervention only from later independent evidence, not from performance inside this repair session itself."
           completionNote="P14 drift repair intervention"
         />
       </main>
@@ -81,7 +81,7 @@ export default async function PracticePage({ searchParams }: { searchParams: Pro
     const data=await getStrategyPractice(course,strategy);
     return (
       <main className="shell practice-shell">
-        <header className="header"><div><p className="eyebrow">P16 · controlled method experiment</p><h1>{data.course?.displayName ?? "Strategy experiment"}</h1></div><Nav /></header>
+        <header className="header"><div><p className="eyebrow">Method experiment</p><h1>{data.course?.displayName ?? "Strategy experiment"}</h1></div><Nav /></header>
         {data.strategy ? <section className="panel strategy-session-context">
           <div><p className="eyebrow">{data.strategy.title}</p><h2>{data.strategy.purpose}</h2></div>
           <p>{data.strategy.instructions}</p>
@@ -96,8 +96,8 @@ export default async function PracticePage({ searchParams }: { searchParams: Pro
           plannedMinutes={Math.max(1,data.queueMinutes||data.strategy.budgetMinutes)}
           sessionType="relearning"
           courseId={data.course?.courseId}
-          eyebrow={"P16 · "+data.strategy.title}
-          intro={data.strategy.instructions+" This session tests the method; its own score will not count as proof that the method works. P16 will judge later independent transfer."}
+          eyebrow={"Method · "+data.strategy.title}
+          intro={data.strategy.instructions+" This session tests the method; its own score will not count as proof that the method works. StudyOS will judge later independent transfer."}
           completionNote={data.completionNote ?? undefined}
         /> : null}
       </main>
@@ -110,7 +110,7 @@ export default async function PracticePage({ searchParams }: { searchParams: Pro
       <header className="header"><div><p className="eyebrow">Retrieval engine</p><h1>Practice</h1></div><Nav /></header>
 
       <section className="panel calibration-overview">
-        <div className="section-heading"><div><p className="eyebrow">P13 · first-week calibration</p><h2>Build a trustworthy starting profile</h2></div><span>{calibration.filter((c)=>!c.profile.needsCalibration).length}/{calibration.length}</span></div>
+        <div className="section-heading"><div><p className="eyebrow">First-week calibration</p><h2>Build a trustworthy starting profile</h2></div><span>{calibration.filter((c)=>!c.profile.needsCalibration).length}/{calibration.length}</span></div>
         <p className="muted">Calibration uses independent attempts, confidence, timing, evidence dimensions, and error diagnoses. Before the sample is usable, StudyOS keeps practice broad instead of overfitting to a few early results.</p>
         <div className="calibration-card-grid">
           {calibration.map((item)=><article className="calibration-card" key={item.courseId}>
