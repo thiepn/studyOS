@@ -27,7 +27,7 @@ export default async function HandoffPage(){
 
   return <main className="shell">
     <header className="header">
-      <div><p className="eyebrow">P21 · closed-loop weekly review</p><h1>Weekly handoff</h1></div>
+      <div><p className="eyebrow">Weekly review</p><h1>Weekly handoff</h1></div>
       <Nav />
     </header>
 
@@ -36,7 +36,7 @@ export default async function HandoffPage(){
         <div><p className="eyebrow">Next operating week</p><h2>{data.targetStart} → {data.targetEnd}</h2></div>
         <span>{data.commitAllowed?"handoff window":"preview"}</span>
       </div>
-      <p>P21 closes the weekly loop without carrying study-time debt forward. The previous envelope is reviewed as evidence; next week is rebuilt from current P17 readiness, P20 calibration, real unresolved commitments, and current calendar capacity.</p>
+      <p>Close the week without carrying unfinished study-time debt forward. The previous plan becomes evidence; next week is rebuilt from current readiness, planning calibration, unresolved commitments, and real calendar capacity.</p>
       <div className="handoff-summary-grid">
         <span><strong>{fmt(data.capacity.feasibleCapacityMinutes)}</strong> feasible ceiling</span>
         <span><strong>{fmt(data.capacity.selectedCapacityMinutes)}</strong> recommended capacity</span>
@@ -58,16 +58,16 @@ export default async function HandoffPage(){
           <span><strong>{fmt(review.droppedEnvelopeMinutes)}</strong> expired envelope</span>
         </div>
         <p className="handoff-debt-rule">{data.previousEnded
-          ? <><strong>{fmt(review.droppedEnvelopeMinutes)} unfinished study minutes expired with the weekly envelope and do not carry forward as debt.</strong> Current P17/P20 evidence determines next week's allocation instead.</>
+          ? <><strong>{fmt(review.droppedEnvelopeMinutes)} unfinished study minutes expired with the weekly envelope and do not carry forward as debt.</strong> Current evidence determines next week&apos;s allocation instead.</>
           : <><strong>{fmt(review.droppedEnvelopeMinutes)} course minutes are still unfilled in the current week.</strong> They expire rather than becoming debt only after this Sunday ends.</>}</p>
         <div className="handoff-course-grid">
           {review.courses.map(course=><article key={course.courseId}>
             <div><strong>{course.shortName??course.displayName}</strong><span>{course.adherencePercent}%</span></div>
             <p>{fmt(course.creditedMinutes)} credited / {fmt(course.targetMinutes)} target</p>
-            <small>{course.droppedEnvelopeMinutes?fmt(course.droppedEnvelopeMinutes)+" expired":course.overageMinutes?fmt(course.overageMinutes)+" above target":"target met"} · readiness {course.priorReadinessIndex??"—"} → {course.currentReadinessIndex??"—"} ({signed(course.readinessDelta)}){course.floorAdjustmentMinutes?" · P20 "+signed(course.floorAdjustmentMinutes)+"m":""}{course.sacrificed?" · protection-floor sacrifice":""}</small>
+            <small>{course.droppedEnvelopeMinutes?fmt(course.droppedEnvelopeMinutes)+" expired":course.overageMinutes?fmt(course.overageMinutes)+" above target":"target met"} · readiness {course.priorReadinessIndex??"—"} → {course.currentReadinessIndex??"—"} ({signed(course.readinessDelta)}){course.floorAdjustmentMinutes?" · calibrated "+signed(course.floorAdjustmentMinutes)+"m":""}{course.sacrificed?" · protection-floor sacrifice":""}</small>
           </article>)}
         </div>
-      </>:<p>No P19 plan exists for the week ending {data.previousEnd}. P21 will still prepare the next-week scenario from current semester evidence.</p>}
+      </>:<p>No committed plan exists for the week ending {data.previousEnd}. StudyOS will still prepare the next-week scenario from current semester evidence.</p>}
     </section>
 
     <section className="panel handoff-obligations">
@@ -75,7 +75,7 @@ export default async function HandoffPage(){
         <div><p className="eyebrow">Real obligations</p><h2>What actually carries forward</h2></div>
         <span>{data.mandatoryCommitments.length}</span>
       </div>
-      <p>Open assignments/deadlines are not copied into a new debt bucket. They remain the same P10 commitments with the same IDs and original due dates.</p>
+      <p>Open assignments/deadlines are not copied into a new debt bucket. They remain the same commitments with the same IDs and original due dates.</p>
       {data.carryoverCommitments.length?<div className="handoff-obligation-group">
         <h3>{data.previousEnded?"Carried unresolved obligations":"Currently open before next Monday"}</h3>
         {data.carryoverCommitments.map(item=><article key={item.id}>
@@ -95,7 +95,7 @@ export default async function HandoffPage(){
     <section className="panel handoff-adaptation">
       <div className="section-heading">
         <div><p className="eyebrow">Semester adaptation</p><h2>{data.recommendation.objective.replaceAll("_"," ")}</h2></div>
-        <span>P17 + P20</span>
+        <span>Readiness + calibration</span>
       </div>
       <p><strong>Objective:</strong> {data.recommendation.reason}</p>
       <p><strong>Capacity:</strong> {data.capacity.calibrationNote}</p>
@@ -113,17 +113,17 @@ export default async function HandoffPage(){
         <span>{data.source.replace("_"," ")}</span>
       </div>
       <div className="handoff-summary-grid">
-        <span><strong>{fmt(data.nominalWeeklyMinutes)}</strong> P10 nominal ceiling</span>
+        <span><strong>{fmt(data.nominalWeeklyMinutes)}</strong> nominal study ceiling</span>
         <span><strong>{data.calendarFreeMinutes==null?"—":fmt(data.calendarFreeMinutes)}</strong> calendar free</span>
         <span><strong>{fmt(data.capacity.retentionMinutes)}</strong> retention reserve</span>
         <span><strong>{fmt(data.scenario.allocatedCourseMinutes)}</strong> allocated course work</span>
       </div>
-      {data.calendarStale?<p className="scenario-warning">Calendar data is stale; refresh P11 before committing if availability has changed.</p>:null}
+      {data.calendarStale?<p className="scenario-warning">Calendar data is stale; refresh the calendar before committing if availability has changed.</p>:null}
       {data.scenario.mandatoryShortfallMinutes>0?<p className="scenario-warning"><strong>{fmt(data.scenario.mandatoryShortfallMinutes)} mandatory-work deficit.</strong> The next week cannot be committed at this capacity while those obligations remain open.</p>:null}
       <div className="handoff-next-courses">
         {data.scenario.allocations.map(row=><article key={row.courseId}>
           <div><strong>{row.shortName??row.displayName}</strong><span>{fmt(row.allocatedMinutes)}</span></div>
-          <small>{fmt(row.protectionFloorMinutes)} floor{row.floorCalibrationMinutes?" · P20 "+signed(row.floorCalibrationMinutes)+"m":""} · {row.band.replaceAll("_"," ")} · {row.runway} runway</small>
+          <small>{fmt(row.protectionFloorMinutes)} floor{row.floorCalibrationMinutes?" · calibrated "+signed(row.floorCalibrationMinutes)+"m":""} · {row.band.replaceAll("_"," ")} · {row.runway} runway</small>
           {!row.floorMet?<p>Protection shortfall: {fmt(row.floorShortfallMinutes)}</p>:null}
         </article>)}
       </div>
@@ -140,7 +140,7 @@ export default async function HandoffPage(){
         recommendedCapacityMinutes={data.capacity.selectedCapacityMinutes}
         feasibleCapacityMinutes={data.capacity.feasibleCapacityMinutes}
       />
-      <div className="button-row"><Link className="secondary-button" href="/quality">Inspect P20 calibration</Link><Link className="secondary-button" href="/outlook">Review P17 outlook</Link><Link className="secondary-button" href="/week">Open current week</Link></div>
+      <div className="button-row"><Link className="secondary-button" href="/quality">Inspect calibration</Link><Link className="secondary-button" href="/outlook">Review outlook</Link><Link className="secondary-button" href="/week">Open current week</Link></div>
     </section>
   </main>;
 }
