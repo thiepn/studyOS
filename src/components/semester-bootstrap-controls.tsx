@@ -1,10 +1,50 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Course={courseId:string;displayName:string;shortName:string|null;courseKind:string};
 type PriorOption={id:string;semester_id:string;semester_name:string;display_name:string;short_name:string|null;course_kind:string;stable_key:string};
+
+
+export function InitialSemesterForm(){
+  const router=useRouter();
+  const [busy,setBusy]=useState(false);
+  const [message,setMessage]=useState<string|null>(null);
+  const [timezone,setTimezone]=useState("Europe/Berlin");
+
+  useEffect(()=>{
+    const detected=Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if(detected)setTimezone(detected);
+  },[]);
+
+  async function submit(event:React.FormEvent<HTMLFormElement>){
+    event.preventDefault();setBusy(true);setMessage(null);
+    const fd=new FormData(event.currentTarget);
+    try{
+      const response=await fetch("/api/study/semester-bootstrap/semester",{
+        method:"POST",headers:{"content-type":"application/json"},
+        body:JSON.stringify({
+          displayName:fd.get("displayName"),startsOn:fd.get("startsOn"),
+          endsOn:fd.get("endsOn")||null,timezone:fd.get("timezone"),
+        }),
+      });
+      const body=await response.json();if(!response.ok)throw new Error(body?.error||"Could not create semester");
+      setMessage("Semester created. Add the real course roster next.");
+      router.refresh();
+    }catch(error){setMessage(error instanceof Error?error.message:"Could not create semester");}
+    finally{setBusy(false);}
+  }
+
+  return <form className="bootstrap-course-form initial-semester-form" onSubmit={submit}>
+    <label className="wide"><span>Semester name</span><input required name="displayName" maxLength={80} placeholder="Wintersemester 2026/27"/></label>
+    <label><span>Starts</span><input required name="startsOn" type="date"/></label>
+    <label><span>Ends <em>optional</em></span><input name="endsOn" type="date"/></label>
+    <label className="wide"><span>Timezone</span><input required name="timezone" value={timezone} onChange={event=>setTimezone(event.target.value)} maxLength={80}/></label>
+    <div className="wide button-row"><button className="primary-button button-reset" disabled={busy}>{busy?"Creating…":"Create semester workspace"}</button></div>
+    {message?<p className="wide form-message" role="status">{message}</p>:null}
+  </form>;
+}
 
 export function BootstrapCourseForm(){
   const router=useRouter();
