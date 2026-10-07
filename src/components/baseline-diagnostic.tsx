@@ -36,7 +36,7 @@ export function BaselineDiagnosticPanel({courseId,courseName,skills,status}:{cou
 
   return <section className="baseline-shell">
     <section className="panel baseline-head">
-      <div><p className="eyebrow">P12 · Retake baseline</p><h1>{courseName}</h1><p>{classified}/{skills.length} skills classified · status {status.replace("_"," ")}</p></div>
+      <div><p className="eyebrow">Retake baseline</p><h1>{courseName}</h1><p>{classified}/{skills.length} skills classified · status {status.replace("_"," ")}</p></div>
       <div className="button-row">
         {status==="not_started"?<button className="primary-button button-reset" disabled={Boolean(busy)} onClick={()=>void action({action:"start"},"start")}>Start diagnostic</button>:null}
         <Link className="secondary-button" href={"/courses/"+courseId}>Back to course</Link>
@@ -64,7 +64,7 @@ export function BaselineDiagnosticPanel({courseId,courseName,skills,status}:{cou
     })}</div>
 
     <section className="panel baseline-finish">
-      <div><p className="eyebrow">Baseline completion</p><h2>{complete?"All skills classified":"Finish every skill first"}</h2><p>{complete?"Completing freezes the diagnostic summary and lets P12 count this retake as activated.":"StudyOS will not infer missing topics as retained."}</p></div>
+      <div><p className="eyebrow">Baseline completion</p><h2>{complete?"All skills classified":"Finish every skill first"}</h2><p>{complete?"Completing freezes the diagnostic summary and lets StudyOS treat this retake as ready for the semester.":"StudyOS will not infer missing topics as retained."}</p></div>
       <button className="primary-button button-reset" disabled={!complete||Boolean(busy)||status==="completed"} onClick={()=>void action({action:"complete"},"complete")}>{status==="completed"?"Baseline complete":"Complete baseline"}</button>
     </section>
     {message?<p className="form-message" role="status">{message}</p>:null}
