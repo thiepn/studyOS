@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
-import { ensureStudyWorkspace } from "./bootstrap";
+import { ensureStudyWorkspace, getStudyWorkspaceState } from "./bootstrap";
 import { StudyServiceError } from "./errors";
 import { evaluateSemesterBootstrap, parseBootstrapCourseDraft, type BootstrapRelation } from "./semester-bootstrap";
+import { validateNewSemester } from "./semester-rollover";
 
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -14,6 +15,44 @@ type BootstrapCourseDetail={
   exam_format:string|null;
   drive_folder_url:string|null;
 };
+
+
+function initialSemesterKey(displayName:string,startsOn:string){
+  const normalized=displayName.normalize("NFKD").replace(/[\u0300-\u036f]/g,"")
+    .toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"").slice(0,32);
+  const fallback="semester_"+startsOn.slice(0,4);
+  const base=normalized.length>=2?normalized:fallback;
+  return /^[a-z0-9_]{2,40}$/.test(base)?base:fallback;
+}
+
+export async function getSemesterBootstrapEntryState(){
+  const supabase=await createClient();
+  return getStudyWorkspaceState(supabase);
+}
+
+export async function createInitialSemester(value:unknown){
+  const row=value&&typeof value==="object"&&!Array.isArray(value)?value as Record<string,unknown>:{};
+  const displayName=String(row.displayName??"").trim();
+  const startsOn=String(row.startsOn??"").trim();
+  const endsOn=String(row.endsOn??"").trim()||null;
+  const timezone=String(row.timezone??"").trim();
+  const stableKey=initialSemesterKey(displayName,startsOn);
+  const validation=validateNewSemester({stableKey,displayName,startsOn,endsOn,timezone});
+  if(validation)throw new StudyServiceError(validation,"invalid_initial_semester");
+
+  const supabase=await createClient();
+  const state=await getStudyWorkspaceState(supabase);
+  if(state.activeSemester||state.hasAnySemester)throw new StudyServiceError("Semester history already exists; use Semester Rollover instead.","invalid_initial_semester");
+
+  const connection=await supabase.rpc("connect_thiepn_app",{p_app_slug:"semester-os"});
+  if(connection.error)throw new StudyServiceError("Could not connect StudyOS to THIEPN Account",connection.error.code||"account_connection_failed",connection.error);
+
+  const {data,error}=await (supabase.rpc as any)("study_create_initial_semester",{
+    p_stable_key:stableKey,p_display_name:displayName,p_starts_on:startsOn,p_ends_on:endsOn,p_timezone:timezone,
+  });
+  if(error)throw new StudyServiceError("Could not create the first semester",error.code||"initial_semester_failed",error);
+  return data;
+}
 
 export async function getSemesterBootstrapData(){
   const supabase=await createClient();
