@@ -25,7 +25,7 @@ export function evaluateActivation(platform:PlatformActivation,snapshot:Activati
   const platformBlockers=platformChecks.filter(([ok])=>!ok).map(([,message])=>message);
 
   const activationChecks=[
-    [snapshot.bootstrap_certified,"Complete and certify P27 new-semester bootstrap."],
+    [snapshot.bootstrap_certified,"Complete and confirm semester setup."],
     [snapshot.course_count>0,"Add the real courses for the active semester."],
     [snapshot.drive_connected,"Connect the intended Study Drive Google account."],
     [snapshot.drive_tree_ready,"Provision the active-semester Drive folder, inbox, and course folders."],

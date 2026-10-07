@@ -13,7 +13,7 @@ export default async function SemestersPage(){
   const data=await getSemesterRolloverData();
   return <main className="shell">
     <header className="header">
-      <div><p className="eyebrow">P26 · semester lifecycle</p><h1>Semester history</h1></div>
+      <div><p className="eyebrow">Semester lifecycle</p><h1>Semester history</h1></div>
       <Nav />
     </header>
 

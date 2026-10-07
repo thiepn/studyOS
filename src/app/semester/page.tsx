@@ -24,7 +24,7 @@ function stateExplanation(state:string){
     provisional_result:"A newer attempt has a provisional result and is waiting for official confirmation.",
     awaiting_result:"The configured exam has ended and the current attempt has no result yet.",
     ongoing:"Course is still active and has no terminal official outcome.",
-    inactive_unresolved:"Course is inactive without a terminal P24 result. Review the data before treating the semester as complete.",
+    inactive_unresolved:"Course is inactive without a terminal official result. Review the data before treating the semester as complete.",
   } as Record<string,string>)[state]??state;
 }
 
@@ -36,7 +36,7 @@ export default async function SemesterPage(){
 
   return <main className="shell">
     <header className="header">
-      <div><p className="eyebrow">P25 · semester completion ledger</p><h1>{data.semester.displayName}</h1></div>
+      <div><p className="eyebrow">Semester review</p><h1>{data.semester.displayName}</h1></div>
       <Nav />
     </header>
 
@@ -104,7 +104,7 @@ export default async function SemesterPage(){
           <div>
             {course.attempts.map(attempt=><article key={attempt.id}>
               <div><strong>Attempt {attempt.attemptNo} · {pretty(attempt.outcome)}</strong><span>{pretty(attempt.resultStatus)}</span></div>
-              <small>{fmtDate(attempt.examAt,data.timezone)}{attempt.gradeText?" · "+attempt.gradeText:attempt.scorePercent!=null?" · "+attempt.scorePercent+"%":""} · P17 {attempt.readinessIndexSnapshot==null?"—":attempt.readinessIndexSnapshot+"/100"} {attempt.readinessBandSnapshot?"("+pretty(attempt.readinessBandSnapshot)+")":""}</small>
+              <small>{fmtDate(attempt.examAt,data.timezone)}{attempt.gradeText?" · "+attempt.gradeText:attempt.scorePercent!=null?" · "+attempt.scorePercent+"%":""} · readiness {attempt.readinessIndexSnapshot==null?"—":attempt.readinessIndexSnapshot+"/100"} {attempt.readinessBandSnapshot?"("+pretty(attempt.readinessBandSnapshot)+")":""}</small>
             </article>)}
           </div>
         </details>:null}
@@ -113,11 +113,11 @@ export default async function SemesterPage(){
 
     <section className="panel semester-outcome-review">
       <div className="section-heading">
-        <div><p className="eyebrow">P17 ↔ P24 review</p><h2>What the readiness evidence got directionally right</h2></div>
+        <div><p className="eyebrow">Readiness ↔ outcome review</p><h2>What the readiness evidence got directionally right</h2></div>
         <span>{retrospective.forecastReview.evaluatedAttempts} evaluated</span>
       </div>
       <p>{retrospective.forecastReview.summary}</p>
-      <p className="forecast-disclaimer">This is not predictive accuracy. P17 was an evidence-based readiness index, not a grade forecast or pass probability. P25 therefore reviews only broad directional consistency.</p>
+      <p className="forecast-disclaimer">This is not predictive accuracy. Readiness is an evidence-based index, not a grade forecast or pass probability, so this review measures only broad directional consistency.</p>
       <div className="semester-review-grid">
         <span><strong>{retrospective.forecastReview.aligned}</strong> aligned</span>
         <span><strong>{retrospective.forecastReview.positiveSurprises}</strong> positive surprises</span>
@@ -130,7 +130,7 @@ export default async function SemesterPage(){
 
     <section className="panel semester-execution-review">
       <div className="section-heading">
-        <div><p className="eyebrow">P19 / P20 execution review</p><h2>{pretty(retrospective.execution.capacitySignal)}</h2></div>
+        <div><p className="eyebrow">Weekly execution review</p><h2>{pretty(retrospective.execution.capacitySignal)}</h2></div>
         <span>{retrospective.execution.completedWeeks} completed weeks</span>
       </div>
       <p>{retrospective.execution.summary}</p>
@@ -145,7 +145,7 @@ export default async function SemesterPage(){
           <div><strong>{course.shortName??course.displayName}</strong><span>{pretty(course.allocationSignal)}</span></div>
           <small>{course.observedWeeks} observed weeks · {course.medianAdherencePercent??"—"}% median adherence · floor calibration {course.floorAdjustmentMinutes>0?"+":""}{course.floorAdjustmentMinutes} min</small>
         </article>)}
-      </div>:<p className="muted">No completed P19 weeks are available for course-level execution review yet.</p>}
+      </div>:<p className="muted">No completed weeks are available for course-level execution review yet.</p>}
     </section>
 
     <section className="semester-retrospective-grid">
@@ -165,7 +165,7 @@ export default async function SemesterPage(){
       <div className="section-heading"><div><p className="eyebrow">Next-semester handoff</p><h2>Evidence-backed changes</h2></div><span>{retrospective.nextSemesterActions.length}</span></div>
       <ol>{retrospective.nextSemesterActions.map(item=><li key={item}>{item}</li>)}</ol>
       <div className="button-row">
-        <Link className="secondary-button" href="/semester/bootstrap">Semester bootstrap</Link><Link className="secondary-button" href="/exam-results">Open exam results</Link>
+        <Link className="secondary-button" href="/semester/bootstrap">Semester setup</Link><Link className="secondary-button" href="/exam-results">Open exam results</Link>
         <Link className="secondary-button" href="/quality">Inspect execution quality</Link>
         <Link className="secondary-button" href="/outlook">Review readiness model</Link>
         <Link className="secondary-button" href="/semesters">Semester history</Link>

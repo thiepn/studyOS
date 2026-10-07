@@ -23,7 +23,7 @@ export async function getActivationData(){
     db.from("study_semesters").select("display_name,starts_on,ends_on,timezone,bootstrap_certified_at").eq("id",semesterId).single(),
   ]);
   const error=snapshotResult.error||coursesResult.error||baselineResult.error||driveResult.error||calendarResult.error||semesterResult.error;
-  if(error)throw new StudyServiceError("Could not load P12 activation state",error.code||"activation_read_failed",error);
+  if(error)throw new StudyServiceError("Could not load semester activation state",error.code||"activation_read_failed",error);
 
   const snapshot=snapshotResult.data as ActivationSnapshot;
   const server=serverConfigurationStatus();

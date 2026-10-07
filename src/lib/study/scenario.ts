@@ -216,7 +216,7 @@ export function buildScenario(input:ScenarioInput):ScenarioPlan{
       floorMet:shortfall===0,floorShortfallMinutes:shortfall,
       sharePercent:allocatable?Math.round(allocated/allocatable*100):0,
       marginalScore:Math.round(clamp(objectiveScore(course,input.objective,prior+allocated,floor))),
-      reason:reasonFor(course,input.objective,floor)+(floorCalibration.get(course.courseId)?" · P20 "+((floorCalibration.get(course.courseId)??0)>0?"+":"")+(floorCalibration.get(course.courseId)??0)+" min calibration":""),
+      reason:reasonFor(course,input.objective,floor)+(floorCalibration.get(course.courseId)?" · calibrated "+((floorCalibration.get(course.courseId)??0)>0?"+":"")+(floorCalibration.get(course.courseId)??0)+" min":""),
       sacrificeRank:null,
       readinessIndex:course.readinessIndex,band:course.band,runway:course.runway,actionTitle:course.actionTitle,
     };

@@ -51,7 +51,7 @@ export async function getSemesterLearningAnalytics(){
       healthStatus:w.health_status==null?null:String(w.health_status),unresolvedErrors:Number(w.unresolved_errors??0),
     }));
     const interventions:InterventionSession[]=sessions
-      .filter((session)=>String(session.course_id)===course.id&&String(session.note??"").startsWith("P14 drift repair intervention"))
+      .filter((session)=>String(session.course_id)===course.id&&["Targeted drift repair intervention","P14 drift repair intervention"].some(prefix=>String(session.note??"").startsWith(prefix)))
       .map((session)=>({
         id:String(session.id),startedAt:String(session.started_at),endedAt:session.ended_at==null?null:String(session.ended_at),
         plannedMinutes:session.planned_minutes==null?null:Number(session.planned_minutes),

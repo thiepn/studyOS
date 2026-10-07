@@ -1,10 +1,14 @@
 # StudyOS
 
-StudyOS is the WS26/27 retention and exam-readiness system for the THIEPN ecosystem. The application keeps raw university material in a dedicated Google Drive account, structured academic state in Supabase, and daily review/exam-readiness workflows in a Next.js frontend.
+StudyOS is the university-study operating system for the THIEPN ecosystem. It keeps source material in a dedicated Google Drive connection, structured academic state in Supabase, and daily study, retention, planning, and exam workflows in a Next.js frontend.
 
-## Current phase: P27
+## Current status: P29 product consolidation complete
 
-Implemented through P27; the foundation includes:
+The study engine is implemented through P28. P29 consolidates that engine into a stable product surface with workflow-first navigation, normalized StudyOS naming, plain-language user interfaces, route-state handling, and a defined route responsibility model.
+
+Fresh accounts now create their real first semester explicitly in **Semester Setup**. StudyOS no longer seeds a fixed WS26/27 semester or a six-course example roster; existing historical data and legacy Drive roots remain compatible.
+
+The foundation includes:
 
 - Next.js 16 App Router + Supabase SSR authentication
 - THIEPN Account shared identity with isolated `study_*` application data
@@ -13,7 +17,7 @@ Implemented through P27; the foundation includes:
 - resource versioning, extraction candidates, explicit human approval, and source provenance
 - a **separate StudyOS Google Drive OAuth connection** that can use a different Google account from ChatGPT or THIEPN Account
 - Google account chooser, encrypted server-side refresh-token storage, disconnect/switch-account support
-- StudyOS-owned Drive tree creation (`Semester OS/WS26-27/...`)
+- StudyOS-owned Drive tree creation (`StudyOS/<semester>/...` for new connections; legacy `Semester OS` roots remain supported)
 - Drive scanning and deterministic course/type/week classification
 - deduplicated Drive intake ledger
 - candidate validation/conflict detection before material can enter the active study map
@@ -28,7 +32,7 @@ Implemented through P27; the foundation includes:
 
 StudyOS does **not** reuse the Google account used to sign in to THIEPN Account and does not depend on the Google Drive account connected to ChatGPT. `/resources` has its own **Connect Google Drive** flow and Google displays an account chooser.
 
-The recommended setup for the user's dedicated study Drive is `GOOGLE_DRIVE_SCOPE_MODE=readonly`. The OAuth request combines `drive.file` (to create and manage the StudyOS tree) with read-only access so files manually dropped into the StudyOS folders can be discovered. StudyOS still scans only the configured Semester OS tree. If every file is uploaded/selected through StudyOS instead, `file` mode can be used for narrower authorization.
+The recommended setup for the user's dedicated study Drive is `GOOGLE_DRIVE_SCOPE_MODE=readonly`. The OAuth request combines `drive.file` (to create and manage the StudyOS tree) with read-only access so files manually dropped into the StudyOS folders can be discovered. StudyOS scans only its configured Drive tree. If every file is uploaded/selected through StudyOS instead, `file` mode can be used for narrower authorization.
 
 Google refresh tokens are encrypted before persistence. `SUPABASE_SERVICE_ROLE_KEY`, the Google OAuth secret, and `STUDY_DRIVE_TOKEN_KEY` are server-only Vercel environment variables and must never be exposed with `NEXT_PUBLIC_` prefixes.
 
@@ -84,6 +88,10 @@ npm run dev
 
 Canonical repository: `thiepn/studyOS`.
 
+
+## Historical implementation log
+
+The phase sections below document how the current engine was built. They are implementation history, not current user-facing terminology or fixed-semester requirements.
 
 ## P5 weekly operating rule
 
@@ -593,3 +601,19 @@ StudyOS now tests historical priors against fresh-semester evidence instead of m
 
 See `docs/P28.md` for the evidence contract and guardrails.
 
+
+
+## P29 product consolidation and architecture cleanup
+
+P29 converts the accumulated study engine into a cleaner finished product surface without changing mastery, readiness, planning, or exam authority.
+
+- the user-facing product name is consistently **StudyOS**;
+- primary navigation is **Today · Study · Courses · Progress · More**;
+- implementation phase IDs are removed from normal application copy;
+- advanced routes keep distinct responsibilities but are grouped contextually rather than exposed as equal primary destinations;
+- Today remains the daily execution authority, while Progress, Outlook, Quality, Week, Scenarios, and Handoff expose different evidence/planning layers;
+- global loading, error, and not-found states protect the workflow from raw framework failures;
+- new Drive roots use **StudyOS**, while existing legacy **Semester OS** roots continue to work by ID/name fallback;
+- version 0.27.0.
+
+See `docs/P29.md` for the route responsibility map and P29 invariants.

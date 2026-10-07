@@ -92,7 +92,7 @@ export function buildSemesterForecastFromEvidence(input:{
         summary:"Official non-passing outcome recorded. Study allocation is paused until the retake decision is resolved.",
         nextAction:{
           kind:"retake_decision",title:"Resolve retake decision",
-          reason:"P24 blocks new study allocation until you explicitly choose whether and when this course will be retaken.",
+          reason:"Study allocation is paused until you explicitly choose whether and when this course will be retaken.",
           href:"/exam-results",estimatedMinutes:5,expectedValue:100,authority:"P24",
         },
       };

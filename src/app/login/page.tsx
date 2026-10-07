@@ -15,7 +15,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
     <main className="login-shell">
       <section className="panel login-panel">
         <p className="eyebrow">THIEPN Account</p>
-        <h1>Semester OS</h1>
+        <h1>StudyOS</h1>
         <p>Sign in with the same Google-backed THIEPN Account used by your other apps.</p>
         {params.error ? <p className="error">Sign-in could not be completed. Try again.</p> : null}
         <a className="primary-button" href={`/auth/google?next=${encodeURIComponent(next)}`}>Continue with Google</a>

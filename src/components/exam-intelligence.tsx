@@ -14,7 +14,7 @@ function nextActionLabel(action:string){
 
 export function ExamIntelligence({papers,blueprint,strategy}:{papers:ExamPaper[];blueprint:ExamBlueprintRow[];strategy:ExamStrategy|null}){
   return <section className="panel exam-intelligence">
-    <div className="section-heading"><div><p className="eyebrow">P9 exam intelligence</p><h2>Exam Blueprint</h2></div><span>{papers.length} paper{papers.length===1?"":"s"}</span></div>
+    <div className="section-heading"><div><p className="eyebrow">Exam intelligence</p><h2>Exam Blueprint</h2></div><span>{papers.length} paper{papers.length===1?"":"s"}</span></div>
     {!strategy||!papers.length ? <p className="muted">No accepted Altklausur has been mapped yet. Register/process exam PDFs as resource type <code>exam</code>; official solutions can be processed separately as <code>exam_solution</code>.</p> : <>
       <div className="exam-strategy-card">
         <div><p className="eyebrow">Next exam action</p><h3>{nextActionLabel(strategy.next_action)}</h3><p>{strategy.next_action_reason}</p></div>

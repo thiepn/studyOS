@@ -9,7 +9,7 @@ export default async function SemesterRolloverPage(){
   const data=await getSemesterRolloverData();
   return <main className="shell">
     <header className="header">
-      <div><p className="eyebrow">P26 · semester rollover</p><h1>Archive & start next semester</h1></div>
+      <div><p className="eyebrow">Semester rollover</p><h1>Archive & start next semester</h1></div>
       <Nav />
     </header>
 
@@ -30,7 +30,7 @@ export default async function SemesterRolloverPage(){
           <span><strong>{data.preflight.staleCalendarBlocks}</strong> future calendar blocks</span>
         </div>
         <p>{data.preflight.eligible
-          ?"The academic ledger is ready for rollover. P26 will archive the current semester, create the new active workspace, and carry only explicitly planned retakes."
+          ?"The academic ledger is ready for rollover. StudyOS will archive the current semester, create the new active workspace, and carry only explicitly planned retakes."
           :"Resolve every blocker below before StudyOS will archive the semester."}</p>
         {data.preflight.blockers.length?<div className="rollover-blocker-list">{data.preflight.blockers.map(item=><article key={item.code}><strong>{item.count}</strong><span>{item.message}</span></article>)}</div>:null}
       </section>
@@ -40,7 +40,7 @@ export default async function SemesterRolloverPage(){
         <div className="rollover-boundary-grid">
           <article><strong>Carried</strong><p>Planned retake course identity, credits, future exam date, exam configuration, and reusable workflow settings.</p></article>
           <article><strong>Archived only</strong><p>Exam-result history, sessions, mastery evidence, weekly plans, prior forecasts, interventions, and completed course records.</p></article>
-          <article><strong>Never copied</strong><p>Unfinished study-time debt, P19 envelopes, stale P10 candidates, calendar blocks, Drive semester folders, or old intake queues.</p></article>
+          <article><strong>Never copied</strong><p>Unfinished study-time debt, weekly planning envelopes, stale daily candidates, calendar blocks, Drive semester folders, or old intake queues.</p></article>
         </div>
       </section>
 

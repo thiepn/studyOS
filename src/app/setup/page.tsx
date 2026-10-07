@@ -18,7 +18,7 @@ export default async function SetupPage(){
     ?new Date(String(semester.starts_on)+"T12:00:00Z").toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})
     :"start date not configured";
   return <main className="shell">
-    <header className="header"><div><p className="eyebrow">P12 · Live semester activation</p><h1>Activation Center</h1></div><Nav /></header>
+    <header className="header"><div><p className="eyebrow">System readiness</p><h1>Setup</h1></div><Nav /></header>
 
     <section className="panel activation-hero">
       <div><p className="eyebrow">{semester.display_name} · begins {startLabel}</p>
@@ -42,13 +42,13 @@ export default async function SetupPage(){
       </article>
       <article className="panel">
         <div className="section-heading"><div><p className="eyebrow">Study Calendar</p><h2>{snapshot.calendar_connected?"Connected":"Not connected"}</h2></div><span>{snapshot.calendar_synced?"synced":"sync pending"}</span></div>
-        <p>Connect the Google Calendar account containing the real university timetable, then sync enough events to map all four major courses.</p>
+        <p>Connect the Google Calendar account containing the real university timetable, then sync enough events to map every active major course.</p>
         <div className="button-row">{snapshot.calendar_connected?<Link className="primary-button" href="/">Open calendar controls</Link>:<a className="primary-button" href="/api/integrations/google-calendar/start">Connect Study Calendar</a>}</div>
       </article>
     </section>
 
     <section className="panel activation-courses">
-      <div className="section-heading"><div><p className="eyebrow">Real-course onboarding</p><h2>Six-course activation matrix</h2></div><span>{courses.length}/6</span></div>
+      <div className="section-heading"><div><p className="eyebrow">Real-course onboarding</p><h2>Active course readiness</h2></div><span>{courses.length}</span></div>
       <div className="activation-course-list">{courses.map((course)=>{
         const major=course.course_kind==="major";
         return <article key={course.course_id}>
@@ -74,10 +74,10 @@ export default async function SetupPage(){
 
     <section className="panel first-week-proof">
       <div className="section-heading"><div><p className="eyebrow">End-to-end proof</p><h2>First-week operational contract</h2></div><span>{evaluation.firstWeekCertified?"CERTIFIED":"PENDING"}</span></div>
-      <p>Every major course must independently prove the real path below. One successful course does not certify the other three.</p>
-      <pre>Week-1 source in Study Drive → verified processing → skill/question map → closed-book attempt → P10/P11 planning</pre>
+      <p>Every active major course must independently prove the real path below. One successful course does not certify the rest.</p>
+      <pre>Week-1 source in Study Drive → verified processing → skill/question map → closed-book attempt → daily planning</pre>
       <div className="readiness-stats"><span><strong>{snapshot.majors_with_week1_material}/{snapshot.major_course_count}</strong> verified W1 material</span><span><strong>{snapshot.majors_with_study_map}/{snapshot.major_course_count}</strong> study maps</span><span><strong>{snapshot.majors_with_attempts}/{snapshot.major_course_count}</strong> real attempts</span></div>
-      <div className="button-row"><Link className="secondary-button" href="/semester/bootstrap">Semester bootstrap</Link><Link className="secondary-button" href="/resources">Material intake</Link><Link className="secondary-button" href="/practice">Practice</Link><Link className="secondary-button" href="/">Today</Link></div>
+      <div className="button-row"><Link className="secondary-button" href="/semester/bootstrap">Semester setup</Link><Link className="secondary-button" href="/resources">Material intake</Link><Link className="secondary-button" href="/practice">Practice</Link><Link className="secondary-button" href="/">Today</Link></div>
     </section>
 
     <section className="panel activation-platform-detail">

@@ -49,7 +49,7 @@ export function ScenarioPlanner({data}:{data:SemesterScenarioData}){
         <span><strong>{fmt(retention)}</strong> retention reserve</span>
       </div>
       {data.calendarFreeMinutes!=null&&capacity>data.calendarFreeMinutes?<p className="scenario-warning"><strong>Counterfactual only:</strong> this scenario exceeds current seven-day calendar free time by {fmt(capacity-data.calendarFreeMinutes)} and would require freeing calendar time.</p>:null}
-      {data.calibration.completedWeeks>=3?<p className="scenario-calibration-note"><strong>P20 calibration active:</strong> {Object.keys(data.calibration.floorAdjustments).length} course floor{Object.keys(data.calibration.floorAdjustments).length===1?"":"s"} adjusted from completed-week execution evidence.</p>:null}
+      {data.calibration.completedWeeks>=3?<p className="scenario-calibration-note"><strong>Planning calibration active:</strong> {Object.keys(data.calibration.floorAdjustments).length} course floor{Object.keys(data.calibration.floorAdjustments).length===1?"":"s"} adjusted from completed-week execution evidence.</p>:null}
       <div className="scenario-objectives">
         {(Object.keys(labels) as ScenarioObjective[]).map(key=><button key={key} className={objective===key?"active":""} onClick={()=>setObjective(key)}>{labels[key]}</button>)}
       </div>
@@ -77,7 +77,7 @@ export function ScenarioPlanner({data}:{data:SemesterScenarioData}){
         <div className="scenario-bar"><i style={{width:Math.min(100,row.protectionFloorMinutes?row.allocatedMinutes/row.protectionFloorMinutes*100:100)+"%"}}/></div>
         <p>{row.reason}</p>
         <div className="scenario-course-meta">
-          <span><strong>{fmt(row.protectionFloorMinutes)}</strong> floor{row.floorCalibrationMinutes!==0?<small> · P20 {row.floorCalibrationMinutes>0?"+":""}{row.floorCalibrationMinutes}m</small>:null}</span>
+          <span><strong>{fmt(row.protectionFloorMinutes)}</strong> floor{row.floorCalibrationMinutes!==0?<small> · calibrated {row.floorCalibrationMinutes>0?"+":""}{row.floorCalibrationMinutes}m</small>:null}</span>
           <span><strong>{row.sharePercent}%</strong> course-capacity share</span>
           <span><strong>{row.readinessIndex==null?"—":row.readinessIndex+"/100"}</strong> readiness</span>
           <span><strong>{row.marginalScore}/100</strong> marginal value</span>

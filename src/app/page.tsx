@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Nav } from "@/components/nav";
 import { DailyPlan } from "@/components/daily-plan";
 import { CapacityControls } from "@/components/capacity-controls";
@@ -7,6 +8,7 @@ import { CalendarAutopilotPanel } from "@/components/calendar-autopilot-panel";
 import { getDailyOrchestration } from "@/lib/study/planning";
 import { getCalendarAutopilot } from "@/lib/study/calendar-autopilot";
 import type { PlanningMode } from "@/lib/study/planner";
+import { getStudyWorkspaceState } from "@/lib/study/bootstrap";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +17,8 @@ function dayLabel(date:string){
 }
 
 export default async function TodayPage() {
+  const workspace=await getStudyWorkspaceState();
+  if(!workspace.activeSemester)redirect("/semester/bootstrap");
   const orchestration=await getDailyOrchestration();
   const calendar=await getCalendarAutopilot(orchestration);
   const {today:data,pulse,capacity,plan,commitments,courses,settings}=orchestration;

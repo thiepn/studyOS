@@ -13,7 +13,7 @@ export default async function StrategyPage({searchParams}:{searchParams:Promise<
   const course=data.course;
   return <main className="shell">
     <header className="header">
-      <div><p className="eyebrow">P16 · method experimentation</p><h1>Strategy lab</h1></div>
+      <div><p className="eyebrow">Method experimentation</p><h1>Strategy lab</h1></div>
       <Nav />
     </header>
 
@@ -23,7 +23,7 @@ export default async function StrategyPage({searchParams}:{searchParams:Promise<
           <div><p className="eyebrow">{course.difficultySignal.replaceAll("_"," ")} signal</p><h2>{course.displayName}</h2></div>
           <span>{course.experiments.length} experiment{course.experiments.length===1?"":"s"}</span>
         </div>
-        <p>{course.eligibleForExperiment ? course.recommendation.reason : "P15 has not classified this course as persistent or structural. Keep the normal coursework/review loop; P16 method experiments are not active for this course."}</p>
+        <p>{course.eligibleForExperiment ? course.recommendation.reason : "This course is not currently classified as persistently or structurally difficult. Keep the normal coursework/review loop; method experiments are not active for this course."}</p>
         {course.recommendation.awaitingEvidence ? <div className="strategy-hold">
           <strong>Experiment hold</strong>
           <span>Collect normal independent coursework/review evidence before switching methods. A second experiment now would contaminate the comparison.</span>
@@ -84,7 +84,7 @@ export default async function StrategyPage({searchParams}:{searchParams:Promise<
             <div><strong>{experiment.strategyTitle}</strong><span>Week {experiment.interventionWeek} · {experiment.outcome.replaceAll("_"," ")}</span></div>
             <b>{experiment.baselineAccuracyPercent==null?"—":experiment.baselineAccuracyPercent+"%"} → {experiment.followupAccuracyPercent==null?"—":experiment.followupAccuracyPercent+"%"}</b>
           </article>)}
-        </div> : <p className="muted">No P16 method experiment has been completed yet.</p>}
+        </div> : <p className="muted">No method experiment has been completed yet.</p>}
       </section>
     </>}
   </main>;

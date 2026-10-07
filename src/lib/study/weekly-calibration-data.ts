@@ -29,7 +29,7 @@ export async function getWeeklyCalibrationProfile(semesterIdOverride?:string){
     db.from("study_current_capacity").select("local_today,timezone").eq("semester_id",semesterId).maybeSingle(),
   ]);
   const setupError=semesterResult.error||capacityResult.error;
-  if(setupError)throw new StudyServiceError("Could not load P20 calibration context",setupError.code||"weekly_calibration_context_failed",setupError);
+  if(setupError)throw new StudyServiceError("Could not load weekly calibration context",setupError.code||"weekly_calibration_context_failed",setupError);
   const timezone=String(capacityResult.data?.timezone??semesterResult.data?.timezone??"Europe/Berlin");
   const today=String(capacityResult.data?.local_today??localDate(timezone));
 

@@ -21,7 +21,7 @@ export default async function ArchivedSemesterPage({params}:{params:Promise<{sem
 
   return <main className="shell">
     <header className="header">
-      <div><p className="eyebrow">P26 · archived semester</p><h1>{data.semester.displayName}</h1></div>
+      <div><p className="eyebrow">Archived semester</p><h1>{data.semester.displayName}</h1></div>
       <Nav />
     </header>
 
@@ -30,7 +30,7 @@ export default async function ArchivedSemesterPage({params}:{params:Promise<{sem
         <div><p className="eyebrow">Historical context</p><h2>Read-only semester ledger</h2></div>
         <span>archived</span>
       </div>
-      <p>This semester is no longer an active planning workspace. Its P24 outcomes, P25 completion ledger, attempts, and P19/P20 execution history remain available as historical evidence.</p>
+      <p>This semester is no longer an active planning workspace. Its official outcomes, completion ledger, attempts, and weekly execution history remain available as historical evidence.</p>
       <div className="archive-summary-grid">
         <span><strong>{data.summary.passedCourses}/{data.summary.totalCourses}</strong> courses passed</span>
         <span><strong>{credits(data.summary.passedCredits)}</strong> passed credits</span>
@@ -50,7 +50,7 @@ export default async function ArchivedSemesterPage({params}:{params:Promise<{sem
           ?"Latest official: "+pretty(course.latestOfficial.outcome)+(course.latestOfficial.gradeText?" · "+course.latestOfficial.gradeText:"")
           :"No official result recorded."}</p>
         {course.attempts.length?<details className="semester-attempt-history"><summary>Attempt history · {course.attempts.length}</summary><div>
-          {course.attempts.map(attempt=><article key={attempt.id}><div><strong>Attempt {attempt.attemptNo} · {pretty(attempt.outcome)}</strong><span>{pretty(attempt.resultStatus)}</span></div><small>{when(attempt.examAt,data.timezone)} · P17 {attempt.readinessIndexSnapshot==null?"—":attempt.readinessIndexSnapshot+"/100"}</small></article>)}
+          {course.attempts.map(attempt=><article key={attempt.id}><div><strong>Attempt {attempt.attemptNo} · {pretty(attempt.outcome)}</strong><span>{pretty(attempt.resultStatus)}</span></div><small>{when(attempt.examAt,data.timezone)} · readiness {attempt.readinessIndexSnapshot==null?"—":attempt.readinessIndexSnapshot+"/100"}</small></article>)}
         </div></details>:null}
       </article>)}
     </section>
@@ -61,7 +61,7 @@ export default async function ArchivedSemesterPage({params}:{params:Promise<{sem
       <div className="archive-summary-grid">
         <span><strong>{data.retrospective.execution.completedWeeks}</strong> completed weeks</span>
         <span><strong>{data.retrospective.execution.medianWeekAdherencePercent==null?"—":data.retrospective.execution.medianWeekAdherencePercent+"%"}</strong> median adherence</span>
-        <span><strong>{data.retrospective.forecastReview.negativeSurprises}</strong> negative P17 surprises</span>
+        <span><strong>{data.retrospective.forecastReview.negativeSurprises}</strong> negative readiness surprises</span>
         <span><strong>{data.retrospective.execution.sacrificeEvents}</strong> floor sacrifices</span>
       </div>
       <div className="button-row"><Link className="secondary-button" href="/semesters">Back to semester history</Link><Link className="secondary-button" href="/semester">Open active semester</Link></div>

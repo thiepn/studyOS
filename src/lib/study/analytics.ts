@@ -147,9 +147,9 @@ export function buildCourseLearningAnalytics(input:{
   else if(evaluated.length>=2&&effectivenessRate!=null&&effectivenessRate>=50) difficultySignal="responsive";
   else if(latestEvaluated?.outcome==="effective"&&latestDrift.band==="on_track") difficultySignal="transient";
 
-  let recommendation="Complete a P14 drift-repair session and collect independent follow-up evidence before judging intervention effectiveness.";
+  let recommendation="Complete a targeted drift-repair session and collect independent follow-up evidence before judging intervention effectiveness.";
   if(difficultySignal==="transient")recommendation="The correction worked and the course returned on track. Treat the episode as temporary unless drift recurs.";
-  if(difficultySignal==="responsive")recommendation="P14 corrections are usually improving later performance. Reuse the same correction pattern when similar drift returns.";
+  if(difficultySignal==="responsive")recommendation="Targeted corrections are usually improving later performance. Reuse the same correction pattern when similar drift returns.";
   if(difficultySignal==="persistent")recommendation="Repeated corrections are not reliably improving later performance. Do not repeat the same repair pattern blindly; inspect the error pattern and study method.";
   if(difficultySignal==="structural")recommendation="Repeated corrections have failed despite adequate effort and sustained drift. Treat this as a structural course difficulty signal: change method, representation, or external support rather than adding more minutes.";
 

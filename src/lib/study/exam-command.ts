@@ -141,13 +141,13 @@ export function buildExamCommand(input:{
     let conflictReason:string|null=null;
     if((course.daysToExam??999)<=0){
       todayEligible=false;conflict="exam_today";
-      conflictReason="The exam is today. P22 does not schedule additional preparation into the exam day.";
+      conflictReason="The exam is today. StudyOS does not schedule additional preparation into the exam day.";
     }else if(course.heavy&&(course.daysToExam??999)<=1){
       todayEligible=false;conflict="final_day_heavy";
-      conflictReason="P9 still owns the timed/heavy action, but P22 will not place a heavy simulation inside the final 24-hour runway.";
+      conflictReason="The course keeps its timed/heavy action, but StudyOS will not place a heavy simulation inside the final 24-hour runway.";
     }else if(course.actionClass==="simulation"&&daysSince(course.lastSimulationAt,input.nowIso)<1.5){
       todayEligible=false;conflict="simulation_cooldown";
-      conflictReason="A timed simulation was completed within roughly 36 hours. P22 protects recovery before another full simulation.";
+      conflictReason="A timed simulation was completed within roughly 36 hours. StudyOS protects recovery before another full simulation.";
     }
     return {
       ...course,rank:index+1,todayEligible,conflict,conflictReason,
@@ -202,7 +202,7 @@ export function buildExamCommand(input:{
       course.scheduleStatus="unplaced";
       if(course.conflict==="none"){
         course.conflict="capacity";
-        course.conflictReason="The current P9 action does not fit the protected seven-day capacity/runway without breaking exam-day or heavy-work spacing constraints.";
+        course.conflictReason="The current course action does not fit the protected seven-day capacity/runway without breaking exam-day or heavy-work spacing constraints.";
       }
     }
   }
@@ -211,7 +211,7 @@ export function buildExamCommand(input:{
   const compressed=courses.filter(course=>(course.daysToExam??999)<=21).length;
   const unplaced=courses.filter(course=>course.scheduleStatus==="unplaced"||course.scheduleStatus==="blocked").length;
   const summary=!courses.length
-    ?"No course is currently in an active P9 transition/exam runway."
+    ?"No course is currently in an active transition/exam runway."
     :unplaced
       ?unplaced+" active exam action"+(unplaced===1?" has":"s have")+" a capacity, fatigue, or final-runway conflict that needs attention."
       :courses.length+" active exam action"+(courses.length===1?" is":"s are")+" placeable inside the protected seven-day runway.";

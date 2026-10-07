@@ -6,13 +6,19 @@ export const dynamic="force-dynamic";
 
 function pretty(value:string){return value.replaceAll("_"," ");}
 function score(value:number|null){return value==null?"—":String(value);}
+function authorityLabel(value:string){
+  return ({
+    P24:"Outcome state",P17:"Readiness",P16:"Method experiment",P14:"Drift repair",
+    P13:"Calibration",P9:"Exam strategy",P8:"Retention",
+  } as Record<string,string>)[value]??value;
+}
 
 export default async function OutlookPage(){
   const outlook=await getSemesterForecast();
   const queue=[...outlook.courses].sort((a,b)=>b.decisionPriority-a.decisionPriority);
   const top=queue[0]??null;
   return <main className="shell">
-    <header className="header"><div><p className="eyebrow">P17 · semester decision layer</p><h1>Semester outlook</h1></div><Nav /></header>
+    <header className="header"><div><p className="eyebrow">Semester readiness</p><h1>Semester outlook</h1></div><Nav /></header>
 
     <section className="panel forecast-hero">
       <div className="forecast-hero-main">
@@ -40,9 +46,9 @@ export default async function OutlookPage(){
       </div>
       <h3>{top.nextAction.title}</h3>
       <p>{top.nextAction.reason}</p>
-      <div className="forecast-action-meta"><span>{top.nextAction.estimatedMinutes} min</span><span>{top.nextAction.authority}</span><span>course priority {top.decisionPriority}/100</span></div>
+      <div className="forecast-action-meta"><span>{top.nextAction.estimatedMinutes} min</span><span>{authorityLabel(top.nextAction.authority)}</span><span>course priority {top.decisionPriority}/100</span></div>
       <div className="button-row"><Link className="primary-button" href={top.nextAction.href}>Open recommended action</Link></div>
-      <small>P17 ranks strategic value only. P10&apos;s daily capacity and scheduling rules still decide whether this work belongs in today&apos;s plan.</small>
+      <small>This view ranks strategic value across courses. Today remains the authority for what actually fits into the current day.</small>
     </section> : null}
 
     <section className="panel forecast-queue-panel">
@@ -98,7 +104,7 @@ export default async function OutlookPage(){
 
         <div className="forecast-next-action">
           <div>
-            <p className="eyebrow">Highest-value next action · {course.nextAction.authority}</p>
+            <p className="eyebrow">Highest-value next action · {authorityLabel(course.nextAction.authority)}</p>
             <h3>{course.nextAction.title}</h3>
             <p>{course.nextAction.reason}</p>
           </div>

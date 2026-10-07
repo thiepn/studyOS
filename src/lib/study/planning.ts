@@ -240,7 +240,7 @@ export async function getDailyOrchestration(){
     candidates.push({
       id:"exam:"+strategy.course_id+":"+strategy.next_action,kind:"exam_strategy",courseId:strategy.course_id,
       courseName:strategy.display_name,title:examActionLabel(strategy.next_action)+" · "+(strategy.short_name??strategy.display_name),
-      reason:strategy.next_action_reason+(directive.priorityAdjustment?" · P22 cross-exam priority +"+directive.priorityAdjustment:""),
+      reason:strategy.next_action_reason+(directive.priorityAdjustment?" · cross-exam priority +"+directive.priorityAdjustment:""),
       href:timed&&paperMap.get(strategy.course_id)?"/practice/exam/"+paperMap.get(strategy.course_id):"/courses/"+strategy.course_id,
       estimatedMinutes:estimate,
       priority:(strategy.operating_mode==="exam"?86:72)+Math.max(0,12-Math.max(0,days))+Number(risk?.risk_score??0)*0.15+directive.priorityAdjustment+recoveryDirective.priorityAdjustment,
@@ -300,7 +300,7 @@ export async function getDailyOrchestration(){
     return {
       ...candidate,
       priority:candidate.priority+adjustment,
-      reason:candidate.reason+" · P14 "+course.profile.band+" allocation +"+adjustment,
+      reason:candidate.reason+" · "+course.profile.band+" drift allocation +"+adjustment,
       metadata:{...(candidate.metadata??{}),driftBand:course.profile.band,driftPriorityBoost:adjustment},
     };
   });
@@ -313,7 +313,7 @@ export async function getDailyOrchestration(){
     return {
       ...candidate,
       priority:candidate.priority+adjustment,
-      reason:candidate.reason+" · P19 "+(progress?.paceStatus??"weekly")+" envelope "+(adjustment>0?"+":"")+adjustment,
+      reason:candidate.reason+" · "+(progress?.paceStatus??"weekly")+" weekly envelope "+(adjustment>0?"+":"")+adjustment,
       metadata:{...(candidate.metadata??{}),weeklyPace:progress?.paceStatus,weeklyPriorityAdjustment:adjustment},
     };
   });

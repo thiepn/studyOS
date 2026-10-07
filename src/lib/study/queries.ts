@@ -19,7 +19,7 @@ export async function getTodayData(): Promise<TodayData> {
   ]);
 
   const error = semesterResult.error || capacityResult.error || courseResult.error || dueResult.error || operatingModeResult.error || resultResult.error;
-  if (error) throw new StudyServiceError("Could not load Semester OS state", error.code || "study_read_failed", error);
+  if (error) throw new StudyServiceError("Could not load StudyOS state", error.code || "study_read_failed", error);
 
   const postExamCourses = new Set(
     (operatingModeResult.data ?? []).filter((row) => row.operating_mode === "post_exam").map((row) => row.course_id)

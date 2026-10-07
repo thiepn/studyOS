@@ -164,7 +164,7 @@ export function buildWeeklyCalibrationProfile(
 
     let rationale:string;
     if(rows.length<3)rationale="Collect at least three completed weekly commitments before changing this course's protection floor.";
-    else if(adjustment>0)rationale="Repeated execution evidence suggests this course is being under-protected or repeatedly sacrificed; future P18 floors receive a bounded increase.";
+    else if(adjustment>0)rationale="Repeated execution evidence suggests this course is being under-protected or repeatedly sacrificed; future planning floors receive a bounded increase.";
     else if(adjustment<0)rationale="The rest of the week was generally executed while this course repeatedly received more planned time than was used; a bounded floor reduction is supported.";
     else if(allocationSignal==="volatile")rationale="The course alternates between over- and under-allocation. Keep the current floor until the pattern stabilizes.";
     else rationale="Historical execution is compatible with the current protection floor; no automatic correction is supported.";
@@ -194,13 +194,13 @@ export function buildWeeklyCalibrationProfile(
   if(completedWeeks>=3){
     if(lowWeeks>=2&&highWeeks>=2){
       capacitySignal="volatile";
-      recommendation="Weekly execution varies too much to justify changing the default capacity. Keep P10 unchanged and inspect calendar/workload volatility.";
+      recommendation="Weekly execution varies too much to justify changing the default capacity. Keep the current daily capacity unchanged and inspect calendar/workload volatility.";
     }else if(lowWeeks>=2&&(weekMedian??100)<80){
       capacitySignal="commitment_too_high";factor=0.9;
-      recommendation="Course envelopes are repeatedly under-completed. Test roughly 10% less weekly course capacity before changing the P10 daily default.";
+      recommendation="Course envelopes are repeatedly under-completed. Test roughly 10% less weekly course capacity before changing the daily default.";
     }else if(highWeeks>=2&&(weekMedian??100)>110){
       capacitySignal="commitment_too_low";factor=1.1;
-      recommendation="Course envelopes are repeatedly exceeded. Up to 10% more weekly course capacity may be realistic, but P10 daily capacity should not change automatically.";
+      recommendation="Course envelopes are repeatedly exceeded. Up to 10% more weekly course capacity may be realistic, but daily capacity should not change automatically.";
     }else{
       capacitySignal="aligned";
       recommendation="Committed course capacity is broadly aligned with actual execution. Keep the current weekly capacity baseline.";

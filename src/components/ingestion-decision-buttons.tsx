@@ -13,7 +13,7 @@ export function IngestionDecisionButtons({ runId, disableAccept = false }: { run
     try {
       const response = await fetch(`/api/study/ingestion/${runId}/decision`, {
         method: "POST", headers: { "content-type": "application/json" },
-        body: JSON.stringify({ action, reason: action === "reject" ? "Rejected from Semester OS review inbox" : undefined }),
+        body: JSON.stringify({ action, reason: action === "reject" ? "Rejected from StudyOS review inbox" : undefined }),
       });
       const body = await response.json();
       if (!response.ok) throw new Error(body?.error || `Could not ${action}`);

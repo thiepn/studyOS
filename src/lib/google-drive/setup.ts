@@ -34,7 +34,7 @@ export async function createSemesterDriveTree(userId: string, accessToken: strin
     root={id:connection.root_folder_id,webViewLink:connection.root_folder_url??undefined};
   }else{
     const topLevel=await listChildren(accessToken,"root");
-    root=folderNamed(topLevel,"Semester OS")??await createFolder(accessToken,"Semester OS");
+    root=folderNamed(topLevel,"StudyOS")??folderNamed(topLevel,"Semester OS")??await createFolder(accessToken,"StudyOS");
   }
 
   const semesterName=safeFolderName(semester.display_name);

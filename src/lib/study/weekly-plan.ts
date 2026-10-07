@@ -186,7 +186,7 @@ export function buildRollingProposal(input:{
   const reasonText=reason==="capacity_loss"
     ?"Remaining feasible study capacity has fallen below the unspent weekly commitment, so lower-value envelopes must shrink."
     :reason==="evidence_shift"
-      ?"Current P17 priorities have moved materially since the weekly commitment, so the remaining envelope should follow the new evidence."
+      ?"Current readiness priorities have moved materially since the weekly commitment, so the remaining envelope should follow the new evidence."
       :reason==="pace_recovery"
         ?"The week is behind its committed pace; remaining minutes are redistributed to protect the most valuable unfinished work."
         :"The committed envelopes remain compatible with current capacity and evidence.";

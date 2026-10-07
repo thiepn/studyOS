@@ -1,10 +1,50 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Course={courseId:string;displayName:string;shortName:string|null;courseKind:string};
 type PriorOption={id:string;semester_id:string;semester_name:string;display_name:string;short_name:string|null;course_kind:string;stable_key:string};
+
+
+export function InitialSemesterForm(){
+  const router=useRouter();
+  const [busy,setBusy]=useState(false);
+  const [message,setMessage]=useState<string|null>(null);
+  const [timezone,setTimezone]=useState("Europe/Berlin");
+
+  useEffect(()=>{
+    const detected=Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if(detected)setTimezone(detected);
+  },[]);
+
+  async function submit(event:React.FormEvent<HTMLFormElement>){
+    event.preventDefault();setBusy(true);setMessage(null);
+    const fd=new FormData(event.currentTarget);
+    try{
+      const response=await fetch("/api/study/semester-bootstrap/semester",{
+        method:"POST",headers:{"content-type":"application/json"},
+        body:JSON.stringify({
+          displayName:fd.get("displayName"),startsOn:fd.get("startsOn"),
+          endsOn:fd.get("endsOn")||null,timezone:fd.get("timezone"),
+        }),
+      });
+      const body=await response.json();if(!response.ok)throw new Error(body?.error||"Could not create semester");
+      setMessage("Semester created. Add the real course roster next.");
+      router.refresh();
+    }catch(error){setMessage(error instanceof Error?error.message:"Could not create semester");}
+    finally{setBusy(false);}
+  }
+
+  return <form className="bootstrap-course-form initial-semester-form" onSubmit={submit}>
+    <label className="wide"><span>Semester name</span><input required name="displayName" maxLength={80} placeholder="Wintersemester 2026/27"/></label>
+    <label><span>Starts</span><input required name="startsOn" type="date"/></label>
+    <label><span>Ends <em>optional</em></span><input name="endsOn" type="date"/></label>
+    <label className="wide"><span>Timezone</span><input required name="timezone" value={timezone} onChange={event=>setTimezone(event.target.value)} maxLength={80}/></label>
+    <div className="wide button-row"><button className="primary-button button-reset" disabled={busy}>{busy?"Creating…":"Create semester workspace"}</button></div>
+    {message?<p className="wide form-message" role="status">{message}</p>:null}
+  </form>;
+}
 
 export function BootstrapCourseForm(){
   const router=useRouter();
@@ -65,7 +105,7 @@ export function BootstrapPriorForm({courses,options}:{courses:Course[];options:P
         body:JSON.stringify({courseId,sourceCourseId,relation:fd.get("relation"),note:fd.get("note")}),
       });
       const body=await response.json();if(!response.ok)throw new Error(body?.error||"Could not attach prior");
-      setMessage("Historical prior attached as advisory context.");router.refresh();
+      setMessage("Previous-semester context attached as advisory evidence.");router.refresh();
     }catch(error){setMessage(error instanceof Error?error.message:"Could not attach prior");}
     finally{setBusy(false);}
   }
@@ -75,7 +115,7 @@ export function BootstrapPriorForm({courses,options}:{courses:Course[];options:P
     <label><span>Archived source</span><select value={sourceCourseId} onChange={e=>setSourceCourseId(e.target.value)}>{grouped.map(o=><option value={o.id} key={o.id}>{o.semester_name} · {o.short_name??o.display_name}</option>)}</select></label>
     <label><span>Relationship</span><select name="relation" defaultValue="prerequisite"><option value="direct_retake">Direct retake · same stable key</option><option value="prerequisite">Prerequisite</option><option value="related">Related</option></select></label>
     <label className="wide"><span>Why this prior matters</span><textarea name="note" rows={2} maxLength={1000}/></label>
-    <div className="wide button-row"><button className="secondary-button button-reset" disabled={busy}>{busy?"Attaching…":"Attach historical prior"}</button></div>
+    <div className="wide button-row"><button className="secondary-button button-reset" disabled={busy}>{busy?"Attaching…":"Attach previous course"}</button></div>
     {message?<p className="wide form-message">{message}</p>:null}
   </form>;
 }
@@ -87,14 +127,14 @@ export function BootstrapActionButtons({ready,certified,driveConnected}:{ready:b
     try{
       const response=await fetch(path,{method:"POST"});const body=await response.json();
       if(!response.ok)throw new Error(body?.error||"Action failed");
-      setMessage(key==="drive"?"Active-semester Drive folders provisioned.":"Semester bootstrap certified.");
+      setMessage(key==="drive"?"Semester Drive folders are ready.":"Semester setup confirmed.");
       router.refresh();
     }catch(error){setMessage(error instanceof Error?error.message:"Action failed");}
     finally{setBusy(null);}
   }
   return <div className="bootstrap-actions">
     {driveConnected?<button className="secondary-button button-reset" disabled={Boolean(busy)} onClick={()=>void post("/api/integrations/google-drive/provision","drive")}>{busy==="drive"?"Provisioning…":"Provision / repair semester Drive"}</button>:<a className="secondary-button" href="/api/integrations/google-drive/start">Connect Study Drive</a>}
-    <button className="primary-button button-reset" disabled={!ready||certified||Boolean(busy)} onClick={()=>void post("/api/study/semester-bootstrap/certify","certify")}>{certified?"Bootstrap certified":busy==="certify"?"Certifying…":"Certify semester bootstrap"}</button>
+    <button className="primary-button button-reset" disabled={!ready||certified||Boolean(busy)} onClick={()=>void post("/api/study/semester-bootstrap/certify","certify")}>{certified?"Setup confirmed":busy==="certify"?"Certifying…":"Confirm semester setup"}</button>
     {message?<p className="form-message" role="status">{message}</p>:null}
   </div>;
 }

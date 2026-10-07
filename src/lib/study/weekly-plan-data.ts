@@ -112,7 +112,7 @@ export async function commitWeeklyPlan(input:{objective:string;capacityMinutes?:
   const bootstrapResult=await db.from("study_semesters").select("bootstrap_certified_at").eq("id",semesterId).single();
   if(bootstrapResult.error)throw new StudyServiceError("Could not inspect semester bootstrap state",bootstrapResult.error.code||"semester_bootstrap_read_failed",bootstrapResult.error);
   if(!bootstrapResult.data?.bootstrap_certified_at)throw new StudyServiceError(
-    "Finish P27 semester bootstrap before committing a weekly study plan.",
+    "Finish semester setup before committing a weekly study plan.",
     "invalid_semester_bootstrap",
   );
   const existingResult=await db.from("study_week_plans").select("*")

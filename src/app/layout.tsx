@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Semester OS",
-  description: "Semester learning, retention, exam-readiness, and academic outcome system",
+  title: "StudyOS",
+  description: "University study planning, retrieval practice, retention, and exam-readiness workspace",
   robots: { index: false, follow: false, nocache: true },
 };
 

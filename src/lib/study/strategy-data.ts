@@ -45,12 +45,12 @@ type StrategyState={
 
 function dayNumber(date:string){return Math.floor(Date.parse(date+"T00:00:00Z")/86_400_000);}
 function parseStrategyKey(note:string|null|undefined):StrategyKey|null{
-  const match=String(note??"").match(/^P16 strategy experiment:([a-z_]+)/);
+  const match=String(note??"").match(/^(?:P16 )?strategy experiment:([a-z_]+)/);
   return match&&isStrategyKey(match[1])?match[1]:null;
 }
 function taggedIntervention(note:string|null|undefined){
   const value=String(note??"");
-  return value.startsWith("P14 drift repair intervention")||value.startsWith("P16 strategy experiment:");
+  return value.startsWith("Targeted drift repair intervention")||value.startsWith("P14 drift repair intervention")||value.startsWith("strategy experiment:")||value.startsWith("P16 strategy experiment:");
 }
 
 async function loadStrategyState():Promise<StrategyState>{
@@ -67,7 +67,7 @@ async function loadStrategyState():Promise<StrategyState>{
     db.from("study_skills").select("id,course_id,title,prerequisite_importance").eq("active",true),
   ]);
   const error=semesterResult.error||capacityResult.error||courseResult.error||attemptResult.error||sessionResult.error||questionResult.error||skillResult.error;
-  if(error)throw new StudyServiceError("Could not load P16 strategy evidence",error.code||"strategy_read_failed",error);
+  if(error)throw new StudyServiceError("Could not load strategy evidence",error.code||"strategy_read_failed",error);
 
   const startsOn=String(semesterResult.data?.starts_on??"");
   const localToday=String(capacityResult.data?.local_today??new Date().toISOString().slice(0,10));
@@ -182,6 +182,6 @@ export async function getStrategyPractice(courseId?:string|null,requestedStrateg
   const queue=buildStrategyQueue(selected,questions,skills,attempts);
   return {
     course,strategy:selected,queue,queueMinutes:queueMinutes(queue),
-    completionNote:"P16 strategy experiment:"+selected.key,
+    completionNote:"strategy experiment:"+selected.key,
   };
 }
