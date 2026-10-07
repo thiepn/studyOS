@@ -4,6 +4,7 @@ import { getSemesterPulse, topRiskDrivers } from "@/lib/study/pulse";
 import { getSemesterCalibration } from "@/lib/study/calibration-data";
 import { getSemesterLearningAnalytics } from "@/lib/study/analytics-data";
 import { getCrossSemesterTransferData } from "@/lib/study/cross-semester-data";
+import { courseInitials, courseToneClass } from "@/lib/study/course-visual";
 
 export const dynamic = "force-dynamic";
 
@@ -62,7 +63,9 @@ export default async function ProgressPage(){
         const driftProfile=learningProfile?.latestDrift;
         const transferProfiles=transferByCourse.get(course.course_id)??[];
         const longitudinalProfile=longitudinalByKey.get(course.stable_key);
-        return <article className="panel risk-course" id={"course-"+course.course_id} key={course.course_id}>
+        return <article className={`panel risk-course progress-ledger ${courseToneClass(course.stable_key)}`} id={"course-"+course.course_id} key={course.course_id}>
+          <div className="progress-course-spine" aria-hidden="true"><span>{courseInitials(course.short_name,course.display_name)}</span></div>
+          <div className="progress-course-body">
           <div className="risk-course-head">
             <div><p className="eyebrow">{course.operating_mode.replace("_"," ")} mode</p><h2>{course.display_name}</h2></div>
             <div className="risk-score-block"><span className={"risk-badge risk-" + course.risk_band}>{course.risk_band.replace("_"," ")}</span><strong>{Math.round(Number(course.risk_score))}/100</strong></div>
@@ -145,6 +148,7 @@ export default async function ProgressPage(){
           {calibrationProfile ? <p className="calibration-recommendation"><strong>Calibration:</strong> {calibrationProfile.recommendation}</p> : null}
           <p className="muted">{course.days_to_exam==null?"Exam date not configured.":course.days_to_exam>=0?String(course.days_to_exam)+" days to exam.":"Exam date has passed."} {course.actionable_backlog} actionable weekly item{course.actionable_backlog===1?"":"s"} · {course.unresolved_errors} unresolved error{course.unresolved_errors===1?"":"s"}.</p>
           <div className="button-row"><Link className="secondary-button" href={"/courses/" + course.course_id}>Open course</Link>{calibrationProfile?<Link className="secondary-button" href={"/practice?mode=calibration&course="+course.course_id}>Calibration set</Link>:null}{learningProfile&&(learningProfile.difficultySignal==="persistent"||learningProfile.difficultySignal==="structural")?<Link className="primary-button" href={"/strategy?course="+course.course_id}>Open strategy lab</Link>:null}</div>
+          </div>
         </article>;
       })}
     </section>
