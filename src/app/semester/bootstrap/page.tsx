@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { Nav } from "@/components/nav";
 import {
-  BootstrapActionButtons,BootstrapCourseForm,BootstrapPriorForm,RemovePriorButton,
+  BootstrapActionButtons,BootstrapCourseForm,BootstrapPriorForm,InitialSemesterForm,RemovePriorButton,
 } from "@/components/semester-bootstrap-controls";
-import { getSemesterBootstrapData } from "@/lib/study/semester-bootstrap-data";
+import { getSemesterBootstrapData, getSemesterBootstrapEntryState } from "@/lib/study/semester-bootstrap-data";
 import { historicalPriorUse } from "@/lib/study/semester-bootstrap";
 
 export const dynamic="force-dynamic";
@@ -15,6 +15,26 @@ function snapshotValue(snapshot:any,key:string){
 }
 
 export default async function SemesterBootstrapPage(){
+  const entry=await getSemesterBootstrapEntryState();
+
+  if(!entry.activeSemester){
+    return <main className="shell">
+      <header className="header">
+        <div><p className="eyebrow">Semester setup</p><h1>{entry.hasAnySemester?"No active semester":"Create your first semester"}</h1></div>
+        <Nav />
+      </header>
+      {entry.hasAnySemester ? <section className="panel bootstrap-hero blocked">
+        <div className="section-heading"><div><p className="eyebrow">Semester lifecycle</p><h2>Choose the next workspace</h2></div><span>inactive</span></div>
+        <p>Semester history exists, but none is active. Use rollover/history recovery instead of creating an unrelated first-semester workspace.</p>
+        <div className="button-row"><Link className="primary-button" href="/semester/rollover">Open semester rollover</Link><Link className="secondary-button" href="/semesters">Semester history</Link></div>
+      </section> : <section className="panel bootstrap-hero">
+        <div className="section-heading"><div><p className="eyebrow">First workspace</p><h2>Start with the real semester</h2></div><span>1 step</span></div>
+        <p>Create only the semester identity here. No example courses or old mastery will be inserted. After creation, add the real course roster and curriculum below.</p>
+        <InitialSemesterForm/>
+      </section>}
+    </main>;
+  }
+
   const data=await getSemesterBootstrapData();
   const {evaluation}=data;
   return <main className="shell">
