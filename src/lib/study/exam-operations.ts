@@ -83,7 +83,7 @@ export function examRecoveryDirective(input:{
     return {eligible:false,priorityAdjustment:0,reason:"This course's exam has started; its pre-exam preparation is frozen."};
   }
   if(input.operations.inProgress.length){
-    return {eligible:false,priorityAdjustment:0,reason:"An exam is currently in progress. P23 freezes competing exam preparation until it ends."};
+    return {eligible:false,priorityAdjustment:0,reason:"An exam is currently in progress. StudyOS freezes competing exam preparation until it ends."};
   }
   if(input.operations.recoveryLevel==="full"){
     return {eligible:false,priorityAdjustment:0,reason:"Immediate post-exam recovery shield is active for roughly four hours."};
