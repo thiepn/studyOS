@@ -56,21 +56,21 @@ export default async function ExamCommandPage(){
           <span><strong>{course.readinessIndex==null?"—":course.readinessIndex+"/100"}</strong> readiness</span>
           <span><strong>{course.band.replaceAll("_"," ")}</strong> readiness band</span>
           <span><strong>{course.trajectory}</strong> trajectory</span>
-          <span><strong>{fmt(course.nextActionMinutes)}</strong> P9 action</span>
+          <span><strong>{fmt(course.nextActionMinutes)}</strong> course action</span>
         </div>
         <p className={course.conflict==="none"?"exam-command-ok":"exam-command-warning"}>
           {course.conflictReason??(course.scheduledDate
-            ?"Current P9 action fits the protected runway on "+course.scheduledDate+"."
-            :"Current P9 action has no active conflict.")}
+            ?"Current course action fits the protected runway on "+course.scheduledDate+"."
+            :"Current course action has no active conflict.")}
         </p>
         <small>Exam date from current runway: {course.daysToExam==null?"—":addDays(data.today,course.daysToExam)} · Today priority adjustment {course.p10PriorityAdjustment>=0?"+":""}{course.p10PriorityAdjustment}{selected.has(course.courseId)?" · selected in Today":""}</small>
-        <div className="button-row"><Link className="primary-button" href={course.nextActionHref}>Open P9 action</Link></div>
+        <div className="button-row"><Link className="primary-button" href={course.nextActionHref}>Open course action</Link></div>
       </article>)}
     </section>:null}
 
     {command.active?<section className="panel exam-runway">
       <div className="section-heading">
-        <div><p className="eyebrow">Protected 7-day runway</p><h2>Current P9 action placement</h2></div>
+        <div><p className="eyebrow">Protected 7-day runway</p><h2>Current course action placement</h2></div>
         <span>preview only</span>
       </div>
       <p>This is a conflict-resolution preview, not a frozen seven-day strategy. After an action is completed, StudyOS recalculates the course action and rebuilds the runway.</p>
@@ -78,7 +78,7 @@ export default async function ExamCommandPage(){
         {command.days.map(day=><article key={day.date}>
           <div><strong>{day.date}</strong><span>{fmt(day.remainingMinutes)} free</span></div>
           <small>{fmt(day.availableMinutes)} exam-usable after protected review, commitment, and calendar reserves</small>
-          {day.items.length?<ul>{day.items.map(item=><li key={item.courseId}><strong>{command.courses.find(c=>c.courseId===item.courseId)?.shortName??item.courseId}</strong> · {item.title} · {fmt(item.minutes)}{item.heavy?" · heavy":""}</li>)}</ul>:<p>No current P9 action assigned.</p>}
+          {day.items.length?<ul>{day.items.map(item=><li key={item.courseId}><strong>{command.courses.find(c=>c.courseId===item.courseId)?.shortName??item.courseId}</strong> · {item.title} · {fmt(item.minutes)}{item.heavy?" · heavy":""}</li>)}</ul>:<p>No current course action assigned.</p>}
         </article>)}
       </div>
     </section>:null}
