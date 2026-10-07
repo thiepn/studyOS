@@ -59,8 +59,8 @@ test("retake-only semester does not require nonexistent major evidence",()=>{
 });
 
 
-test("uncertified rollover semester cannot pass P12 activation",()=>{
+test("unconfirmed semester setup cannot pass activation",()=>{
   const result=evaluateActivation(platform,{...snapshot,bootstrap_certified:false});
   assert.equal(result.preSemesterReady,false);
-  assert.ok(result.activationBlockers.some(item=>item.includes("P27")));
+  assert.ok(result.activationBlockers.some(item=>item.includes("semester setup")));
 });
