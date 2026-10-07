@@ -2,9 +2,9 @@
 
 StudyOS is the university-study operating system for the THIEPN ecosystem. It keeps source material in a dedicated Google Drive connection, structured academic state in Supabase, and daily study, retention, planning, and exam workflows in a Next.js frontend.
 
-## Current status: P29 product consolidation complete
+## Current status: P30 visual identity complete
 
-The study engine is implemented through P28. P29 consolidates that engine into a stable product surface with workflow-first navigation, normalized StudyOS naming, plain-language user interfaces, route-state handling, and a defined route responsibility model.
+The study engine is implemented through P28, P29 consolidates the product architecture, and P30 establishes the finished StudyOS visual language: an academic workspace built around paper, ink, course spines, restrained color, reading hierarchy, and focus-first study surfaces rather than generic dashboard cards.
 
 Fresh accounts now create their real first semester explicitly in **Semester Setup**. StudyOS no longer seeds a fixed WS26/27 semester or a six-course example roster; existing historical data and legacy Drive roots remain compatible.
 
@@ -617,3 +617,21 @@ P29 converts the accumulated study engine into a cleaner finished product surfac
 - version 0.27.0.
 
 See `docs/P29.md` for the route responsibility map and P29 invariants.
+
+
+## P30 visual identity
+
+P30 establishes one visual system across StudyOS without changing study authority or evidence rules.
+
+- warm paper and near-black ink replace generic white-dashboard styling;
+- compact serif display typography is reserved for page/course/question hierarchy while interface controls stay sans-serif;
+- stable course keys deterministically receive one of six muted academic spine identities;
+- Courses reads like a course binder rather than a grid of SaaS cards;
+- Course settings move behind a secondary disclosure so the academic workflow stays primary;
+- Study uses a paper-solving surface with a restrained margin rule, answer area, rubric state, and evidence controls;
+- Progress uses course ledgers and evidence bands instead of KPI-card styling;
+- Today keeps the P29 linear agenda and inherits the same typography, rules, buttons, and paper geometry;
+- mobile preserves bottom navigation while retaining the same course-spine and study-paper identity;
+- version 0.28.0.
+
+See `docs/P30.md` for the visual-system contract and invariants.
