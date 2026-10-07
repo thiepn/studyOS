@@ -419,3 +419,29 @@ body{background:var(--paper);font-family:Inter,ui-sans-serif,-apple-system,Blink
   .study-budget{font-size:1.15rem}
   .study-budget small{display:none}
 }
+
+
+.practice-modes{margin:42px 0 56px;border-top:2px solid #24241f}
+.practice-modes-heading{display:flex;justify-content:space-between;align-items:end;gap:18px;padding:14px 0 11px;border-bottom:1px solid #aaa89f}
+.practice-modes-heading h2{margin:0;font-family:Georgia,"Times New Roman",serif;font-size:1.05rem;font-weight:500}
+.practice-mode-drawer{border-bottom:1px solid #cccac1}
+.practice-mode-drawer>summary{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:16px 0;cursor:pointer;list-style:none}
+.practice-mode-drawer>summary::-webkit-details-marker{display:none}
+.practice-mode-drawer>summary>span{display:grid;gap:3px}
+.practice-mode-drawer>summary strong{font-size:.92rem}
+.practice-mode-drawer>summary small{font-size:.74rem;color:#7a776f}
+.practice-mode-drawer>summary>b{font-size:.72rem;color:#5e5b54}
+.practice-mode-list{padding:0 0 12px}
+.practice-mode-list>article,.practice-paper-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center;padding:13px 0;border-top:1px solid #e0ded6;text-decoration:none}
+.practice-mode-list>article>div,.practice-paper-row>div{display:grid;gap:3px}
+.practice-mode-list span,.practice-paper-row span{font-size:.64rem;text-transform:uppercase;letter-spacing:.09em;color:#858179;font-weight:750}
+.practice-mode-list strong,.practice-paper-row strong{font-size:.91rem}
+.practice-mode-list small,.practice-paper-row small{font-size:.74rem;color:#77736b}
+.practice-paper-row>b{font-size:.72rem;white-space:nowrap}
+.practice-shell>.review-start{margin-top:5vh;border-radius:0;border:0;border-top:2px solid #24241f;border-bottom:1px solid #bdbab1;background:transparent;padding:26px 0}
+.practice-shell>.review-start h2{font-family:Georgia,"Times New Roman",serif;font-weight:500}
+@media(max-width:620px){
+  .practice-modes-heading{display:grid;gap:3px}
+  .practice-mode-list>article,.practice-paper-row{grid-template-columns:1fr}
+  .practice-mode-list .primary-button,.practice-mode-list .secondary-button{justify-self:start}
+}
