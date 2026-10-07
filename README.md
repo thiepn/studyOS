@@ -571,3 +571,25 @@ The next phase is **P28 — Cross-Semester Transfer Validation, Prior Calibratio
 - direct writes to historical-prior rows are database-guarded: source snapshots and identity are immutable and canonicalized from archived owner data;
 - archived historical priors are read-only;
 - direct course-roster insert/delete operations invalidate bootstrap certification as a database invariant.
+
+## P28 cross-semester transfer validation and longitudinal profile
+
+StudyOS now tests historical priors against fresh-semester evidence instead of merely displaying them.
+
+- immutable P27 source snapshots are reduced to bounded positive / mixed / negative / unknown signals;
+- fresh P12 baseline classifications and independent attempts from the first 21 days provide the current-semester comparison;
+- fewer than four independent early attempts remain insufficient unless a completed baseline provides usable evidence;
+- each prior is classified as confirmed, partial, contradicted, or insufficient_evidence;
+- guided attempts never count as transfer evidence;
+- relation-level reliability is learned separately for direct_retake, prerequisite, and related priors;
+- insufficient cases are reported but excluded from reliability denominators;
+- direct-retake chains can form durable_strength, recurring_weakness, context_sensitive, emerging, or insufficient longitudinal patterns;
+- durable labels require at least two usable same-key transitions;
+- prerequisite and related priors calibrate relation usefulness but never create a same-course durable trait;
+- Progress exposes active prior validation, relation reliability, evidence confidence, and longitudinal patterns;
+- all P28 outputs remain advisory: no mastery, review schedule, weekly allocation, risk, readiness, or exam decision is mutated;
+- P28 adds no new database table or migration, avoiding a second longitudinal truth store;
+- version 0.26.0.
+
+See `docs/P28.md` for the evidence contract and guardrails.
+
