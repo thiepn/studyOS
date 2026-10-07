@@ -91,7 +91,7 @@ export default async function ExamDayPage(){
           <span><strong>{course.futureScheduledBlocks.length}</strong> future blocks</span>
         </div>
         <p>Exam: {fmtTime(course.examStartsAt,timezone)} → {fmtTime(course.examEndsAt,timezone)}</p>
-        {course.phase==="in_progress"?<p className="exam-day-note">Discretionary workflow, retention, P9 work, checkpoints, and weekly fallback work for this course are frozen.</p>:null}
+        {course.phase==="in_progress"?<p className="exam-day-note">Discretionary workflow, retention, exam-preparation work, checkpoints, and weekly fallback work for this course are frozen.</p>:null}
         {course.closureEligible&&!course.closureComplete?<>
           <p className="exam-day-note"><strong>Closure ready.</strong> The exam has ended. Closing removes obsolete StudyOS calendar blocks and releases unused weekly course minutes.</p>
           <ExamClosureButton courseId={course.courseId}/>
