@@ -19,7 +19,7 @@ export default async function SemesterBootstrapPage(){
   const {evaluation}=data;
   return <main className="shell">
     <header className="header">
-      <div><p className="eyebrow">P27 · new-semester bootstrap</p><h1>{data.semester.display_name}</h1></div>
+      <div><p className="eyebrow">Semester setup</p><h1>{data.semester.display_name}</h1></div>
       <Nav />
     </header>
 
@@ -29,7 +29,7 @@ export default async function SemesterBootstrapPage(){
         <span>{evaluation.percent}%</span>
       </div>
       <div className="bar"><i style={{width:evaluation.percent+"%"}}/></div>
-      <p>P27 creates a clean semester baseline from current sources. Archived evidence may guide diagnostics, but old mastery, study sessions, weekly debt, and planner state are never restored.</p>
+      <p>StudyOS creates a clean semester baseline from current sources. Archived evidence may guide diagnostics, but old mastery, study sessions, weekly debt, and planner state are never restored.</p>
       <div className="bootstrap-summary-grid">
         <span><strong>{evaluation.readyCourses}/{evaluation.courseCount}</strong> courses ready</span>
         <span><strong>{evaluation.driveConnected?"connected":"off"}</strong> Study Drive</span>
@@ -110,7 +110,7 @@ export default async function SemesterBootstrapPage(){
         <span><strong>Current curriculum</strong> Every course has verified source material, active skills, and active questions.</span>
         <span><strong>Retake proof</strong> Every retake has a fresh baseline diagnostic.</span>
       </div>
-      <p className="muted">Certification unlocks normal discretionary planning. It does not certify first-week execution; P12 still requires real timetable/material/attempt evidence after the semester begins.</p>
+      <p className="muted">Certification unlocks normal discretionary planning. It does not certify first-week execution; The semester still requires real timetable, material, and attempt evidence after the semester begins.</p>
     </section>
   </main>;
 }

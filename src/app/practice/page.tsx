@@ -38,7 +38,7 @@ export default async function PracticePage({ searchParams }: { searchParams: Pro
     const data=await getCalibrationPractice(course);
     return (
       <main className="shell practice-shell">
-        <header className="header"><div><p className="eyebrow">P13 · adaptive calibration</p><h1>{data.course?.displayName ?? "Calibration"}</h1></div><Nav /></header>
+        <header className="header"><div><p className="eyebrow">Adaptive calibration</p><h1>{data.course?.displayName ?? "Calibration"}</h1></div><Nav /></header>
         {data.profile ? <section className="panel calibration-session-context">
           <div><p className="eyebrow">{data.profile.status}</p><h2>{data.profile.independentAttempts} independent attempts · {data.profile.distinctSkills} skills sampled</h2></div>
           <p>{data.profile.recommendation}</p>
@@ -59,7 +59,7 @@ export default async function PracticePage({ searchParams }: { searchParams: Pro
     const data=await getCalibrationPractice(course);
     return (
       <main className="shell practice-shell">
-        <header className="header"><div><p className="eyebrow">P14 → P15 · drift repair</p><h1>{data.course?.displayName ?? "Drift repair"}</h1></div><Nav /></header>
+        <header className="header"><div><p className="eyebrow">Drift repair</p><h1>{data.course?.displayName ?? "Drift repair"}</h1></div><Nav /></header>
         {data.profile ? <section className="panel calibration-session-context">
           <div><p className="eyebrow">bounded intervention</p><h2>{data.profile.status} calibration · {data.profile.independentAttempts} independent attempts</h2></div>
           <p>{data.profile.recommendation}</p>
@@ -69,8 +69,8 @@ export default async function PracticePage({ searchParams }: { searchParams: Pro
           plannedMinutes={Math.max(1,data.queueMinutes)}
           sessionType="relearning"
           courseId={data.course?.courseId}
-          eyebrow="P14 targeted drift repair"
-          intro="This is a bounded correction inside your existing daily capacity. Work independently and closed-book. P15 will judge the intervention only from later independent evidence, not from performance inside this repair session itself."
+          eyebrow="Targeted drift repair"
+          intro="This is a bounded correction inside your existing daily capacity. Work independently and closed-book. StudyOS will judge the intervention only from later independent evidence, not from performance inside this repair session itself."
           completionNote="P14 drift repair intervention"
         />
       </main>
@@ -81,7 +81,7 @@ export default async function PracticePage({ searchParams }: { searchParams: Pro
     const data=await getStrategyPractice(course,strategy);
     return (
       <main className="shell practice-shell">
-        <header className="header"><div><p className="eyebrow">P16 · controlled method experiment</p><h1>{data.course?.displayName ?? "Strategy experiment"}</h1></div><Nav /></header>
+        <header className="header"><div><p className="eyebrow">Method experiment</p><h1>{data.course?.displayName ?? "Strategy experiment"}</h1></div><Nav /></header>
         {data.strategy ? <section className="panel strategy-session-context">
           <div><p className="eyebrow">{data.strategy.title}</p><h2>{data.strategy.purpose}</h2></div>
           <p>{data.strategy.instructions}</p>
@@ -96,8 +96,8 @@ export default async function PracticePage({ searchParams }: { searchParams: Pro
           plannedMinutes={Math.max(1,data.queueMinutes||data.strategy.budgetMinutes)}
           sessionType="relearning"
           courseId={data.course?.courseId}
-          eyebrow={"P16 · "+data.strategy.title}
-          intro={data.strategy.instructions+" This session tests the method; its own score will not count as proof that the method works. P16 will judge later independent transfer."}
+          eyebrow={"Method · "+data.strategy.title}
+          intro={data.strategy.instructions+" This session tests the method; its own score will not count as proof that the method works. StudyOS will judge later independent transfer."}
           completionNote={data.completionNote ?? undefined}
         /> : null}
       </main>
@@ -107,32 +107,33 @@ export default async function PracticePage({ searchParams }: { searchParams: Pro
   const [data,papers,calibration] = await Promise.all([getTodayData(),getAvailableExamPapers(),getSemesterCalibration()]);
   return (
     <main className="shell practice-shell">
-      <header className="header"><div><p className="eyebrow">Retrieval engine</p><h1>Practice</h1></div><Nav /></header>
+      <header className="header"><div><p className="eyebrow">Study</p><h1>Practice</h1></div><Nav /></header>
 
-      <section className="panel calibration-overview">
-        <div className="section-heading"><div><p className="eyebrow">P13 · first-week calibration</p><h2>Build a trustworthy starting profile</h2></div><span>{calibration.filter((c)=>!c.profile.needsCalibration).length}/{calibration.length}</span></div>
-        <p className="muted">Calibration uses independent attempts, confidence, timing, evidence dimensions, and error diagnoses. Before the sample is usable, StudyOS keeps practice broad instead of overfitting to a few early results.</p>
-        <div className="calibration-card-grid">
-          {calibration.map((item)=><article className="calibration-card" key={item.courseId}>
-            <div className="calibration-card-head"><div><strong>{item.shortName ?? item.displayName}</strong><span>{item.profile.status}</span></div><b>{item.profile.independentAttempts}/12</b></div>
-            <div className="calibration-metrics">
-              <span><strong>{metric(item.profile.accuracyPercent,"%")}</strong> accuracy</span>
-              <span><strong>{metric(item.profile.confidenceGap,"%")}</strong> confidence gap</span>
-              <span><strong>{item.profile.paceRatio==null?"—":item.profile.paceRatio.toFixed(2)+"×"}</strong> pace</span>
-              <span><strong>{item.profile.distinctSkills}/4</strong> skills</span>
-            </div>
-            <p>{item.profile.recommendation}</p>
-            <Link className={item.profile.needsCalibration?"primary-button":"secondary-button"} href={"/practice?mode=calibration&course="+item.courseId}>{item.profile.needsCalibration?"Run calibration set":"Run adaptive set"}</Link>
-          </article>)}
-        </div>
-      </section>
-
-      {papers.length ? <section className="panel practice-exams">
-        <div className="section-heading"><div><p className="eyebrow">Exam simulation</p><h2>Timed Altklausuren</h2></div><span>{papers.length}</span></div>
-        <p className="muted">Use real mapped papers for closed-book, full-duration evidence. Verified/official solutions can feed exam mastery; provisional self-grading cannot.</p>
-        <div className="practice-exam-list">{papers.map((paper)=><Link className="practice-exam-link" href={"/practice/exam/"+paper.exam_id} key={paper.exam_id}><div><strong>{paper.title}</strong><span>{paper.course.short_name ?? paper.course.display_name} · {paper.year_label ?? "year ?"} · {paper.duration_minutes ?? "?"} min</span></div><b>{paper.total_points ?? paper.question_points} pts</b></Link>)}</div>
-      </section> : null}
       <ReviewSession queue={data.queue} plannedMinutes={Math.max(1, data.queueMinutes)} />
+
+      <section className="practice-modes" aria-label="Other study modes">
+        <div className="practice-modes-heading"><span className="section-kicker">Other modes</span><h2>Use these when the evidence calls for them.</h2></div>
+
+        <details className="practice-mode-drawer">
+          <summary><span><strong>Calibration sets</strong><small>Build or refresh a trustworthy course baseline</small></span><b>{calibration.filter((item)=>item.profile.needsCalibration).length} due</b></summary>
+          <div className="practice-mode-list">
+            {calibration.map((item)=><article key={item.courseId}>
+              <div><span>{item.shortName ?? item.displayName}</span><strong>{item.profile.status}</strong><small>{item.profile.independentAttempts}/12 independent · {metric(item.profile.accuracyPercent,"%")} accuracy · {item.profile.distinctSkills}/4 skills</small></div>
+              <Link className={item.profile.needsCalibration?"primary-button":"secondary-button"} href={"/practice?mode=calibration&course="+item.courseId}>{item.profile.needsCalibration?"Calibrate":"Adaptive set"}</Link>
+            </article>)}
+          </div>
+        </details>
+
+        {papers.length ? <details className="practice-mode-drawer">
+          <summary><span><strong>Timed past exams</strong><small>Full-duration, closed-book exam evidence</small></span><b>{papers.length} available</b></summary>
+          <div className="practice-mode-list">
+            {papers.map((paper)=><Link className="practice-paper-row" href={"/practice/exam/"+paper.exam_id} key={paper.exam_id}>
+              <div><span>{paper.course.short_name ?? paper.course.display_name}</span><strong>{paper.title}</strong><small>{paper.year_label ?? "year ?"} · {paper.duration_minutes ?? "?"} min · {paper.total_points ?? paper.question_points} pts</small></div>
+              <b>Start →</b>
+            </Link>)}
+          </div>
+        </details> : null}
+      </section>
     </main>
   );
 }

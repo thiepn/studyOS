@@ -3,36 +3,36 @@ import { Nav } from "@/components/nav";
 import { DailyPlan } from "@/components/daily-plan";
 import { CapacityControls } from "@/components/capacity-controls";
 import { CommitmentsPanel } from "@/components/commitments-panel";
+import { CalendarAutopilotPanel } from "@/components/calendar-autopilot-panel";
 import { getDailyOrchestration } from "@/lib/study/planning";
 import { getCalendarAutopilot } from "@/lib/study/calendar-autopilot";
-import { CalendarAutopilotPanel } from "@/components/calendar-autopilot-panel";
-import { topRiskDrivers } from "@/lib/study/pulse";
 import type { PlanningMode } from "@/lib/study/planner";
 
 export const dynamic = "force-dynamic";
+
+function dayLabel(date:string){
+  return new Date(date+"T12:00:00Z").toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"});
+}
 
 export default async function TodayPage() {
   const orchestration=await getDailyOrchestration();
   const calendar=await getCalendarAutopilot(orchestration);
   const {today:data,pulse,capacity,plan,commitments,courses,settings}=orchestration;
-  const topRisk=pulse.risks[0] ?? null;
+
+  const topRisk=pulse.risks[0]??null;
   const checkpoint=pulse.checkpoint;
-  const examCourses=pulse.risks.filter((course)=>course.operating_mode==="exam"||course.operating_mode==="transition");
-  const activeDrift=[...orchestration.drift.courses]
-    .filter((course)=>["watch","drifting","critical"].includes(course.profile.band))
-    .sort((a,b)=>b.profile.score-a.profile.score);
-  const topDrift=activeDrift[0]??null;
-  const interventionConcern=[...orchestration.learningAnalytics.courses]
-    .filter((course)=>course.analytics.difficultySignal==="structural"||course.analytics.difficultySignal==="persistent")
-    .sort((a,b)=>Number(b.analytics.difficultySignal==="structural")-Number(a.analytics.difficultySignal==="structural"))[0]??null;
-  const topForecast=[...orchestration.forecast.courses].sort((a,b)=>b.decisionPriority-a.decisionPriority)[0]??null;
   const examCommand=orchestration.examCommand;
   const examOperations=orchestration.examOperations;
-  const examOutcomeState=orchestration.examOutcomeState;
-  const topExamCommand=examCommand.courses[0]??null;
-  const pendingRetake=examOutcomeState.pendingRetakes[0]??null;
-  const resultReady=examOutcomeState.ready[0]??null;
+  const pendingRetake=orchestration.examOutcomeState.pendingRetakes[0]??null;
+  const resultReady=orchestration.examOutcomeState.ready[0]??null;
   const weekRuntime=orchestration.weekRuntime;
+  const topDrift=[...orchestration.drift.courses]
+    .filter(course=>["watch","drifting","critical"].includes(course.profile.band))
+    .sort((a,b)=>b.profile.score-a.profile.score)[0]??null;
+  const structuralConcern=[...orchestration.learningAnalytics.courses]
+    .filter(course=>course.analytics.difficultySignal==="structural"||course.analytics.difficultySignal==="persistent")
+    .sort((a,b)=>Number(b.analytics.difficultySignal==="structural")-Number(a.analytics.difficultySignal==="structural"))[0]??null;
+
   const pendingPostExam=examOperations.courses.find(course=>
     course.phase==="post_exam"&&
     (weekRuntime?.progress.courses.find(row=>row.courseId===course.courseId)?.remainingMinutes??0)>0
@@ -42,207 +42,104 @@ export default async function TodayPage() {
     ??examOperations.courses.find(course=>course.phase==="final_window")
     ??pendingPostExam
     ??null;
+
   const weekConcern=weekRuntime?.progress.courses
     .filter(course=>course.remainingMinutes>0)
     .sort((a,b)=>{
       const rank=(value:string)=>value==="behind"||value==="not_started"?3:value==="on_track"?2:value==="ahead"?1:0;
       return rank(b.paceStatus)-rank(a.paceStatus)||b.remainingMinutes-a.remainingMinutes;
     })[0]??null;
+
   const configured=String(settings?.default_mode??"normal");
   const defaultMode=(configured==="light"||configured==="recovery"||configured==="intensive"?configured:"normal") as Exclude<PlanningMode,"custom">;
+  const attention=structuralConcern
+    ? {title:structuralConcern.shortName??structuralConcern.displayName,body:structuralConcern.analytics.recommendation,href:"/strategy?course="+structuralConcern.courseId,label:"Adjust study method"}
+    : topDrift
+      ? {title:topDrift.shortName??topDrift.displayName,body:topDrift.profile.recommendation,href:"/progress#course-"+topDrift.courseId,label:"See evidence"}
+      : topRisk&&Number(topRisk.risk_score)>0
+        ? {title:topRisk.short_name??topRisk.display_name,body:"This course currently has the highest study pressure.",href:"/progress#course-"+topRisk.course_id,label:"See why"}
+        : null;
 
   return (
-    <main className="shell">
-      <header className="header">
-        <div><p className="eyebrow">WS26/27 · Week {Math.max(0,orchestration.currentWeek)}</p><h1>Today</h1></div>
+    <main className="shell today-shell">
+      <header className="header workflow-header">
+        <div className="page-identity">
+          <span className="product-mark">StudyOS</span>
+          <div><h1>Today</h1><p>{dayLabel(capacity.local_today)} · Week {Math.max(0,orchestration.currentWeek)}</p></div>
+        </div>
         <Nav />
       </header>
 
-      <section className="hero panel autopilot-hero">
-        <div><span className="metric">{plan.usedMinutes}</span><span className="metric-unit"> / {plan.budgetMinutes} min planned</span></div>
-        <p>{capacity.mode.replace("_"," ")} mode · {data.queueMinutes} min retention · {plan.deferred.length} item{plan.deferred.length===1?"":"s"} deferred by capacity.</p>
-        <div className="hero-actions">{plan.selected[0]
-          ? plan.selected[0].href.startsWith("http")
-            ? <a className="primary-button" href={plan.selected[0].href} target="_blank" rel="noreferrer">Start next task</a>
-            : <Link className="primary-button" href={plan.selected[0].href}>Start next task</Link>
-          : <Link className="secondary-button" href="/courses">Review courses</Link>}
-        </div>
+      <section className="day-status" aria-label="Today at a glance">
+        <div><span>Planned</span><strong>{plan.usedMinutes} / {plan.budgetMinutes} min</strong></div>
+        <div><span>Mode</span><strong>{capacity.mode.replace("_"," ")}</strong></div>
+        <div><span>Review</span><strong>{data.queueMinutes} min due</strong></div>
+        <div><span>Week</span><strong>{weekRuntime?weekRuntime.progress.completionPercent+"% complete":"not committed"}</strong></div>
       </section>
 
-      {!orchestration.bootstrapCertified ? <section className="panel bootstrap-today-warning">
-        <div className="section-heading"><div><p className="eyebrow">P27 · semester bootstrap</p><h2>Discretionary planning is paused</h2></div><span>setup required</span></div>
-        <p>The active semester has not been bootstrap-certified. Real commitments remain visible, but StudyOS will not generate normal course/review work from an unanchored curriculum.</p>
-        <div className="button-row"><Link className="primary-button" href="/semester/bootstrap">Finish semester bootstrap</Link></div>
+      {!orchestration.bootstrapCertified ? <section className="workflow-notice workflow-notice-required">
+        <div><span className="notice-label">Setup required</span><strong>Finish the semester setup before StudyOS schedules normal course work.</strong><p>Your real deadlines remain visible; generated discretionary study work stays paused until the curriculum is anchored.</p></div>
+        <Link className="primary-button" href="/semester/bootstrap">Finish setup</Link>
       </section> : null}
 
-      <DailyPlan plan={plan} />
-
-      {pendingRetake||resultReady ? <section className={"panel exam-result-today "+(pendingRetake?"retake-pending":"result-ready")}>
-        <div className="exam-result-today-head">
-          <div><p className="eyebrow">P24 · exam outcome</p><h2>{pendingRetake
-            ? (pendingRetake.shortName??pendingRetake.displayName)+" · retake decision pending"
-            : (resultReady?.shortName??resultReady?.displayName)+" · result ready"}</h2></div>
-          <span>{pendingRetake?"decision":"intake"}</span>
-        </div>
-        <p>{pendingRetake
-          ?"Discretionary planning for this course is paused until the retake decision is resolved."
-          :"The configured exam has ended and no official outcome is recorded yet."}</p>
-        <div className="button-row"><Link className="secondary-button" href="/exam-results">{pendingRetake?"Resolve retake":"Record result"}</Link></div>
+      {pendingRetake||resultReady ? <section className="workflow-notice">
+        <div><span className="notice-label">Exam result</span><strong>{pendingRetake
+          ? (pendingRetake.shortName??pendingRetake.displayName)+" needs a retake decision."
+          : (resultReady?.shortName??resultReady?.displayName)+" is ready for its official result."}</strong>
+        <p>{pendingRetake?"Study planning for this course is paused until you decide what happens next.":"Record the result so the semester state can close correctly."}</p></div>
+        <Link className="secondary-button" href="/exam-results">{pendingRetake?"Resolve":"Record result"}</Link>
       </section> : null}
 
-      {activeExamBoundary ? <section className={"panel exam-day-today phase-"+activeExamBoundary.phase}>
-        <div className="exam-day-today-head">
-          <div><p className="eyebrow">P23 · exam-day operations</p><h2>{activeExamBoundary.shortName??activeExamBoundary.displayName} · {activeExamBoundary.phase.replaceAll("_"," ")}</h2></div>
-          <span>{examOperations.recoveryLevel==="none"?"boundary":examOperations.recoveryLevel+" recovery"}</span>
-        </div>
-        <p>{activeExamBoundary.phase==="in_progress"
-          ?"Exam in progress. Discretionary preparation is frozen until the scheduled end."
-          :examOperations.recoveryLevel==="full"
-            ?"Immediate post-exam recovery is active; competing exam-strategy work is withheld."
-            :examOperations.recoveryLevel==="light"
-              ?"Light recovery is active; heavy exam work remains deferred."
+      {activeExamBoundary ? <section className="workflow-notice workflow-notice-exam">
+        <div><span className="notice-label">Exam mode</span><strong>{activeExamBoundary.shortName??activeExamBoundary.displayName} · {activeExamBoundary.phase.replaceAll("_"," ")}</strong>
+          <p>{activeExamBoundary.phase==="in_progress"
+            ?"The exam is in progress. Other preparation for this course is frozen."
+            :examOperations.recoveryLevel==="full"
+              ?"Post-exam recovery is active; heavy study work is held back."
               :activeExamBoundary.phase==="post_exam"
-                ?"Pre-exam work is obsolete; close the exam to release any remaining weekly envelope."
-                :"Final exam window is active."}</p>
-        <div className="button-row"><Link className="secondary-button" href="/exam-day">Open exam-day operations</Link></div>
+                ?"Close the finished exam to release the remaining weekly allocation."
+                :"The final exam window is active."}</p>
+        </div>
+        <Link className="secondary-button" href="/exam-day">Open exam view</Link>
       </section> : null}
 
-      {examCommand.active ? <section className={"panel exam-command-today level-"+examCommand.level}>
-        <div className="exam-command-today-head">
-          <div><p className="eyebrow">P22 · exam command</p><h2>{examCommand.activeExamCount} active exam{examCommand.activeExamCount===1?"":"s"} · {examCommand.level.replaceAll("_"," ")}</h2></div>
-          <span>{examCommand.urgentExamCount} urgent</span>
+      <DailyPlan plan={plan}/>
+
+      <section className="after-plan">
+        <div className="after-plan-heading"><span className="section-kicker">Keep an eye on</span><h2>Only what can change the plan.</h2></div>
+        <div className="signal-list">
+          {weekRuntime ? <Link href="/week" className={"signal-row "+(weekConcern?"signal-"+weekConcern.paceStatus:"")}>
+            <div><span>This week</span><strong>{weekRuntime.progress.totalCompletedMinutes} / {weekRuntime.progress.totalTargetMinutes} course min</strong></div>
+            <p>{weekConcern
+              ? (weekConcern.shortName??weekConcern.displayName)+" has "+weekConcern.remainingMinutes+" min left and is "+weekConcern.paceStatus.replace("_"," ")+"."
+              :"All committed course time is complete."}</p><b>Open week →</b>
+          </Link> : <Link href="/week" className="signal-row"><div><span>This week</span><strong>No weekly plan committed</strong></div><p>Choose a feasible weekly allocation before the week drifts.</p><b>Plan week →</b></Link>}
+
+          {checkpoint?.due ? <Link href="/practice?mode=checkpoint" className="signal-row">
+            <div><span>Checkpoint</span><strong>{checkpoint.short_name??checkpoint.display_name}</strong></div>
+            <p>{checkpoint.eligible_skills} skills are eligible for this cumulative retrieval check.</p><b>Run checkpoint →</b>
+          </Link> : null}
+
+          {examCommand.active ? <Link href="/exam-command" className="signal-row">
+            <div><span>Exam runway</span><strong>{examCommand.activeExamCount} active exam{examCommand.activeExamCount===1?"":"s"}</strong></div>
+            <p>{examCommand.urgentExamCount?examCommand.urgentExamCount+" urgent. "+examCommand.summary:examCommand.summary}</p><b>Open exam plan →</b>
+          </Link> : null}
+
+          {attention ? <Link href={attention.href} className="signal-row signal-attention">
+            <div><span>Needs attention</span><strong>{attention.title}</strong></div><p>{attention.body}</p><b>{attention.label} →</b>
+          </Link> : null}
         </div>
-        <p>{topExamCommand
-          ? (topExamCommand.shortName??topExamCommand.displayName)+" ranks first · "+topExamCommand.daysToExam+"d · "+topExamCommand.nextActionTitle+"."
-          : examCommand.summary}</p>
-        {topExamCommand?.conflictReason?<p className="exam-command-warning">{topExamCommand.conflictReason}</p>:null}
-        <div className="button-row"><Link className="secondary-button" href="/exam-command">Open exam command center</Link></div>
-      </section> : null}
-
-      {weekRuntime ? <section className={"panel week-today "+(weekConcern?"pace-"+weekConcern.paceStatus:"pace-met")}>
-        <div className="week-today-head">
-          <div><p className="eyebrow">P19 · weekly commitment</p><h2>{weekRuntime.progress.totalCompletedMinutes} / {weekRuntime.progress.totalTargetMinutes} course min</h2></div>
-          <span>{weekRuntime.daysRemaining}d left</span>
-        </div>
-        <div className="bar"><i style={{width:weekRuntime.progress.completionPercent+"%"}}/></div>
-        <p>{weekConcern
-          ? (weekConcern.shortName??weekConcern.displayName)+" · "+weekConcern.remainingMinutes+" min remaining · "+weekConcern.paceStatus.replace("_"," ")+" pace."
-          : "All committed course envelopes are complete."}</p>
-        <div className="button-row"><Link className="secondary-button" href="/week">Open weekly plan</Link></div>
-      </section> : <section className="panel week-today">
-        <div><p className="eyebrow">P19 · weekly commitment</p><h2>No committed week yet</h2></div>
-        <p>P18 scenarios are still exploratory until one is committed for the remainder of this week.</p>
-        <div className="button-row"><Link className="secondary-button" href="/week">Commit this week</Link></div>
-      </section>}
-
-      {topForecast ? <section className={"panel semester-decision forecast-band-"+topForecast.band}>
-        <div className="semester-decision-head">
-          <div><p className="eyebrow">P17 · semester decision</p><h2>{topForecast.shortName??topForecast.displayName}</h2></div>
-          <span>{topForecast.decisionPriority}/100 priority</span>
-        </div>
-        <p><strong>{topForecast.nextAction.title}</strong> — {topForecast.nextAction.reason}</p>
-        <div className="semester-decision-metrics">
-          <span><strong>{topForecast.readinessIndex==null?"—":topForecast.readinessIndex+"/100"}</strong> readiness</span>
-          <span><strong>{topForecast.confidence.replace("_"," ")}</strong> confidence</span>
-          <span><strong>{topForecast.trajectory}</strong> trajectory</span>
-          <span><strong>{topForecast.nextAction.expectedValue}/100</strong> action value</span>
-        </div>
-        <div className="button-row"><Link className="primary-button" href={topForecast.nextAction.href}>Open action</Link><Link className="secondary-button" href="/outlook">View semester outlook</Link></div>
-        <small>P17 ranks strategic value; the daily plan above remains the capacity authority.</small>
-      </section> : null}
-
-      {topDrift ? <section className={"panel drift-correction drift-"+topDrift.profile.band}>
-        <div className="drift-correction-head">
-          <div><p className="eyebrow">P14 · automatic plan correction</p><h2>{topDrift.shortName ?? topDrift.displayName}</h2></div>
-          <span>{topDrift.profile.band.replace("_"," ")} · {topDrift.profile.score}/100</span>
-        </div>
-        <p>{topDrift.profile.recommendation}</p>
-        <div className="drift-correction-metrics">
-          <span><strong>{topDrift.profile.workloadFeedback.replace("_"," ")}</strong> workload signal</span>
-          <span><strong>{topDrift.profile.accuracyDelta==null?"—":(topDrift.profile.accuracyDelta>0?"+":"")+topDrift.profile.accuracyDelta+" pp"}</strong> accuracy change</span>
-          <span><strong>{topDrift.profile.recentPracticeMinutes} / {topDrift.profile.priorPracticeMinutes} min</strong> recent / prior practice</span>
-          <span><strong>+{topDrift.profile.priorityBoost}</strong> allocation priority</span>
-        </div>
-        <small>StudyOS is reallocating the existing daily capacity only. The {plan.budgetMinutes}-minute budget has not been increased.</small>
-      </section> : null}
-
-      {interventionConcern ? <section className={"panel intervention-alert difficulty-"+interventionConcern.analytics.difficultySignal}>
-        <div><p className="eyebrow">P15 · intervention validation</p><h2>{interventionConcern.shortName ?? interventionConcern.displayName}</h2></div>
-        <p>{interventionConcern.analytics.recommendation}</p>
-        <div className="button-row"><Link className="primary-button" href={"/strategy?course="+interventionConcern.courseId}>Change strategy</Link><Link className="secondary-button" href={"/progress#course-"+interventionConcern.courseId}>Review evidence</Link></div>
-      </section> : null}
-
-      <CalendarAutopilotPanel data={calendar} />
-      <CapacityControls capacity={capacity} defaultMode={defaultMode} />
-
-      <section className="pulse-grid">
-        <article className="panel pulse-card">
-          <p className="eyebrow">Cumulative checkpoint</p>
-          {checkpoint ? <>
-            <div className="pulse-title"><h2>{checkpoint.display_name}</h2><span>Week {checkpoint.target_week_no}</span></div>
-            <p>{checkpoint.current_week_no < 1
-              ? "First rotation begins with " + (checkpoint.short_name ?? checkpoint.display_name) + " when the semester starts."
-              : checkpoint.completed
-                ? "This week’s rotating cumulative checkpoint is complete."
-                : checkpoint.eligible_skills
-                  ? checkpoint.eligible_skills + " skills are eligible · up to " + checkpoint.budget_minutes + " minutes."
-                  : "No verified questions are available for this checkpoint yet."}</p>
-            {checkpoint.due ? <Link className="secondary-button" href="/practice?mode=checkpoint">Open checkpoint</Link> : null}
-          </> : <p className="muted">Checkpoint rotation will appear after semester initialization.</p>}
-        </article>
-
-        <article className="panel pulse-card">
-          <p className="eyebrow">Course risk</p>
-          {topRisk ? <>
-            <div className="pulse-title"><h2>{topRisk.display_name}</h2><span className={"risk-badge risk-" + topRisk.risk_band}>{topRisk.risk_band.replace("_"," ")}</span></div>
-            <div className="risk-score">{Math.round(Number(topRisk.risk_score))}<small>/100</small></div>
-            <p>{topRisk.risk_score > 0
-              ? "Main pressure: " + (topRiskDrivers(topRisk).map((item)=>item.label).join(" + ") || "early-semester setup") + "."
-              : "No risk signal yet; this will become meaningful after real course material and attempts arrive."}</p>
-            <Link className="secondary-button" href="/progress">Explain risk</Link>
-          </> : <p className="muted">No course-risk data yet.</p>}
-        </article>
-
-        <article className="panel pulse-card">
-          <p className="eyebrow">Exam transition</p>
-          {examCourses.length ? <>
-            <h2>{examCourses.length} course{examCourses.length===1?"":"s"} changing mode</h2>
-            <div className="mode-list">{examCourses.map((course)=><div key={course.course_id}><strong>{course.short_name ?? course.display_name}</strong><span>{course.operating_mode} · {course.days_to_exam}d</span></div>)}</div>
-          </> : <><h2>Semester mode</h2><p>No configured exam is inside the transition window. Current coursework and retention remain dominant.</p></>}
-        </article>
       </section>
 
-      <CommitmentsPanel commitments={commitments} courses={courses} />
+      <details className="today-drawer">
+        <summary><span><strong>Schedule & deadlines</strong><small>Calendar placement, commitments, and due dates</small></span><b>Open</b></summary>
+        <div className="today-drawer-body"><CalendarAutopilotPanel data={calendar}/><CommitmentsPanel commitments={commitments} courses={courses}/></div>
+      </details>
 
-      <section className="grid today-lower-grid">
-        <div className="panel">
-          <h2>Review queue</h2>
-          <p className="muted">{data.dueSkillCount} skills due · today&apos;s review cap is {data.dailyBudgetMinutes} minutes.</p>
-          {data.queue.length ? (
-            <ol className="queue">
-              {data.queue.map((item) => (
-                <li key={item.question.id}>
-                  <div><strong>{item.skillTitle}</strong><span>{item.targetDimension} · {Math.ceil(Number(item.question.expected_minutes))} min</span></div>
-                  <p>{item.question.prompt}</p>
-                </li>
-              ))}
-            </ol>
-          ) : <p className="muted">No due question is available yet. Register course material under Resources to populate the study map.</p>}
-        </div>
-
-        <div className="panel">
-          <h2>Courses</h2>
-          <div className="course-list">
-            {data.courses.map((course) => (
-              <article key={course.course_id ?? course.stable_key ?? course.display_name}>
-                <div><strong>{course.display_name}</strong><span>Week {course.latest_week_no ?? 0}</span></div>
-                <div className="bar"><i style={{ width: String(course.durable_mastery_percent ?? 0) + "%" }} /></div>
-                <small>{course.coverage_percent ?? 0}% coverage · {course.durable_mastery_percent ?? 0}% durable</small>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
+      <details className="today-drawer">
+        <summary><span><strong>Adjust today</strong><small>Change capacity only when the day itself changed</small></span><b>Open</b></summary>
+        <div className="today-drawer-body"><CapacityControls capacity={capacity} defaultMode={defaultMode}/></div>
+      </details>
     </main>
   );
 }
