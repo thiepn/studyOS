@@ -25,7 +25,7 @@ export default async function SemesterBootstrapPage(){
 
     <section className={"panel bootstrap-hero "+(evaluation.ready?"ready":"blocked")}>
       <div className="section-heading">
-        <div><p className="eyebrow">Operational baseline</p><h2>{evaluation.certified?"Certified":evaluation.ready?"Ready to certify":"Bootstrap incomplete"}</h2></div>
+        <div><p className="eyebrow">Semester readiness</p><h2>{evaluation.certified?"Setup confirmed":evaluation.ready?"Ready to confirm":"Setup incomplete"}</h2></div>
         <span>{evaluation.percent}%</span>
       </div>
       <div className="bar"><i style={{width:evaluation.percent+"%"}}/></div>
@@ -34,7 +34,7 @@ export default async function SemesterBootstrapPage(){
         <span><strong>{evaluation.readyCourses}/{evaluation.courseCount}</strong> courses ready</span>
         <span><strong>{evaluation.driveConnected?"connected":"off"}</strong> Study Drive</span>
         <span><strong>{evaluation.driveTreeReady?"ready":"pending"}</strong> Drive tree</span>
-        <span><strong>{data.priors.length}</strong> historical priors</span>
+        <span><strong>{data.priors.length}</strong> previous-course links</span>
       </div>
       {evaluation.blockers.length?<ul className="bootstrap-blockers">{evaluation.blockers.map(item=><li key={item}>{item}</li>)}</ul>:null}
       <BootstrapActionButtons ready={evaluation.ready} certified={evaluation.certified} driveConnected={evaluation.driveConnected}/>
@@ -76,7 +76,7 @@ export default async function SemesterBootstrapPage(){
 
     <section className="panel bootstrap-priors">
       <div className="section-heading">
-        <div><p className="eyebrow">Historical prior transfer</p><h2>Use history without restoring mastery</h2></div>
+        <div><p className="eyebrow">Previous-semester context</p><h2>Use history without restoring mastery</h2></div>
         <span>{data.priors.length}</span>
       </div>
       <p>Attach an archived course only when it genuinely informs this course. The prior changes what StudyOS suggests you diagnose first; it never marks a current skill retained, stable, or exam-ready.</p>
@@ -92,18 +92,18 @@ export default async function SemesterBootstrapPage(){
           <div className="bootstrap-prior-metrics">
             <span><strong>{snapshotValue(snapshot,"official_attempts")}</strong> official attempts</span>
             <span><strong>{pretty(snapshotValue(snapshot,"latest_outcome"))}</strong> latest outcome</span>
-            <span><strong>{snapshotValue(snapshot,"latest_readiness_index")}</strong> prior P17</span>
+            <span><strong>{snapshotValue(snapshot,"latest_readiness_index")}</strong> prior readiness</span>
             <span><strong>{snapshotValue(snapshot,"unresolved_findings")}</strong> unresolved findings</span>
           </div>
           {prior.note?<p className="muted">{prior.note}</p>:null}
           <RemovePriorButton priorId={String(prior.id)}/>
         </article>;
-      })}</div>:<p className="muted">No optional historical priors are attached. Direct carried retakes are attached automatically when a matching archived course exists.</p>}
+      })}</div>:<p className="muted">No optional previous-semester context is attached. Direct carried retakes are attached automatically when a matching archived course exists.</p>}
     </section>
 
     <section className="panel bootstrap-contract">
       <p className="eyebrow">Certification contract</p>
-      <h2>What “bootstrap certified” means</h2>
+      <h2>What “semester ready” means</h2>
       <div className="bootstrap-contract-grid">
         <span><strong>Real roster</strong> At least one current-semester course exists.</span>
         <span><strong>Fresh Drive tree</strong> Every active course has a folder in this semester.</span>
