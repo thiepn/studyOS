@@ -6,6 +6,8 @@ StudyOS is the university-study operating system for the THIEPN ecosystem. It ke
 
 The study engine is implemented through P28. P29 consolidates that engine into a stable product surface with workflow-first navigation, normalized StudyOS naming, plain-language user interfaces, route-state handling, and a defined route responsibility model.
 
+Fresh accounts now create their real first semester explicitly in **Semester Setup**. StudyOS no longer seeds a fixed WS26/27 semester or a six-course example roster; existing historical data and legacy Drive roots remain compatible.
+
 The foundation includes:
 
 - Next.js 16 App Router + Supabase SSR authentication
@@ -86,6 +88,10 @@ npm run dev
 
 Canonical repository: `thiepn/studyOS`.
 
+
+## Historical implementation log
+
+The phase sections below document how the current engine was built. They are implementation history, not current user-facing terminology or fixed-semester requirements.
 
 ## P5 weekly operating rule
 
