@@ -22,12 +22,12 @@ export function reconcileExamOutcome(input:{
   const readiness=input.snapshot.readinessIndex;
   const weakEvidence=readiness==null||input.snapshot.readinessBand==="insufficient_evidence"||input.snapshot.confidence==="very_low";
   if(weakEvidence){
-    return {alignment:"insufficient_evidence",summary:"The pre-exam P17 evidence was too limited for a meaningful directional comparison."};
+    return {alignment:"insufficient_evidence",summary:"The pre-exam readiness evidence was too limited for a meaningful directional comparison."};
   }
 
   if(input.outcome==="passed"){
     if(readiness<65){
-      return {alignment:"positive_surprise",summary:"The course passed despite a fragile/at-risk readiness signal. This is a positive directional surprise, not evidence that P17 predicted a grade incorrectly."};
+      return {alignment:"positive_surprise",summary:"The course passed despite a fragile/at-risk readiness signal. This is a positive directional surprise, not evidence that readiness predicted a grade incorrectly."};
     }
     return {alignment:"aligned",summary:"The passing outcome is directionally consistent with the pre-exam readiness evidence."};
   }
