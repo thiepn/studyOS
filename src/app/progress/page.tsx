@@ -27,7 +27,7 @@ export default async function ProgressPage(){
     <section className="panel intervention-summary">
       <div className="section-heading"><div><p className="eyebrow">Intervention validation</p><h2>Are corrections actually working?</h2></div><span>{learning.summary.effectivenessRate==null?"—":learning.summary.effectivenessRate+"%"}</span></div>
       <div className="intervention-summary-grid">
-        <div><strong>{learning.summary.totalInterventions}</strong><span>completed P14 repairs</span></div>
+        <div><strong>{learning.summary.totalInterventions}</strong><span>completed targeted repairs</span></div>
         <div><strong>{learning.summary.evaluatedInterventions}</strong><span>with enough follow-up</span></div>
         <div><strong>{learning.summary.effectiveInterventions}</strong><span>effective</span></div>
         <div><strong>{learning.summary.pendingInterventions}</strong><span>pending / insufficient evidence</span></div>
