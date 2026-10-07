@@ -6,6 +6,12 @@ export const dynamic="force-dynamic";
 
 function pretty(value:string){return value.replaceAll("_"," ");}
 function score(value:number|null){return value==null?"—":String(value);}
+function authorityLabel(value:string){
+  return ({
+    P24:"Outcome state",P17:"Readiness",P16:"Method experiment",P14:"Drift repair",
+    P13:"Calibration",P9:"Exam strategy",P8:"Retention",
+  } as Record<string,string>)[value]??value;
+}
 
 export default async function OutlookPage(){
   const outlook=await getSemesterForecast();
@@ -40,7 +46,7 @@ export default async function OutlookPage(){
       </div>
       <h3>{top.nextAction.title}</h3>
       <p>{top.nextAction.reason}</p>
-      <div className="forecast-action-meta"><span>{top.nextAction.estimatedMinutes} min</span><span>{top.nextAction.authority}</span><span>course priority {top.decisionPriority}/100</span></div>
+      <div className="forecast-action-meta"><span>{top.nextAction.estimatedMinutes} min</span><span>{authorityLabel(top.nextAction.authority)}</span><span>course priority {top.decisionPriority}/100</span></div>
       <div className="button-row"><Link className="primary-button" href={top.nextAction.href}>Open recommended action</Link></div>
       <small>This view ranks strategic value across courses. Today remains the authority for what actually fits into the current day.</small>
     </section> : null}
@@ -98,7 +104,7 @@ export default async function OutlookPage(){
 
         <div className="forecast-next-action">
           <div>
-            <p className="eyebrow">Highest-value next action · {course.nextAction.authority}</p>
+            <p className="eyebrow">Highest-value next action · {authorityLabel(course.nextAction.authority)}</p>
             <h3>{course.nextAction.title}</h3>
             <p>{course.nextAction.reason}</p>
           </div>
