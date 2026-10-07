@@ -57,9 +57,9 @@ export async function getCrossSemesterTransferData(){
   const error=courseResult.error||semesterResult.error||diagnosticResult.error||baselineResult.error||attemptResult.error;
   if(error)throw new StudyServiceError("Could not build cross-semester transfer profile",error.code||"cross_semester_read_failed",error);
 
-  const courses=new Map((courseResult.data??[]).map((row:any)=>[String(row.id),row]));
-  const semesters=new Map((semesterResult.data??[]).map((row:any)=>[String(row.id),row]));
-  const diagnostics=new Map((diagnosticResult.data??[]).map((row:any)=>[String(row.course_id),row]));
+  const courses=new Map<string,any>((courseResult.data??[]).map((row:any)=>[String(row.id),row]));
+  const semesters=new Map<string,any>((semesterResult.data??[]).map((row:any)=>[String(row.id),row]));
+  const diagnostics=new Map<string,any>((diagnosticResult.data??[]).map((row:any)=>[String(row.course_id),row]));
   const baselineRows=(baselineResult.data??[]) as Array<any>;
   const attemptRows=(attemptResult.data??[]) as Array<any>;
 
