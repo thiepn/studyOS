@@ -71,7 +71,7 @@ export default async function PracticePage({ searchParams }: { searchParams: Pro
           courseId={data.course?.courseId}
           eyebrow="Targeted drift repair"
           intro="This is a bounded correction inside your existing daily capacity. Work independently and closed-book. StudyOS will judge the intervention only from later independent evidence, not from performance inside this repair session itself."
-          completionNote="P14 drift repair intervention"
+          completionNote="Targeted drift repair intervention"
         />
       </main>
     );
