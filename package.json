@@ -1,6 +1,6 @@
 {
-  "name": "semester-os",
-  "version": "0.27.0",
+  "name": "studyos",
+  "version": "0.28.0",
   "private": true,
   "scripts": {
     "dev": "next dev",

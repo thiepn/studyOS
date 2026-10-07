@@ -3,6 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "StudyOS",
+  applicationName: "StudyOS",
   description: "University study planning, retrieval practice, retention, and exam-readiness workspace",
   robots: { index: false, follow: false, nocache: true },
 };

@@ -6,6 +6,7 @@ import { CourseMasterMap } from "@/components/course-master-map";
 import { getCourseWorkflow } from "@/lib/study/workflow";
 import { getCourseExamIntelligence } from "@/lib/study/exams";
 import { ExamIntelligence } from "@/components/exam-intelligence";
+import { courseInitials, courseToneClass } from "@/lib/study/course-visual";
 
 export const dynamic = "force-dynamic";
 
@@ -14,14 +15,17 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
   const [data, exam] = await Promise.all([getCourseWorkflow(id), getCourseExamIntelligence(id)]);
   const c = data.configuration;
   return (
-    <main className="shell">
-      <header className="header">
-        <div>
-          <p className="eyebrow">{c.course_kind} · active semester</p>
-          <h1>{c.display_name}</h1>
-          <p className="muted course-subline">
-            {[c.professor, c.credits ? `${c.credits} ECTS` : null, c.exam_at ? `Exam ${new Date(c.exam_at).toLocaleDateString()}` : null].filter(Boolean).join(" · ") || "Course details not configured yet."}
-          </p>
+    <main className={`shell course-shell ${courseToneClass(c.stable_key)}`}>
+      <header className="header course-header">
+        <div className="course-header-identity">
+          <span className="course-header-mark" aria-hidden="true">{courseInitials(c.short_name,c.display_name)}</span>
+          <div>
+            <p className="eyebrow">{c.course_kind} · active semester</p>
+            <h1>{c.display_name}</h1>
+            <p className="muted course-subline">
+              {[c.professor, c.credits ? `${c.credits} ECTS` : null, c.exam_at ? `Exam ${new Date(c.exam_at).toLocaleDateString()}` : null].filter(Boolean).join(" · ") || "Course details not configured yet."}
+            </p>
+          </div>
         </div>
         <Nav />
       </header>
@@ -32,14 +36,16 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
         {c.course_kind === "retake" ? <Link className="secondary-button" href={"/diagnostics/" + c.course_id}>Baseline diagnostic</Link> : null}
       </div>
 
-      <section className="panel config-panel">
-        <div className="section-heading">
-          <div><p className="eyebrow">Configuration</p><h2>Course contract</h2></div>
-          <span>{c.short_name ?? c.stable_key}</span>
+      <details className="course-settings-drawer">
+        <summary>
+          <span><strong>Course settings</strong><small>Identity, exam information, weekly release pattern</small></span>
+          <b>{c.short_name ?? c.stable_key}</b>
+        </summary>
+        <div className="course-settings-body">
+          <p className="muted">The stable internal key remains unchanged.</p>
+          <CourseConfigForm configuration={c} />
         </div>
-        <p className="muted">Set the real course identity, exam information, and weekly release pattern. The stable internal key remains unchanged.</p>
-        <CourseConfigForm configuration={c} />
-      </section>
+      </details>
 
       <CourseMasterMap topics={data.masterMap} />
 
