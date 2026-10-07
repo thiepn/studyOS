@@ -25,7 +25,7 @@ export default async function ExamResultsPage(){
 
   return <main className="shell">
     <header className="header">
-      <div><p className="eyebrow">P24 · outcome reconciliation</p><h1>Exam results</h1></div>
+      <div><p className="eyebrow">Outcome reconciliation</p><h1>Exam results</h1></div>
       <Nav />
     </header>
 
@@ -40,7 +40,7 @@ export default async function ExamResultsPage(){
         <span><strong>{data.plannedRetakes.length}</strong> planned retakes</span>
         <span><strong>{data.courses.filter(course=>course.active).length}</strong> active courses</span>
       </div>
-      <p className="forecast-disclaimer">P24 compares outcomes with the P17 readiness snapshot only directionally. A readiness index was never a predicted grade or probability of passing, so StudyOS does not score forecast “accuracy” by subtracting an exam mark from readiness.</p>
+      <p className="forecast-disclaimer">Outcomes are compared with the pre-exam readiness snapshot only directionally. Readiness was never a predicted grade or pass probability, so StudyOS does not score forecast “accuracy” by subtracting an exam mark from readiness.</p>
     </section>
 
     <section className="panel exam-result-intake">
@@ -76,7 +76,7 @@ export default async function ExamResultsPage(){
           </div>
           <h3>{resultTitle(latest)}</h3>
           <div className="exam-result-metrics">
-            <span><strong>{latest.readiness_index_snapshot==null?"—":Number(latest.readiness_index_snapshot).toFixed(0)+"/100"}</strong> P17 snapshot</span>
+            <span><strong>{latest.readiness_index_snapshot==null?"—":Number(latest.readiness_index_snapshot).toFixed(0)+"/100"}</strong> readiness snapshot</span>
             <span><strong>{pretty(latest.readiness_band_snapshot)}</strong> readiness band</span>
             <span><strong>{pretty(reconciliation?.alignment)}</strong> reconciliation</span>
             <span><strong>{pretty(latest.retake_decision)}</strong> retake</span>
