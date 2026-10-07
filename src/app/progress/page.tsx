@@ -20,12 +20,12 @@ export default async function ProgressPage(){
 
     <section className="panel progress-summary">
       <div className="section-heading"><div><p className="eyebrow">Semester health</p><h2>Where retention is failing</h2></div><span>{pulse.risks.filter((c)=>c.risk_band==="at_risk"||c.risk_band==="critical").length}</span></div>
-      <p className="muted">Risk is deterministic: retention pressure + overdue reviews + recent lapses + actionable coursework backlog + unresolved errors + exam-readiness gap. P14 separately checks completed-week performance and workload drift; {sustainedDrift} course{sustainedDrift===1?" is":"s are"} currently in sustained drift.</p>
+      <p className="muted">Risk is deterministic: retention pressure + overdue reviews + recent lapses + actionable coursework backlog + unresolved errors + exam-readiness gap. StudyOS separately checks completed-week performance and workload drift; {sustainedDrift} course{sustainedDrift===1?" is":"s are"} currently in sustained drift.</p>
       <div className="button-row"><Link className="secondary-button" href="/outlook">Open semester outlook</Link></div>
     </section>
 
     <section className="panel intervention-summary">
-      <div className="section-heading"><div><p className="eyebrow">P15 · intervention validation</p><h2>Are corrections actually working?</h2></div><span>{learning.summary.effectivenessRate==null?"—":learning.summary.effectivenessRate+"%"}</span></div>
+      <div className="section-heading"><div><p className="eyebrow">Intervention validation</p><h2>Are corrections actually working?</h2></div><span>{learning.summary.effectivenessRate==null?"—":learning.summary.effectivenessRate+"%"}</span></div>
       <div className="intervention-summary-grid">
         <div><strong>{learning.summary.totalInterventions}</strong><span>completed P14 repairs</span></div>
         <div><strong>{learning.summary.evaluatedInterventions}</strong><span>with enough follow-up</span></div>
@@ -34,11 +34,11 @@ export default async function ProgressPage(){
         <div><strong>{learning.summary.persistentCourses}</strong><span>persistent difficulty</span></div>
         <div><strong>{learning.summary.structuralCourses}</strong><span>structural signal</span></div>
       </div>
-      <p className="muted">P15 judges a repair only from later independent attempts. Performance inside the repair session itself is excluded, so the metric measures transfer rather than practice-set success.</p>
+      <p className="muted">Repairs are judged only from later independent attempts. Performance inside the repair session itself is excluded, so the metric measures transfer rather than practice-set success.</p>
     </section>
 
     <section className="panel intervention-summary">
-      <div className="section-heading"><div><p className="eyebrow">P28 · cross-semester transfer</p><h2>Did historical evidence actually transfer?</h2></div><span>{transfer.summary.usable}/{transfer.summary.activePriors}</span></div>
+      <div className="section-heading"><div><p className="eyebrow">Cross-semester transfer</p><h2>Did historical evidence actually transfer?</h2></div><span>{transfer.summary.usable}/{transfer.summary.activePriors}</span></div>
       <div className="intervention-summary-grid">
         <div><strong>{transfer.summary.activePriors}</strong><span>active priors</span></div>
         <div><strong>{transfer.summary.usable}</strong><span>validated / mixed</span></div>
@@ -50,7 +50,7 @@ export default async function ProgressPage(){
       <div className="course-learning-metrics">
         {transfer.reliability.filter((item)=>item.total>0).map((item)=><span key={item.relation}><strong>{item.reliabilityPercent==null?"—":item.reliabilityPercent+"%"}</strong> {item.relation.replace("_"," ")} reliability · {item.usable}/{item.total} usable</span>)}
       </div>
-      <p className="muted">P28 compares immutable historical-prior signals with fresh baseline classifications and independent attempts from the first 21 days. It only calibrates how much diagnostic attention a prior deserves; it never restores mastery, schedules reviews, or overrides current-semester evidence.</p>
+      <p className="muted">Cross-semester validation compares immutable historical-prior signals with fresh baseline classifications and independent attempts from the first 21 days. It only calibrates how much diagnostic attention a prior deserves; it never restores mastery, schedules reviews, or overrides current-semester evidence.</p>
     </section>
 
     <section className="risk-course-list">
