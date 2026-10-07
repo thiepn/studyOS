@@ -49,14 +49,14 @@ export function CalendarAutopilotPanel({data}:Props){
   }
 
   if(!data.connection||data.connection.status!=="connected")return <section className="panel calendar-panel">
-    <div className="section-heading"><div><p className="eyebrow">P11 · Calendar-aware planning</p><h2>Study Calendar</h2></div><span>Off</span></div>
+    <div className="section-heading"><div><p className="eyebrow">Schedule</p><h2>Study Calendar</h2></div><span>Off</span></div>
     <p>Connect the Google Calendar account you want StudyOS to use. It is a separate OAuth connection from Study Drive and from any Google account connected to ChatGPT.</p>
     <a className="primary-button" href="/api/integrations/google-calendar/start">Connect Study Calendar</a>
     <p className="muted tiny">Only the primary calendar is selected initially. Other visible calendars remain excluded until you select them here.</p>
   </section>;
 
   return <section className="panel calendar-panel">
-    <div className="section-heading"><div><p className="eyebrow">P11 · Calendar-aware planning</p><h2>Study Calendar</h2></div><span>{data.stale?"stale":"synced"}</span></div>
+    <div className="section-heading"><div><p className="eyebrow">Schedule</p><h2>Study Calendar</h2></div><span>{data.stale?"stale":"synced"}</span></div>
     <div className="calendar-connection">
       <div><strong>{data.connection.google_account_email??"Connected Google account"}</strong><span>{data.connection.last_sync_at?"Last sync "+new Date(data.connection.last_sync_at).toLocaleString():"Not synced yet"}{data.connection.last_sync_status?" · "+data.connection.last_sync_status:""}</span></div>
       <div className="button-row">
@@ -73,7 +73,7 @@ export function CalendarAutopilotPanel({data}:Props){
         {data.proposal.blocks.length?<div className="calendar-proposal">{data.proposal.blocks.map((block)=><article key={block.candidateId+block.startAt}>
           <div className="calendar-time"><strong>{time(block.startAt,data.timezone)}</strong><span>– {time(block.endAt,data.timezone)}</span></div>
           <div><strong>{block.title}</strong><span>{block.minutes} min{block.partial?" · partial":""}</span></div>
-        </article>)}</div>:<p className="muted">No new P10 task currently needs calendar placement.</p>}
+        </article>)}</div>:<p className="muted">No planned study task currently needs calendar placement.</p>}
         {data.proposal.unscheduled.length?<p className="warning-text">{data.proposal.unscheduled.length} planned item(s) do not fit the current free windows. StudyOS leaves them unscheduled instead of creating overlaps.</p>:null}
         {data.proposal.blocks.length?<button className="primary-button button-reset" disabled={Boolean(busy)} onClick={()=>void post("/api/study/calendar/commit")}>{busy?.includes("/commit")?"Creating events…":"Commit today to Google Calendar"}</button>:null}
         <p className="muted tiny">Committed blocks are busy events with a {data.settings.study_reminder_minutes}-minute Google Calendar popup reminder.</p>
@@ -92,7 +92,7 @@ export function CalendarAutopilotPanel({data}:Props){
     {data.courseEvents.length?<details className="calendar-course-events" open><summary>Synced course events ({data.courseEvents.length})</summary><div>{data.courseEvents.map(event=><article key={event.calendar_id+event.event_id}>
       <div><strong>{event.summary??"Calendar event"}</strong><span>{event.event_role.replace("_"," ")} · {new Date(event.start_at).toLocaleDateString("en-GB",{timeZone:data.timezone,day:"2-digit",month:"short"})} · {time(event.start_at,data.timezone)}</span></div>
       {event.event_url?<a href={event.event_url} target="_blank" rel="noreferrer">Open</a>:null}
-    </article>)}</div><small>Deadline-labelled events are mirrored into P10 commitments. Exam-labelled events remain informational until you confirm the official course exam date.</small></details>:null}
+    </article>)}</div><small>Deadline-labelled events are mirrored into StudyOS commitments. Exam-labelled events remain informational until you confirm the official course exam date.</small></details>:null}
 
     {futureBlocks.length?<details className="calendar-scheduled"><summary>Committed StudyOS blocks ({futureBlocks.length})</summary><div>{futureBlocks.map(block=><article key={block.id}>
       <div><strong>{block.title}</strong><span>{dateLabel(block.plan_date,data.timezone)} · {time(block.start_at,data.timezone)}–{time(block.end_at,data.timezone)}</span></div>
