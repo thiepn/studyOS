@@ -12,7 +12,7 @@ export default async function OutlookPage(){
   const queue=[...outlook.courses].sort((a,b)=>b.decisionPriority-a.decisionPriority);
   const top=queue[0]??null;
   return <main className="shell">
-    <header className="header"><div><p className="eyebrow">P17 · semester decision layer</p><h1>Semester outlook</h1></div><Nav /></header>
+    <header className="header"><div><p className="eyebrow">Semester readiness</p><h1>Semester outlook</h1></div><Nav /></header>
 
     <section className="panel forecast-hero">
       <div className="forecast-hero-main">
@@ -42,7 +42,7 @@ export default async function OutlookPage(){
       <p>{top.nextAction.reason}</p>
       <div className="forecast-action-meta"><span>{top.nextAction.estimatedMinutes} min</span><span>{top.nextAction.authority}</span><span>course priority {top.decisionPriority}/100</span></div>
       <div className="button-row"><Link className="primary-button" href={top.nextAction.href}>Open recommended action</Link></div>
-      <small>P17 ranks strategic value only. P10&apos;s daily capacity and scheduling rules still decide whether this work belongs in today&apos;s plan.</small>
+      <small>This view ranks strategic value across courses. Today remains the authority for what actually fits into the current day.</small>
     </section> : null}
 
     <section className="panel forecast-queue-panel">
