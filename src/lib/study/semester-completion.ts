@@ -239,8 +239,8 @@ export function buildSemesterCompletionLedger(input:{
     insufficientEvidence:alignments.filter(value=>value==="insufficient_evidence").length,
     alignmentRate:evaluated.length?Math.round(aligned/evaluated.length*100):null,
     summary:evaluated.length
-      ?"P17 readiness and actual outcomes are compared only directionally across "+evaluated.length+" sufficiently evidenced official attempt"+(evaluated.length===1?"":"s")+"."
-      :"There are not yet enough official attempts with usable P17 snapshots for a meaningful outcome review.",
+      ?"Readiness and actual outcomes are compared only directionally across "+evaluated.length+" sufficiently evidenced official attempt"+(evaluated.length===1?"":"s")+"."
+      :"There are not yet enough official attempts with usable readiness snapshots for a meaningful outcome review.",
   };
 
   const pendingResults=summary.provisionalCourses+summary.awaitingResultCourses;
@@ -273,23 +273,23 @@ export function buildSemesterCompletionLedger(input:{
     +"."
   );
   if(summary.eventualRetakePasses)strengths.push(summary.eventualRetakePasses+" course"+(summary.eventualRetakePasses===1?"":"s")+" eventually passed after more than one official attempt.");
-  if(forecastReview.negativeSurprises===0&&forecastReview.evaluatedAttempts>=2)strengths.push("No target-ready/strong P17 snapshot ended in a non-pass among sufficiently evidenced attempts.");
-  if(calibration.completedWeeks>=3&&calibration.capacitySignal==="aligned")strengths.push("P19/P20 weekly capacity was broadly executable across completed weeks.");
+  if(forecastReview.negativeSurprises===0&&forecastReview.evaluatedAttempts>=2)strengths.push("No target-ready/strong readiness snapshot ended in a non-pass among sufficiently evidenced attempts.");
+  if(calibration.completedWeeks>=3&&calibration.capacitySignal==="aligned")strengths.push("Weekly capacity was broadly executable across completed weeks.");
 
   if(summary.retakePendingCourses)concerns.push(summary.retakePendingCourses+" retake decision"+(summary.retakePendingCourses===1?" remains":"s remain")+" unresolved.");
   if(summary.retakePlannedCourses)concerns.push(summary.retakePlannedCourses+" course"+(summary.retakePlannedCourses===1?" has":"s have")+" a planned retake and therefore remains part of the academic workload.");
   if(summary.closedWithoutPassCourses)concerns.push(summary.closedWithoutPassCourses+" course"+(summary.closedWithoutPassCourses===1?" closed":"s closed")+" without a passing result.");
   if(pendingResults)concerns.push(pendingResults+" course result"+(pendingResults===1?" is":"s are")+" still provisional or missing.");
   if(summary.unknownCreditCourses)concerns.push(summary.unknownCreditCourses+" course"+(summary.unknownCreditCourses===1?" has":"s have")+" no configured credits, so credit percentages are partial.");
-  if(forecastReview.negativeSurprises)concerns.push(forecastReview.negativeSurprises+" official attempt"+(forecastReview.negativeSurprises===1?" was":"s were")+" a negative directional surprise against a target-ready/strong P17 snapshot.");
+  if(forecastReview.negativeSurprises)concerns.push(forecastReview.negativeSurprises+" official attempt"+(forecastReview.negativeSurprises===1?" was":"s were")+" a negative directional surprise against a target-ready/strong readiness snapshot.");
   if(calibration.completedWeeks>=3&&calibration.capacitySignal==="commitment_too_high")concerns.push("Weekly commitment size was repeatedly too high for actual execution.");
   if(calibration.totalSacrificeEvents>=2)concerns.push("Protection floors were sacrificed "+calibration.totalSacrificeEvents+" times across completed weekly plans.");
 
   if(summary.retakePendingCourses)nextSemesterActions.push("Resolve every pending retake decision before allocating new semester capacity.");
   if(summary.retakePlannedCourses)nextSemesterActions.push("Treat planned retakes as first-class courses from week one rather than as leftover study debt.");
-  if(forecastReview.negativeSurprises)nextSemesterActions.push("Audit the evidence behind negative P17 surprises: simulation quality, coverage, independence, and exam transfer should be checked before changing thresholds.");
+  if(forecastReview.negativeSurprises)nextSemesterActions.push("Audit the evidence behind negative readiness surprises: simulation quality, coverage, independence, and exam transfer should be checked before changing thresholds.");
   if(calibration.capacitySignal==="commitment_too_high")nextSemesterActions.push("Start the next semester with a lower weekly course envelope rather than carrying unfinished minutes as debt.");
-  if(calibration.capacitySignal==="commitment_too_low")nextSemesterActions.push("The next semester may support a modestly larger weekly course envelope, but keep P10 daily limits authoritative.");
+  if(calibration.capacitySignal==="commitment_too_low")nextSemesterActions.push("The next semester may support a modestly larger weekly course envelope, but keep daily capacity limits authoritative.");
   if(calibration.capacitySignal==="volatile")nextSemesterActions.push("Do not hard-code a new capacity baseline; investigate calendar/workload volatility first.");
   if(summary.unknownCreditCourses)nextSemesterActions.push("Configure missing course credits before using credit-weighted completion as a decision metric.");
   if(!nextSemesterActions.length)nextSemesterActions.push("Carry forward the current planning structure; no semester-level structural correction is supported by the available evidence.");
@@ -303,7 +303,7 @@ export function buildSemesterCompletionLedger(input:{
         :status==="retakes_open"
           ?"The original exam period is partly resolved, but one or more courses remain open through retake decisions."
           :status==="incomplete_data"
-            ?"At least one inactive course has no terminal P24 outcome, so the completion ledger is incomplete."
+            ?"At least one inactive course has no terminal official outcome, so the completion ledger is incomplete."
             :"The semester is still operational; this review remains a live progress ledger rather than a final report.",
     forecastReview,
     execution:{
