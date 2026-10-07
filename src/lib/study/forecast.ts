@@ -256,7 +256,7 @@ function chooseNextAction(input:ForecastInput,readiness:number,evidence:number,r
   if(input.operatingMode==="post_exam"||runway==="passed"){
     return {
       kind:"maintain",title:"Exam complete — no further allocation",
-      reason:"The configured exam has passed. P17 removes this course from active semester-allocation pressure.",
+      reason:"The configured exam has passed. StudyOS removes this course from active semester-allocation pressure.",
       href:"/courses/"+input.courseId,estimatedMinutes:0,expectedValue:0,authority:"P17",
     };
   }
@@ -267,7 +267,7 @@ function chooseNextAction(input:ForecastInput,readiness:number,evidence:number,r
     if(input.examNextAction&&input.examNextAction!=="maintain_blueprint"){
       add({
         kind:"exam_strategy",title:examActionLabel(input.examNextAction),
-        reason:input.examNextActionReason??"P9 exam strategy is authoritative once the course enters transition/exam mode.",
+        reason:input.examNextActionReason??"Exam strategy becomes authoritative once the course enters transition/exam mode.",
         href:"/courses/"+input.courseId,estimatedMinutes:examActionMinutes(input),
         expectedValue:94+(runway==="urgent"?6:runway==="compressed"?3:0),authority:"P9",
       });
@@ -292,7 +292,7 @@ function chooseNextAction(input:ForecastInput,readiness:number,evidence:number,r
     if(input.daysToExam!=null&&input.daysToExam<=60&&input.processedExams===0){
       add({
         kind:"collect_evidence",title:"Process one representative past exam",
-        reason:"The exam is approaching but P9 has no historical exam evidence yet.",
+        reason:"The exam is approaching but StudyOS has no historical exam evidence yet.",
         href:"/courses/"+input.courseId,estimatedMinutes:20,expectedValue:88,authority:"P9",
       });
     }
@@ -303,7 +303,7 @@ function chooseNextAction(input:ForecastInput,readiness:number,evidence:number,r
     if(input.strategyAwaitingEvidence){
       add({
         kind:"coursework",title:"Collect clean transfer evidence",
-        reason:"A P16 method experiment is still unresolved. Normal independent work is the highest-value next evidence; starting another experiment would confound the comparison.",
+        reason:"A method experiment is still unresolved. Normal independent work is the highest-value next evidence; starting another experiment would confound the comparison.",
         href:"/courses/"+input.courseId,estimatedMinutes:20,expectedValue:89,authority:"P16",
       });
     }else if(input.strategyEscalation==="external_support"){
@@ -318,7 +318,7 @@ function chooseNextAction(input:ForecastInput,readiness:number,evidence:number,r
         title:(input.strategyEscalation==="change_source"?"Change source + ":"Run ")+(input.strategyRecommendedTitle??input.strategyRecommendedKey.replaceAll("_"," ")),
         reason:input.strategyEscalation==="change_source"
           ?"Multiple methods failed; change the representation/source while testing the next method."
-          :"P16 selected a different learning mechanism based on the observed failure pattern and prior transfer.",
+          :"StudyOS selected a different learning mechanism based on the observed failure pattern and prior transfer.",
         href:input.strategyEscalation==="change_source"
           ?"/strategy?course="+input.courseId
           :"/practice?mode=strategy&course="+input.courseId+"&strategy="+input.strategyRecommendedKey,
@@ -330,7 +330,7 @@ function chooseNextAction(input:ForecastInput,readiness:number,evidence:number,r
   if(!escalated&&input.driftCorrectionKind==="targeted_practice"&&input.driftCorrectionMinutes>0){
     add({
       kind:"drift_repair",title:"Run targeted drift repair",
-      reason:"P14 detected a completed-week performance/workload drift that can still be corrected with the existing repair mechanism.",
+      reason:"StudyOS detected a completed-week performance/workload drift that can still be corrected with the existing repair mechanism.",
       href:"/practice?mode=drift&course="+input.courseId,
       estimatedMinutes:input.driftCorrectionMinutes,
       expectedValue:82+(input.driftBand==="critical"?7:input.driftBand==="drifting"?4:0),authority:"P14",
@@ -361,7 +361,7 @@ function chooseNextAction(input:ForecastInput,readiness:number,evidence:number,r
     add({
       kind:"maintain",title:"Maintain the current loop",
       reason:readiness>=80
-        ?"Current readiness is on the high-performance path; protect it with ordinary coursework, retention, and P9 exam work as scheduled."
+        ?"Current readiness is on the high-performance path; protect it with ordinary coursework, retention, and scheduled exam work."
         :"No higher-value exception is currently supported by the evidence.",
       href:"/courses/"+input.courseId,estimatedMinutes:20,expectedValue:50,authority:"P17",
     });
