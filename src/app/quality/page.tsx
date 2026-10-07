@@ -19,7 +19,7 @@ export default async function QualityPage(){
 
   return <main className="shell">
     <header className="header">
-      <div><p className="eyebrow">P20 · execution quality</p><h1>Planning calibration</h1></div>
+      <div><p className="eyebrow">Planning quality</p><h1>Planning calibration</h1></div>
       <Nav />
     </header>
 
@@ -35,13 +35,13 @@ export default async function QualityPage(){
         <span><strong>{profile.totalSacrificeEvents}</strong> sacrifice events</span>
       </div>
       <p>{profile.capacityRecommendation}</p>
-      <small>P20 does not automatically change P10 daily capacity. The capacity recommendation is advisory because mandatory work and retention are not measured as course-envelope minutes.</small>
+      <small>Planning-quality recommendations never change today&apos;s capacity automatically. Mandatory work and retention are protected separately.</small>
     </section>
 
     {profile.completedWeeks<3?<section className="panel quality-gate">
       <p className="eyebrow">Calibration gate</p>
       <h2>No automatic floor correction yet</h2>
-      <p>StudyOS requires at least three completed P19 weekly commitments before changing any P18 course protection floor. Current P18/P19 behavior therefore remains on the original heuristics.</p>
+      <p>StudyOS requires at least three completed weekly plans before changing a course protection floor. Until then, the original planning heuristics remain in effect.</p>
       <div className="button-row"><Link className="primary-button" href="/week">Open weekly commitment</Link><Link className="secondary-button" href="/scenarios">Open scenarios</Link></div>
     </section>:null}
 
@@ -67,11 +67,11 @@ export default async function QualityPage(){
           <span><strong>{course.medianEstimateRatio==null?"—":course.medianEstimateRatio.toFixed(2)+"×"}</strong> actual / planned</span>
         </div>
         <small>Estimate signal: {course.estimateSignal.replaceAll("_"," ")}. {course.adjustmentApplied
-          ?"This bounded floor correction is now applied to future P18/P19 scenarios."
+          ?"This bounded floor correction is now applied to future weekly scenarios and plans."
           :"No automatic floor correction is currently supported."}</small>
       </article>):<section className="panel quality-empty">
         <h2>No completed-week evidence yet</h2>
-        <p>P20 will populate after P19 weekly commitments reach their Sunday endpoint. Current weeks are intentionally excluded from calibration so partial execution cannot distort future floors.</p>
+        <p>Planning quality becomes meaningful after completed weeks reach their endpoint. Current partial weeks are excluded so unfinished execution cannot distort future floors.</p>
       </section>}
     </section>
 
@@ -84,7 +84,7 @@ export default async function QualityPage(){
         <strong>{course.shortName??course.displayName}</strong>
         <span>{signed(course.floorAdjustmentMinutes)} min</span>
       </div>)}</div>:<p>No course currently has enough stable evidence for a protection-floor change.</p>}
-      <p className="muted">P20 calibrates only protection floors. It does not modify P17 readiness, P9 exam strategy, the P18 diminishing-return penalty, or the P10 daily capacity setting.</p>
+      <p className="muted">This page calibrates course protection floors only. It does not rewrite mastery, course readiness, exam strategy, or today&apos;s capacity.</p>
     </section>
 
     <section className="panel">
@@ -99,13 +99,13 @@ export default async function QualityPage(){
           <td>{week.rebalanced?"Yes":"No"}</td>
           <td>{week.sacrificedCourses}</td>
         </tr>)}</tbody>
-      </table></div>:<p className="muted">No completed P19 weekly commitment exists yet.</p>}
+      </table></div>:<p className="muted">No completed weekly plan exists yet.</p>}
     </section>
 
     <section className="panel quality-method">
       <p className="eyebrow">Interpretation guardrails</p>
-      <h2>What P20 can and cannot infer</h2>
-      <p>A missed course target is only called course-specific overallocation when the week as a whole was executed at least reasonably well. If the entire week collapsed, P20 treats that as a capacity/execution problem instead of lowering that course's floor.</p>
+      <h2>What planning quality can and cannot infer</h2>
+      <p>A missed course target is only called course-specific overallocation when the week as a whole was executed at least reasonably well. If the entire week collapsed, StudyOS treats that as a capacity/execution problem instead of lowering that course&apos;s floor.</p>
       <p>Repeated extra work, repeated sacrifice, and sustained estimate under-runs can raise protection. A weak-readiness course is never given a lower floor merely because its target was missed.</p>
     </section>
   </main>;
