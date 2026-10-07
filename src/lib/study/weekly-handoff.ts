@@ -138,10 +138,10 @@ export function deriveHandoffCapacity(input:{
     selected=Math.max(boundedMandatory+baselineRetention,boundedMandatory+baselineRetention+reducedCourse);
     calibrationApplied=selected<feasible;
     note=calibrationApplied
-      ?"P20 supports a conservative next-week trial: the course-work envelope is reduced by about 10% without changing P10 daily capacity."
+      ?"Execution evidence supports a conservative next-week trial: the course-work envelope is reduced by about 10% without changing daily capacity."
       :input.calibration.capacityRecommendation;
   }else if(input.calibration.capacitySignal==="commitment_too_low"){
-    note="P20 suggests that more course capacity may be realistic, but P21 does not exceed the current P10/calendar ceiling automatically.";
+    note="Execution evidence suggests that more course capacity may be realistic, but the next-week plan does not exceed the current daily/calendar ceiling automatically.";
   }
 
   const afterSelectedMandatory=Math.max(0,selected-Math.min(selected,mandatory));
