@@ -37,7 +37,7 @@ export default async function ExamDayPage(){
 
   return <main className="shell">
     <header className="header">
-      <div><p className="eyebrow">P23 · exam-day operations</p><h1>Exam day</h1></div>
+      <div><p className="eyebrow">Exam operations</p><h1>Exam day</h1></div>
       <Nav />
     </header>
 
@@ -54,9 +54,9 @@ export default async function ExamDayPage(){
           <span><strong>{operations.recoveryLevel}</strong> recovery shield</span>
         </div>
         <p>{lead.phase==="final_window"
-          ?"The final 24-hour runway is active. P22 keeps heavy simulations out of this window while P9 remains the method authority."
+          ?"The final 24-hour runway is active. StudyOS keeps heavy simulations out of this window while preserving the course&apos;s current preparation method."
           :lead.phase==="in_progress"
-            ?"The exam is in progress. P23 freezes discretionary study work for this course and competing exam preparation until the scheduled end."
+            ?"The exam is in progress. StudyOS freezes discretionary study work for this course and competing exam preparation until the scheduled end."
             :lead.phase==="recovery_full"
               ?"Immediate recovery is active. All competing exam-strategy work is withheld for roughly four hours after the exam."
               :lead.phase==="recovery_light"
@@ -64,7 +64,7 @@ export default async function ExamDayPage(){
                 :lead.phase==="post_exam"
                   ?"Pre-exam work for this course is obsolete. Any remaining weekly envelope can be released to the active semester plan."
                   :"The exam is configured but not yet in its final operational window."}</p>
-      </>:<p>No active course has a configured exam timestamp. P23 will activate automatically from the course exam configuration.</p>}
+      </>:<p>No active course has a configured exam timestamp. Exam-day operations activate automatically from the course configuration.</p>}
     </section>
 
     {operations.recoveryLevel!=="none"?<section className={"panel exam-recovery recovery-"+operations.recoveryLevel}>
@@ -73,9 +73,9 @@ export default async function ExamDayPage(){
         <span>until {fmtTime(operations.recoveryUntil,timezone)}</span>
       </div>
       <p>{operations.recoveryLevel==="full"
-        ?"P10 will not admit competing exam-strategy work during this immediate recovery window. Real commitments remain eligible."
-        :"P10 may admit lighter exam work with reduced priority, but P23 continues to block heavy exam actions."}</p>
-      {nextCommand?<p className="muted">Next P22 pressure: {nextCommand.shortName??nextCommand.displayName} · {nextCommand.daysToExam}d · {nextCommand.nextActionTitle}.</p>:null}
+        ?"Today will not admit competing exam-strategy work during this immediate recovery window. Real commitments remain eligible."
+        :"Today may admit lighter exam work with reduced priority, while heavy exam actions remain blocked."}</p>
+      {nextCommand?<p className="muted">Next exam pressure: {nextCommand.shortName??nextCommand.displayName} · {nextCommand.daysToExam}d · {nextCommand.nextActionTitle}.</p>:null}
     </section>:null}
 
     {relevant.length?<section className="exam-day-course-grid">
@@ -93,7 +93,7 @@ export default async function ExamDayPage(){
         <p>Exam: {fmtTime(course.examStartsAt,timezone)} → {fmtTime(course.examEndsAt,timezone)}</p>
         {course.phase==="in_progress"?<p className="exam-day-note">Discretionary workflow, retention, P9 work, checkpoints, and weekly fallback work for this course are frozen.</p>:null}
         {course.closureEligible&&!course.closureComplete?<>
-          <p className="exam-day-note"><strong>Closure ready.</strong> The exam has ended. Closing removes obsolete StudyOS calendar blocks and releases unused P19 course minutes.</p>
+          <p className="exam-day-note"><strong>Closure ready.</strong> The exam has ended. Closing removes obsolete StudyOS calendar blocks and releases unused weekly course minutes.</p>
           <ExamClosureButton courseId={course.courseId}/>
         </>:null}
         {course.closureComplete?<p className="exam-day-complete"><strong>Operationally closed.</strong> No unfinished weekly course envelope or future StudyOS calendar block remains.</p>:null}
@@ -111,7 +111,7 @@ export default async function ExamDayPage(){
     </section>:null}
 
     <section className="panel exam-day-rules">
-      <p className="eyebrow">P23 authority</p>
+      <p className="eyebrow">Exam-day rules</p>
       <h2>Boundary rules</h2>
       <div className="exam-day-rule-grid">
         <span><strong>Exam start</strong> freeze obsolete discretionary work</span>
@@ -119,8 +119,8 @@ export default async function ExamDayPage(){
         <span><strong>0–4h</strong> full cross-exam recovery</span>
         <span><strong>4–12h</strong> light work only</span>
       </div>
-      <p className="muted">Real commitments keep their original deadlines. P23 releases planning envelopes, not obligations.</p>
-      <div className="button-row"><Link className="secondary-button" href="/exam-command">Open P22 command center</Link><Link className="secondary-button" href="/week">Open weekly plan</Link></div>
+      <p className="muted">Real commitments keep their original deadlines. Exam closure releases planning envelopes, not obligations.</p>
+      <div className="button-row"><Link className="secondary-button" href="/exam-command">Open exam plan</Link><Link className="secondary-button" href="/week">Open weekly plan</Link></div>
     </section>
   </main>;
 }
