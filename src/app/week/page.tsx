@@ -22,9 +22,9 @@ function fmt(min:number){
 function CalibrationSummary({profile}:{profile:Awaited<ReturnType<typeof getWeeklyCommitmentData>>["scenarioData"]["calibration"]}){
   const adjusted=profile.courses.filter(course=>course.adjustmentApplied).length;
   return <section className="panel week-calibration-summary">
-    <div className="section-heading"><div><p className="eyebrow">P20 · allocation calibration</p><h2>{profile.completedWeeks} completed week{profile.completedWeeks===1?"":"s"}</h2></div><span>{profile.evidence}</span></div>
+    <div className="section-heading"><div><p className="eyebrow">Allocation calibration</p><h2>{profile.completedWeeks} completed week{profile.completedWeeks===1?"":"s"}</h2></div><span>{profile.evidence}</span></div>
     <p>{profile.completedWeeks<3
-      ?"P18/P19 still use the original course-floor heuristics until three completed weekly commitments exist."
+      ?"The original course-floor heuristics remain in use until three completed weekly plans exist."
       :adjusted
         ?adjusted+" course protection floor"+(adjusted===1?" is":"s are")+" calibrated from repeated execution evidence."
         :"Enough history exists to evaluate allocation quality, but no floor correction is currently supported."}</p>
@@ -40,11 +40,11 @@ export default async function WeekPage(){
   if(!runtime){
     const preview=data.preview;
     return <main className="shell">
-      <header className="header"><div><p className="eyebrow">P19 · weekly commitment</p><h1>This week</h1></div><Nav /></header>
+      <header className="header"><div><p className="eyebrow">Weekly plan</p><h1>This week</h1></div><Nav /></header>
 
       <section className="panel week-hero">
         <div><p className="eyebrow">{envelope.today} → {envelope.periodEndsOn}</p><h2>No weekly commitment yet</h2></div>
-        <p>P18 can explore trade-offs freely. P19 turns one feasible scenario into an operational envelope that P10 can follow for the rest of this calendar week.</p>
+        <p>Scenarios are exploratory. Committing one turns it into the operational plan that Today follows for the rest of this calendar week.</p>
         <div className="week-budget-grid">
           <span><strong>{fmt(envelope.feasibleCapacityMinutes)}</strong> feasible capacity</span>
           <span><strong>{fmt(envelope.mandatoryMinutes)}</strong> commitments</span>
@@ -65,7 +65,7 @@ export default async function WeekPage(){
         <div className="section-heading"><div><p className="eyebrow">Commit scenario</p><h2>Lock the remainder of this week</h2></div></div>
         <p className="muted">The capacity field cannot exceed the currently feasible remainder of the week. Course-floor shortfalls may be committed deliberately; mandatory-work deficits may not.</p>
         <WeeklyPlanControls activePlanId={null} baselineCapacityMinutes={envelope.feasibleCapacityMinutes} defaultObjective="balanced" canRebalance={false}/>
-        <div className="button-row"><Link className="secondary-button" href="/scenarios">Compare P18 scenarios</Link><Link className="secondary-button" href="/handoff">Preview weekly handoff</Link><Link className="secondary-button" href="/outlook">Review P17 outlook</Link></div>
+        <div className="button-row"><Link className="secondary-button" href="/scenarios">Compare scenarios</Link><Link className="secondary-button" href="/handoff">Preview weekly handoff</Link><Link className="secondary-button" href="/outlook">Review outlook</Link></div>
       </section>
     </main>;
   }
@@ -77,7 +77,7 @@ export default async function WeekPage(){
   const objective=runtime.plan.objective as ScenarioObjective;
 
   return <main className="shell">
-    <header className="header"><div><p className="eyebrow">P19 · rolling weekly plan</p><h1>This week</h1></div><Nav /></header>
+    <header className="header"><div><p className="eyebrow">Weekly plan</p><h1>This week</h1></div><Nav /></header>
 
     <section className="panel week-hero">
       <div className="week-hero-head">
@@ -141,7 +141,7 @@ export default async function WeekPage(){
         <span><strong>{fmt(envelope.courseBudgetMinutes)}</strong> feasible future course work</span>
         <span><strong>{envelope.calendarFreeMinutes==null?"—":fmt(envelope.calendarFreeMinutes)}</strong> calendar free time</span>
       </div>
-      <div className="button-row"><Link className="secondary-button" href="/scenarios">Open P18 scenarios</Link><Link className="secondary-button" href="/handoff">Open weekly handoff</Link><Link className="secondary-button" href="/outlook">Open P17 outlook</Link></div>
+      <div className="button-row"><Link className="secondary-button" href="/scenarios">Open scenarios</Link><Link className="secondary-button" href="/handoff">Open weekly handoff</Link><Link className="secondary-button" href="/outlook">Open outlook</Link></div>
     </section>
   </main>;
 }
