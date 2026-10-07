@@ -42,7 +42,7 @@ export function evaluateRolloverPreflight(input:{
   if(!input.active)blockers.push({code:"no_active_semester",count:1,message:"The selected source semester is not active."});
   if(input.openCommitments>0)blockers.push({
     code:"open_commitments",count:input.openCommitments,
-    message:"Resolve open real commitments before archiving; P26 never silently drops or copies them.",
+    message:"Resolve open real commitments before archiving; StudyOS never silently drops or copies them.",
   });
   if(pendingRetakes>0)blockers.push({
     code:"pending_retake_decisions",count:pendingRetakes,
@@ -58,7 +58,7 @@ export function evaluateRolloverPreflight(input:{
   });
   if(incomplete>0)blockers.push({
     code:"incomplete_course_state",count:incomplete,
-    message:"At least one inactive course has no terminal P24 outcome.",
+    message:"At least one inactive course has no terminal official outcome.",
   });
 
   const carryCourses=input.courses.filter(course=>course.completionState==="retake_planned");
