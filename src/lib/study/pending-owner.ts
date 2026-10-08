@@ -11,7 +11,4 @@ export async function currentPendingOwner():Promise<string|null> {
   } catch{return null;}
 }
 
-/** Legacy untagged records must never automatically replay to another account. */
-export function canReplayPending(ownerId: string|undefined, currentUser: string|null):boolean {
-  return Boolean(ownerId && currentUser && ownerId===currentUser);
-}
+export { canReplayPending } from "./offline-owner-policy";
