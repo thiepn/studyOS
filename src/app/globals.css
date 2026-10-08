@@ -1132,3 +1132,28 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
  .math-symbol-row button{min-width:37px;min-height:37px}
  .repair-brief{padding:12px 0}
 }
+
+/* P34 — a compact academic workbench. No SaaS-style cards or visual noise. */
+.math-patterns{margin:0 0 13px;border-bottom:1px solid var(--line);padding:1px 0 12px}
+.math-patterns summary,.math-reading-view summary{display:list-item;cursor:pointer;font-size:.77rem;font-weight:700;color:var(--ink-soft)}
+.math-patterns-actions{display:flex;flex-wrap:wrap;gap:7px;padding-top:11px}
+.math-patterns-actions button{border:1px solid var(--line);border-radius:2px;background:transparent;color:var(--ink);font-size:.73rem;padding:7px 10px;cursor:pointer}
+.math-patterns-actions button:hover{border-color:var(--ink);background:var(--soft)}
+.math-reading-view{border-top:1px solid var(--line);padding-top:12px;margin-top:12px}
+.math-reading-view>div{margin-top:14px}
+.math-reading-view strong{display:block;font-family:Georgia,"Times New Roman",serif;font-size:.95rem;margin-bottom:7px}
+.math-reading-view pre{white-space:pre-wrap;overflow-wrap:anywhere;max-width:100%;line-height:1.8;font-size:.82rem;margin:0;padding:11px 13px;border-left:2px solid var(--line-strong);background:var(--sheet-muted);font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.draft-recovery-note{border-left:2px solid var(--ink-soft);font-size:.81rem;line-height:1.5;padding:10px 14px;margin:7px 0 16px;background:var(--sheet-muted)}
+.math-draft-status,.math-draft-warning{font-size:.75rem;color:var(--muted);margin:13px 0 5px}
+.math-draft-warning{color:var(--danger)}
+.week-academic-sequence{list-style:none;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin:13px 0 19px;padding:12px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.week-academic-sequence li{display:flex;gap:8px;align-items:baseline;border-right:1px solid var(--line);padding:2px 12px 2px 0;margin-right:12px;font-size:.74rem;line-height:1.45;color:var(--muted)}
+.week-academic-sequence li:last-child{border-right:0;margin-right:0}
+.week-academic-sequence li span:first-child{flex:none;font-family:ui-monospace,SFMono-Regular,monospace;font-weight:700;font-size:.7rem;color:var(--muted)}
+.week-academic-sequence li.completed{color:var(--ink);font-weight:600}
+.week-academic-sequence li.completed span:first-child{color:var(--success)}
+@media(max-width:760px){
+  .week-academic-sequence{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:12px}
+  .week-academic-sequence li:nth-child(2){border-right:0;margin-right:0}
+  .week-academic-sequence li:nth-child(3),.week-academic-sequence li:nth-child(4){padding-top:10px;border-top:1px solid var(--line)}
+}
