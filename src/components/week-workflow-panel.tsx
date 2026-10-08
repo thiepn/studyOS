@@ -61,8 +61,10 @@ export function WeekWorkflowPanel({
       if (!response.ok) throw new Error(payload?.error || "Action failed");
       router.refresh();
       setMessage("Saved.");
+      return true;
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Action failed");
+      return false;
     } finally {
       setBusy(null);
     }
@@ -70,8 +72,9 @@ export function WeekWorkflowPanel({
 
   async function submitFinding(event: FormEvent<HTMLFormElement>, week: WeekActionRow) {
     event.preventDefault();
-    const fd = new FormData(event.currentTarget);
-    await post(`/api/study/courses/${courseId}/findings`, {
+    const form=event.currentTarget;
+    const fd = new FormData(form);
+    const saved=await post(`/api/study/courses/${courseId}/findings`, {
       weekNo: week.week_no,
       title: fd.get("title"),
       detail: fd.get("detail"),
@@ -79,7 +82,7 @@ export function WeekWorkflowPanel({
       severity: fd.get("severity"),
       skillId: fd.get("skillId"),
     }, `finding-${week.teaching_week_id}`);
-    event.currentTarget.reset();
+    if(saved)form.reset();
   }
 
   if (!weeks.length) {
@@ -132,8 +135,8 @@ export function WeekWorkflowPanel({
 
             <div className="button-row">
               {week.next_action === "process_material" ? <a className="primary-button" href="/resources">Open Resources</a> : null}
-              {week.next_action === "repair_findings" ? <a className="primary-button" href="/practice">Open repair review</a> : null}
-              {week.next_action === "weekly_checkpoint" ? <a className="secondary-button" href="/practice">Run mixed review first</a> : null}
+              {week.next_action === "repair_findings" ? <a className="primary-button" href={"/practice?course="+courseId}>Review due course skills</a> : null}
+              {week.next_action === "weekly_checkpoint" ? <a className="secondary-button" href="/practice?mode=checkpoint">Run cumulative checkpoint</a> : null}
               {milestone ? (
                 <button
                   className="primary-button button-reset"
@@ -162,7 +165,7 @@ export function WeekWorkflowPanel({
                     <div><strong>{finding.title}</strong><span>{finding.skill_id ? "repair scheduled" : "unmapped"}</span></div>
                     {finding.detail ? <p>{finding.detail}</p> : null}
                     <div className="button-row">
-                      {finding.skill_id ? <a className="secondary-button" href="/practice">Practice repair</a> : null}
+                      {finding.skill_id ? <a className="secondary-button" href={"/practice?course="+courseId}>Review due course skills</a> : null}
                       <button className="secondary-button button-reset" disabled={Boolean(busy)} type="button" onClick={() => void post(`/api/study/findings/${finding.id}/resolve`, { note: "Resolved after independent repair." }, `resolve-${finding.id}`)}>Resolve</button>
                     </div>
                   </article>

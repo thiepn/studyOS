@@ -104,12 +104,20 @@ export default async function PracticePage({ searchParams }: { searchParams: Pro
     );
   }
 
-  const [data,papers,calibration] = await Promise.all([getTodayData(),getAvailableExamPapers(),getSemesterCalibration()]);
+  const [data,papers,calibration] = await Promise.all([getTodayData(course),getAvailableExamPapers(),getSemesterCalibration()]);
+  const selectedCourse = course ? data.courses.find(item => item.course_id === course) : null;
   return (
     <main className="shell practice-shell">
-      <header className="header"><div><p className="eyebrow">Study</p><h1>Practice</h1></div><Nav /></header>
+      <header className="header"><div><p className="eyebrow">{selectedCourse ? "Course review" : "Study"}</p><h1>{selectedCourse ? selectedCourse.display_name : "Practice"}</h1></div><Nav /></header>
+      {course ? <div className="course-review-context">
+        <p>{selectedCourse ? `Due retrieval for this course only · ${data.dueSkillCount} due skill(s)` : "This course is not in your active semester."}</p>
+        <Link href="/practice">Review across all courses →</Link>
+      </div> : null}
 
-      <ReviewSession queue={data.queue} plannedMinutes={Math.max(1, data.queueMinutes)} />
+      <ReviewSession queue={data.queue} plannedMinutes={Math.max(1, data.queueMinutes)}
+        courseId={selectedCourse?.course_id ?? undefined}
+        eyebrow={selectedCourse ? "Course retrieval" : "Daily retrieval"}
+        intro={selectedCourse ? "Review only this course's due skills, within your current daily review budget. Return to all-course review for the full retention queue." : undefined} />
 
       <section className="practice-modes" aria-label="Other study modes">
         <div className="practice-modes-heading"><span className="section-kicker">Other modes</span><h2>Use these when the evidence calls for them.</h2></div>

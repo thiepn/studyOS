@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { StudyAttemptResult, StudyErrorType, StudyIndependence } from "@/lib/supabase/database.types";
 import type { QueueItem } from "@/lib/study/types";
-import { assessmentReady, escalateIndependence, isMasteryCreditable, resultLabel } from "@/lib/study/review-state";
+import { assessmentReady, assessmentSourceVerified, canRevealRubric, escalateIndependence, isMasteryCreditable, resultLabel } from "@/lib/study/review-state";
 import { submitAttemptWithFallback } from "@/lib/study/offline-attempts";
 import { finishSessionWithFallback, startSessionWithFallback } from "@/lib/study/offline-sessions";
 
@@ -16,7 +16,7 @@ const ERROR_OPTIONS: { value: StudyErrorType; label: string }[] = [
   { value: "time_management", label: "Time" }, { value: "programming_bug", label: "Programming bug" },
 ];
 
-type Phase = "ready" | "answering" | "grading" | "submitting" | "complete";
+type Phase = "ready" | "starting" | "answering" | "grading" | "submitting" | "complete";
 type Outcome = { questionId: string; result?: StudyAttemptResult; independence?: StudyIndependence; queued?: boolean; durationSeconds?: number; skipped?: boolean };
 
 function formatSeconds(seconds: number) {
@@ -41,6 +41,7 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
   const [hint2Visible, setHint2Visible] = useState(false);
   const [result, setResult] = useState<StudyAttemptResult | null>(null);
   const [confidence, setConfidence] = useState<number | null>(null);
+  const [verifiedExternally, setVerifiedExternally] = useState(false);
   const [errorTypes, setErrorTypes] = useState<StudyErrorType[]>([]);
   const [outcomes, setOutcomes] = useState<Outcome[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
@@ -72,23 +73,32 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
   function resetQuestion(nextIndex: number) {
     setIndex(nextIndex); setQuestionStartedAt(new Date().toISOString()); setElapsed(0); setLockedDuration(0);
     setResponseText(""); setAnswerSurface("typed"); setIndependence("independent"); setHint1Visible(false); setHint2Visible(false);
-    setResult(null); setConfidence(null); setErrorTypes([]); setNotice(null); setError(null); setPhase("answering");
+    setResult(null); setConfidence(null); setVerifiedExternally(false); setErrorTypes([]); setNotice(null); setError(null); setPhase("answering");
   }
 
   async function start() {
     if (!queue.length) return;
     const id = crypto.randomUUID();
     const startedAt = new Date().toISOString();
-    setError(null); setSessionId(id); setSessionStartedAt(startedAt);
-    const sync = await startSessionWithFallback({ sessionId: id, plannedMinutes: Math.max(1, plannedMinutes), startedAt, sessionType, courseId });
-    resetQuestion(0);
-    if (sync.queued) setNotice("Session start is saved locally and will sync when the connection returns.");
+    setError(null); setPhase("starting"); setSessionId(id); setSessionStartedAt(startedAt);
+    try {
+      const sync = await startSessionWithFallback({ sessionId: id, plannedMinutes: Math.max(1, plannedMinutes), startedAt, sessionType, courseId });
+      resetQuestion(0);
+      if (sync.queued) setNotice("Session start is saved locally and will sync when the connection returns.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Could not start the session.");
+      setPhase("ready");
+    }
   }
 
   function revealForGrading(gaveUp = false) {
+    if (!canRevealRubric(confidence, answerSurface, responseText, gaveUp)) return;
     const duration = questionStartedAt ? Math.max(1, Math.floor((Date.now() - Date.parse(questionStartedAt)) / 1000)) : Math.max(1, elapsed);
     setLockedDuration(duration);
-    if (gaveUp) setIndependence((x) => escalateIndependence(x, "solution_exposed"));
+    if (gaveUp) {
+      setIndependence((x) => escalateIndependence(x, "solution_exposed"));
+      setResult("incorrect");
+    }
     setPhase("grading");
   }
 
@@ -112,7 +122,8 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
   }
 
   async function submitAssessment() {
-    if (!current || !result || !assessmentReady(result, confidence, errorTypes)) return;
+    if (!current || !result || !assessmentReady(result, confidence, errorTypes)
+      || !assessmentSourceVerified(Boolean(current.question.answer_key_or_rubric?.trim()), verifiedExternally, independence)) return;
     setPhase("submitting"); setError(null);
     const completedAt = new Date().toISOString();
     try {
@@ -128,20 +139,21 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
   }
 
   async function skip() {
-    if (!current) return;
+    if (!current || phase !== "answering") return;
     const nextOutcomes = [...outcomes, { questionId: current.question.id, skipped: true }];
     setOutcomes(nextOutcomes);
     if (index + 1 >= queue.length) await finishSession(nextOutcomes); else resetQuestion(index + 1);
   }
 
-  if (!queue.length) return <section className="panel empty-state"><h2>No review items yet</h2><p>Once verified skills and questions are ingested, due items will appear here automatically.</p></section>;
+  if (!queue.length) return <section className="panel empty-state"><h2>No questions in this set</h2><p>There are no questions available for this session. That can mean nothing is due, the course has no approved questions, or the current time budget cannot fit a question.</p><div className="button-row"><Link className="secondary-button" href="/courses">View courses</Link><Link className="secondary-button" href="/resources">Check materials</Link></div></section>;
 
-  if (phase === "ready") return (
+  if (phase === "ready" || phase === "starting") return (
     <section className="panel review-start">
       <p className="eyebrow">{eyebrow}</p>
       <h2>{queue.length} questions · {plannedMinutes} planned minutes</h2>
       <p>{intro ?? "Work from memory first. Hints lower evidentiary strength. If you give up and reveal the solution before locking an answer, the attempt receives no mastery credit and becomes a repair item."}</p>
-      <button className="primary-button button-reset" type="button" onClick={() => void start()}>Start review</button>
+      {error ? <p className="error" role="alert">{error}</p> : null}
+      <button className="primary-button button-reset" type="button" disabled={phase === "starting"} onClick={() => void start()}>{phase === "starting" ? "Starting…" : "Start review"}</button>
     </section>
   );
 
@@ -157,7 +169,12 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
   if (!current) return null;
   const expected = Math.ceil(Number(current.question.expected_minutes));
   const creditable = isMasteryCreditable(independence);
-  const canSubmit = assessmentReady(result, confidence, errorTypes) && phase !== "submitting";
+  const hasRubric = Boolean(current.question.answer_key_or_rubric?.trim());
+  const canSubmit = assessmentReady(result, confidence, errorTypes)
+    && assessmentSourceVerified(hasRubric, verifiedExternally, independence) && phase !== "submitting";
+  const canLock = canRevealRubric(confidence, answerSurface, responseText);
+  const canGiveUp = canRevealRubric(confidence, answerSurface, responseText, true);
+  const gaveUp = independence === "solution_exposed";
 
   return (
     <section className={"review-workspace "+(focusMode?"is-focused":"")}>
@@ -187,16 +204,26 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
           <div className="hint-stack">{current.question.hint_1 ? <button className="hint-button" type="button" onClick={() => showHint(1)} disabled={hint1Visible}>Hint 1</button> : null}{current.question.hint_2 ? <button className="hint-button" type="button" onClick={() => showHint(2)} disabled={hint2Visible}>Hint 2</button> : null}</div>
           {hint1Visible && current.question.hint_1 ? <div className="support-box"><strong>Hint 1</strong><p>{current.question.hint_1}</p></div> : null}
           {hint2Visible && current.question.hint_2 ? <div className="support-box"><strong>Hint 2</strong><p>{current.question.hint_2}</p></div> : null}
-          <div className="button-row review-actions"><button className="primary-button button-reset" type="button" onClick={() => revealForGrading(false)}>Lock answer & compare</button><button className="danger-link" type="button" onClick={() => revealForGrading(true)}>I give up — show solution</button><button className="secondary-button button-reset" type="button" onClick={() => void skip()}>Skip</button></div>
+          <fieldset className="grade-group confidence-before-reveal"><legend>How confident are you in your answer? <span>Choose before seeing the solution</span></legend>
+            <div className="choice-row confidence-row">{[1,2,3,4,5].map(value=><button type="button" key={value} aria-pressed={confidence===value} className={`choice-button ${confidence===value?"selected":""}`} onClick={()=>setConfidence(value)} aria-label={`Confidence ${value} of 5`}>{value}</button>)}</div>
+            <small>1 = guessing or unable to solve · 5 = certain. This rating is locked when you reveal the rubric.</small>
+          </fieldset>
+          <div className="button-row review-actions"><button className="primary-button button-reset" type="button" disabled={!canLock} onClick={() => revealForGrading(false)}>Lock answer & compare</button><button className="danger-link" type="button" disabled={!canGiveUp} onClick={() => revealForGrading(true)}>I give up — show solution</button><button className="secondary-button button-reset" type="button" onClick={() => void skip()}>Skip without revealing</button></div>
+          {!canLock ? <p className="review-gate-note">To compare your work, select confidence and {answerSurface==="typed"?"write an attempt (or switch to paper mode)":"then lock your paper attempt"}.</p> : null}
         </> : <>
           <div className="locked-answer"><span>Your locked answer</span><p>{responseText.trim() || (answerSurface==="paper"?"Worked on paper.":"No typed answer.")}</p></div>
-          <div className="solution-box"><span>Answer key / rubric</span><p>{current.question.answer_key_or_rubric || "No answer key is attached yet. Grade only if you can verify the result from the official material."}</p></div>
+          <div className="solution-box"><span>Answer key / rubric</span><p>{current.question.answer_key_or_rubric || "No rubric attached. Check an official solution or a verified course source before assigning a grade."}</p></div>
+          {!hasRubric && !gaveUp ? <label className="rubric-verification">
+            <input type="checkbox" checked={verifiedExternally} onChange={event=>setVerifiedExternally(event.target.checked)} disabled={phase==="submitting"} />
+            <span>I compared my work with an official or independently verified source. <Link href={courseId?"/courses/"+courseId:"/resources"}>Open source material</Link></span>
+          </label> : null}
           <p className={`evidence-note ${creditable ? "" : "evidence-zero"}`}>{creditable ? `Evidence mode: ${independence.replace("_", " ")}. Revealing the rubric after locking does not reduce this.` : "Solution was exposed before answer lock: this attempt records the failure but gives zero mastery credit."}</p>
-          <fieldset className="grade-group" disabled={phase === "submitting"}><legend>How correct was your locked attempt?</legend><div className="choice-row">{(["correct","partial","incorrect"] as StudyAttemptResult[]).map((value)=><button type="button" key={value} aria-pressed={result===value} className={`choice-button ${result===value?"selected":""}`} onClick={()=>{setResult(value);if(value==="correct")setErrorTypes([])}}>{resultLabel(value)}</button>)}</div></fieldset>
-          <fieldset className="grade-group" disabled={phase === "submitting"}><legend>Confidence before seeing the rubric</legend><div className="choice-row confidence-row">{[1,2,3,4,5].map((value)=><button type="button" key={value} aria-pressed={confidence===value} className={`choice-button ${confidence===value?"selected":""}`} onClick={()=>setConfidence(value)}>{value}</button>)}</div></fieldset>
+          <p className="locked-confidence"><strong>Confidence before reveal:</strong> {confidence}/5 · locked before the rubric was shown</p>
+          {gaveUp ? <p className="review-gate-note">You revealed the solution without locking an attempt. This records an incorrect answer with zero mastery credit; classify the error to save it.</p>
+            : <fieldset className="grade-group" disabled={phase === "submitting"}><legend>How correct was your locked attempt?</legend><div className="choice-row">{(["correct","partial","incorrect"] as StudyAttemptResult[]).map((value)=><button type="button" key={value} aria-pressed={result===value} className={`choice-button ${result===value?"selected":""}`} onClick={()=>{setResult(value);if(value==="correct")setErrorTypes([])}}>{resultLabel(value)}</button>)}</div></fieldset>}
           {result && result !== "correct" ? <fieldset className="grade-group" disabled={phase === "submitting"}><legend>What failed? <span>Choose at least one</span></legend><div className="error-grid">{ERROR_OPTIONS.map((option)=><button type="button" key={option.value} aria-pressed={errorTypes.includes(option.value)} className={`error-chip ${errorTypes.includes(option.value)?"selected":""}`} onClick={()=>toggleError(option.value)}>{option.label}</button>)}</div></fieldset> : null}
           {error ? <p className="error" role="alert">{error}</p> : null}
-          <div className="button-row review-actions"><button className="primary-button button-reset" type="button" disabled={!canSubmit} onClick={() => void submitAssessment()}>{phase === "submitting" ? "Saving…" : "Save & next"}</button><button className="secondary-button button-reset" type="button" disabled={phase === "submitting"} onClick={() => void skip()}>Skip instead</button></div>
+          <div className="button-row review-actions"><button className="primary-button button-reset" type="button" disabled={!canSubmit} onClick={() => void submitAssessment()}>{phase === "submitting" ? "Saving…" : "Save & next"}</button><span className="review-save-note">Revealed questions must be recorded before moving on.</span></div>
         </>}
       </article>
       {notice ? <p className="sync-note">{notice}</p> : null}
