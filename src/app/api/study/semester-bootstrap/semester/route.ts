@@ -7,7 +7,11 @@ export async function POST(request:Request){
     const data=await createInitialSemester(await request.json());
     return NextResponse.json({ok:true,data});
   }catch(error){
-    const status=error instanceof StudyServiceError&&error.code==="invalid_initial_semester"?400:500;
+    const status=error instanceof StudyServiceError
+      ? error.code==="invalid_initial_semester"?400
+      : ["initial_semester_schema_unavailable","account_connection_unavailable"].includes(error.code)?503
+      : error.code==="not_authenticated"?401:500
+      :500;
     return NextResponse.json({ok:false,error:error instanceof Error?error.message:"Could not create semester"},{status});
   }
 }
