@@ -25,3 +25,18 @@ test("skips a question that would exceed the hard daily budget", () => {
   const queue=buildReviewQueue([due({skill_id:"s1",priority_score:9})],[q("q-long","s1","execution",45)],40);
   assert.equal(queue.length,0);assert.equal(queueMinutes(queue),0);
 });
+
+test("course selection is applied before the fixed review budget", () => {
+  const dueSkills=[
+    due({skill_id:"a",course_id:"course-a",priority_score:99}),
+    due({skill_id:"b",course_id:"course-b",priority_score:1}),
+  ];
+  const questions=[q("qa","a","execution",8),q("qb","b","execution",8)];
+  const scope=scopeDueSkills(dueSkills,"course-b");
+  const queue=buildReviewQueue(scope,questions,8);
+  assert.equal(queue.length,1);
+  assert.equal(queue[0].courseId,"course-b");
+  assert.equal(queue[0].question.id,"qb");
+  assert.equal(scopeDueSkills(dueSkills).length,2);
+  assert.equal(scopeDueSkills(dueSkills,"missing").length,0);
+});
