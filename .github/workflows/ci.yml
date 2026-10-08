@@ -43,6 +43,9 @@ jobs:
       - name: Next.js production build
         run: npm run build
 
+      - name: Browser Supabase configuration bundle smoke
+        run: node scripts/check-browser-config.mjs
+
       - name: Production server acceptance smoke
         run: |
           set -euo pipefail
