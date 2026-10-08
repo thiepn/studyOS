@@ -34,7 +34,7 @@ const OPS: Record<string,string> = {
   sum:"∑",prod:"∏",int:"∫",oint:"∮",lim:"lim",
   ldots:"…",cdots:"⋯",dots:"…",ldotp:".",
   langle:"⟨",rangle:"⟩",lvert:"|",rvert:"|",
-  ll:"≪",gg:"≫",oplus:"⊕",otimes:"⊗",
+  ll:"≪",gg:"≫",oplus:"⊕",otimes:"⊗",prime:"′",
 };
 const IDENTIFIERS = new Set(["sin","cos","tan","log","ln","exp","max","min","sup","inf","det","ker","dim","gcd"]);
 const SPACES = new Set([",",";",":","!","quad","qquad"," ","~"]);
@@ -151,7 +151,7 @@ class Reader {
     if(/[A-Za-z]/.test(c)){
       this.i++;return leaf("mi",c);
     }
-    if("+-=*/(),.<>|![]:;′∈≤≥≠∑∫∞∂→⇒∀∃πλμθ√×⋅".includes(c)){
+    if("+-=*/(),.<>|![]:;′\'∈≤≥≠∑∫∞∂→⇒∀∃πλμθ√×⋅".includes(c)){
       this.i++;return leaf("mo",c);
     }
     this.fail();
