@@ -224,6 +224,8 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
       const note=[completionNote,pending ? `${pending} attempt(s) were pending local sync when the session ended.` : null].filter(Boolean).join(" · ") || undefined;
       await finishSessionWithFallback({ sessionId, endedAt, note });
     }
+    draftRef.current=null;
+    try{window.sessionStorage.removeItem(draftKey);}catch{}
     setPhase("complete");
   }
 
@@ -309,6 +311,20 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
             <div className="math-symbol-row" aria-label="Insert common mathematical notation">
               {["⇒","⇔","∀","∃","∈","⊂","≤","≥","∑","∫","√","∞","∂","≈"].map(symbol=><button key={symbol} type="button" onClick={()=>insertMathSymbol(symbol)} aria-label={`Insert ${symbol} into working`}>{symbol}</button>)}
             </div>
+            <details className="math-patterns">
+              <summary>Insert a working structure</summary>
+              <div className="math-patterns-actions">
+                {([
+                  ["Proof","Assume ...\\nThen ...\\nTherefore ..."],
+                  ["Cases","Case 1: ...\\nCase 2: ...\\nThus ..."],
+                  ["Derivation","Start: ...\\n⇒ ...\\n⇒ ..."],
+                  ["Integral","∫ f(x) dx = ..."],
+                  ["Differential equation","y'(t) = ...; y(0) = ...\\n⇒ ..."],
+                  ["Probability","P(A | B) = P(A ∩ B) / P(B) = ..."],
+                ] as const).map(([label,structure])=><button type="button" key={label}
+                  onClick={()=>insertMathSymbol(structure.replaceAll("\\\\n","\\n"))}>{label}</button>)}
+              </div>
+            </details>
             <label className="field-label" htmlFor="review-working">Steps, argument or proof <span>Ctrl/⌘ + Enter to lock</span></label>
             <textarea id="review-working" ref={workingRef} className="answer-box math-working-input" value={workingText} onChange={event=>setWorkingText(event.target.value)} maxLength={17000}
               onKeyDown={event=>{if((event.ctrlKey||event.metaKey)&&event.key==="Enter"){event.preventDefault();revealForGrading(false);}}}
@@ -318,6 +334,11 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
               onKeyDown={event=>{if((event.ctrlKey||event.metaKey)&&event.key==="Enter"){event.preventDefault();revealForGrading(false);}}}
               placeholder="e.g. x = 0 is the unique critical point, or a concise proof conclusion" rows={3} />
             <p className="math-work-helper">Your working and conclusion are stored together in the existing attempt record. This editor does not automatically check mathematical correctness.</p>
+            {(workingText.trim()||responseText.trim())?<details className="math-reading-view">
+              <summary>Preview reading layout (plain text)</summary>
+              {workingText.trim()?<div><strong>Working / proof</strong><pre>{workingText}</pre></div>:null}
+              {responseText.trim()?<div><strong>Conclusion</strong><pre>{responseText}</pre></div>:null}
+            </details>:null}
           </div> : <p className="paper-work-note">Solve independently on paper. When finished, lock your work before revealing the rubric. You can switch to typing to record your reasoning or conclusion.</p>}
           <div className="hint-stack">{current.question.hint_1 ? <button className="hint-button" type="button" onClick={() => showHint(1)} disabled={hint1Visible}>Hint 1</button> : null}{current.question.hint_2 ? <button className="hint-button" type="button" onClick={() => showHint(2)} disabled={hint2Visible}>Hint 2</button> : null}</div>
           {hint1Visible && current.question.hint_1 ? <div className="support-box"><strong>Hint 1</strong><p>{current.question.hint_1}</p></div> : null}
