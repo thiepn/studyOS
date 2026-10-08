@@ -33,6 +33,7 @@ export function WeekWorkflowPanel({
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [messageTarget,setMessageTarget]=useState<string | null>(null);
   const [collapsedFeatured,setCollapsedFeatured]=useState<string[]>([]);
   const [expandedOther,setExpandedOther]=useState<string[]>([]);
   const [independentConfirmed,setIndependentConfirmed]=useState<string[]>([]);
@@ -57,7 +58,7 @@ export function WeekWorkflowPanel({
   }, [resources]);
 
   async function post(path: string, body: unknown, key: string) {
-    setBusy(key); setMessage(null);
+    setBusy(key); setMessage(null); setMessageTarget(key);
     try {
       const response = await fetch(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
       const payload = await response.json();
@@ -89,7 +90,7 @@ export function WeekWorkflowPanel({
   }
 
   if (!weeks.length) {
-    return <section className="panel empty-week"><h2>No teaching week yet</h2><p>Once a lecture, exercise sheet, or other week-numbered source is registered, its weekly workflow appears here automatically.</p></section>;
+    return <section className="panel empty-week"><h2>No teaching week yet</h2><p>Register your first lecture, exercise sheet or other week-numbered source to create a working week.</p><div className="button-row"><Link href={`/resources?course=${courseId}&week=1#manual-registration`} className="primary-button">Add first source</Link></div></section>;
   }
 
   return (
@@ -102,6 +103,8 @@ export function WeekWorkflowPanel({
         const hiddenSolutions=weekResources.filter(item=>["solution","exam_solution"].includes(item.resource_type) && !solutionsVisible);
         const visibleResources=weekResources.filter(item=>!hiddenSolutions.includes(item));
         const exerciseConfirmed=independentConfirmed.includes(week.teaching_week_id);
+        const localMessage=message && (messageTarget===`milestone-${week.teaching_week_id}` || messageTarget===`finding-${week.teaching_week_id}`
+          || weekFindings.some(finding=>messageTarget===`resolve-${finding.id}`));
         const isFeatured=week.teaching_week_id===featuredId;
         const isExpanded=isFeatured?!collapsedFeatured.includes(week.teaching_week_id):expandedOther.includes(week.teaching_week_id);
         return (
@@ -198,11 +201,11 @@ export function WeekWorkflowPanel({
                 </form>
               </div>
             ) : null}
+              {localMessage ? <p className="form-message" role="status">{message}</p> : null}
             </section>:null}
           </div>
         );
       })}
-      {message ? <p className="form-message" role="status">{message}</p> : null}
     </div>
   );
 }
