@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test tests/*.test.ts",
     "test:queue": "node --experimental-strip-types --test tests/queue.test.ts",
-    "test:review": "node --experimental-strip-types --test tests/review.test.ts"
+    "test:review": "node --experimental-strip-types --test tests/review.test.ts",
+    "qualify:live": "node scripts/verify-live-deployment.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
