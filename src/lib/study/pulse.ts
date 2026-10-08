@@ -3,6 +3,7 @@ import { ensureStudyWorkspace } from "./bootstrap";
 import { StudyServiceError } from "./errors";
 import { buildCheckpointQueue, type CheckpointSkill } from "./checkpoint";
 import { queueMinutes } from "./queue";
+import { parseTeachingWeek } from "./course-study-flow";
 import type { StudyQuestion } from "./types";
 
 export type CourseRiskRow = {
@@ -73,4 +74,35 @@ export async function getCheckpointData() {
   }
   const queue=buildCheckpointQueue(skills,questions,rotation.target_week_no,Number(rotation.budget_minutes||60));
   return {rotation,queue,queueMinutes:queueMinutes(queue)};
+}
+
+/** A course-week cumulative checkpoint is separate from the semester rotation.
+ * It reuses the existing checkpoint queue and recorded session evidence. */
+export async function getCourseWeekCheckpointData(courseId: string | undefined, weekValue: string | undefined) {
+  const weekNo=parseTeachingWeek(weekValue);
+  if (!courseId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(courseId) || weekNo==null) {
+    throw new StudyServiceError("A valid course and teaching week are required", "invalid_checkpoint");
+  }
+  const supabase=await createClient();
+  const {semesterId}=await ensureStudyWorkspace(supabase);
+  const db=supabase as any;
+  const courseResult=await db.from("study_courses").select("id,display_name,short_name")
+    .eq("semester_id",semesterId).eq("id",courseId).eq("active",true).maybeSingle();
+  if(courseResult.error)throw new StudyServiceError("Could not load checkpoint course",courseResult.error.code||"checkpoint_failed",courseResult.error);
+  if(!courseResult.data)throw new StudyServiceError("This course does not belong to the active semester", "invalid_checkpoint");
+
+  const skillsResult=await db.from("study_skill_retention_diagnostics").select("*")
+    .eq("semester_id",semesterId).eq("course_id",courseId)
+    .or(`first_week_no.is.null,first_week_no.lte.${weekNo}`);
+  if(skillsResult.error)throw new StudyServiceError("Could not load cumulative course skills",skillsResult.error.code||"checkpoint_failed",skillsResult.error);
+  const skills=(skillsResult.data??[]) as CheckpointSkill[];
+  const ids=skills.map(skill=>skill.skill_id);
+  let questions:StudyQuestion[]=[];
+  if(ids.length) {
+    const questionResult=await supabase.from("study_questions").select("*").in("primary_skill_id",ids).eq("active",true);
+    if(questionResult.error)throw new StudyServiceError("Could not load checkpoint questions",questionResult.error.code||"checkpoint_failed",questionResult.error);
+    questions=(questionResult.data??[]) as StudyQuestion[];
+  }
+  const queue=buildCheckpointQueue(skills,questions,weekNo,60);
+  return {course:courseResult.data as {id:string;display_name:string;short_name:string|null},weekNo,queue,queueMinutes:queueMinutes(queue)};
 }
