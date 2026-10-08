@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Nav } from "@/components/nav";
 import { getActivationData } from "@/lib/study/activation";
+import { getStudyWorkspaceState } from "@/lib/study/bootstrap";
+import { redirect } from "next/navigation";
 
 export const dynamic="force-dynamic";
 
@@ -13,6 +15,8 @@ function Gate({title,percent,ready,blockers}:{title:string;percent:number;ready:
 }
 
 export default async function SetupPage(){
+  const state=await getStudyWorkspaceState();
+  if(!state.activeSemester)redirect(state.hasAnySemester?"/semester/rollover":"/semester/bootstrap");
   const data=await getActivationData();const {evaluation,snapshot,courses,server,semester}=data;
   const startLabel=semester.starts_on
     ?new Date(String(semester.starts_on)+"T12:00:00Z").toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})
