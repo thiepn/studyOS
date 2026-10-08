@@ -96,7 +96,6 @@ export function WeekWorkflowPanel({
         return (
           <div className={"week-work-item "+(isFeatured?"week-work-featured":"")} key={week.teaching_week_id}>
             <button type="button" className="week-work-toggle" aria-expanded={isExpanded}
-              aria-controls={"week-panel-"+week.teaching_week_id}
               onClick={()=>{
                 if(isFeatured)setCollapsedFeatured(current=>current.includes(week.teaching_week_id)?current.filter(id=>id!==week.teaching_week_id):[...current,week.teaching_week_id]);
                 else setExpandedOther(current=>current.includes(week.teaching_week_id)?current.filter(id=>id!==week.teaching_week_id):[...current,week.teaching_week_id]);
