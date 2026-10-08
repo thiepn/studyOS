@@ -143,7 +143,7 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
     if (index + 1 >= queue.length) await finishSession(nextOutcomes); else resetQuestion(index + 1);
   }
 
-  if (!queue.length) return <section className="panel empty-state"><h2>No review items yet</h2><p>Once verified skills and questions are ingested, due items will appear here automatically.</p></section>;
+  if (!queue.length) return <section className="panel empty-state"><h2>No questions in this set</h2><p>There are no questions available for this session. That can mean nothing is due, the course has no approved questions, or the current time budget cannot fit a question.</p><div className="button-row"><Link className="secondary-button" href="/courses">View courses</Link><Link className="secondary-button" href="/resources">Check materials</Link></div></section>;
 
   if (phase === "ready" || phase === "starting") return (
     <section className="panel review-start">
