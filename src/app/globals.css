@@ -1100,3 +1100,35 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   .resource-context-nav p{flex-basis:100%}
   .course-shell .course-back-row .primary-button{width:100%;justify-content:center}
 }
+
+/* P33: a mathematical work page, not a dashboard or generative editor. */
+.math-work-editor{margin-top:18px;border-top:1px solid var(--line);padding-top:16px;max-width:100%}
+.math-work-header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:11px}
+.math-work-header strong{font-family:Georgia,"Times New Roman",serif;font-size:1.1rem;letter-spacing:-.01em}
+.math-work-header small,.math-work-helper{font-size:.77rem;line-height:1.55;color:var(--muted)}
+.math-symbol-row{display:flex;flex-wrap:wrap;gap:5px;padding:7px 0 12px;border-bottom:1px solid var(--line);margin-bottom:15px}
+.math-symbol-row button{background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:2px;min-width:34px;min-height:34px;font-family:Georgia,"Times New Roman",serif;font-size:1.15rem;cursor:pointer}
+.math-symbol-row button:hover{background:var(--soft);border-color:var(--ink)}
+.math-work-editor .field-label{margin-top:14px}
+.math-working-input{font-family:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace!important;font-size:.88rem!important;line-height:1.8!important;resize:vertical;min-height:210px}
+.math-answer-input{font-family:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace!important;line-height:1.65!important;resize:vertical}
+.math-work-helper{margin:10px 0 4px}
+.math-locked-work{white-space:pre-wrap;overflow-wrap:anywhere;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;line-height:1.65}
+.repair-brief{margin:0 0 24px;padding:18px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.repair-brief h2{font-family:Georgia,"Times New Roman",serif;font-size:1.3rem;margin:8px 0;letter-spacing:-.01em}
+.repair-brief p{font-size:.85rem;line-height:1.6;margin:8px 0}
+.repair-brief details{margin-top:12px}
+.repair-brief summary{font-size:.8rem;cursor:pointer;font-weight:650}
+.finding-sources{display:flex;flex-wrap:wrap;gap:10px!important;align-items:center;font-size:.76rem!important;color:var(--ink-soft)}
+.finding-sources a{text-decoration:underline;text-underline-offset:3px}
+.finding-dismiss{margin-top:12px;border-top:1px solid var(--line);padding-top:9px}
+.finding-dismiss summary{cursor:pointer;font-size:.76rem;color:var(--muted)}
+.finding-dismiss form{display:flex;flex-wrap:wrap;align-items:end;gap:10px;margin-top:12px}
+.finding-dismiss label{flex:1;min-width:210px;display:grid;gap:5px;font-size:.78rem}
+.finding-dismiss input{width:100%;min-height:36px;padding:8px 10px;border:1px solid var(--line);background:var(--surface);border-radius:2px}
+@media(max-width:760px){
+ .math-work-header{display:block}
+ .math-work-header small{display:block;margin-top:5px}
+ .math-symbol-row button{min-width:37px;min-height:37px}
+ .repair-brief{padding:12px 0}
+}
