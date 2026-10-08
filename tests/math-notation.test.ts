@@ -11,6 +11,12 @@ test("fractions, indexed roots and scripts form native MathML structures",()=>{
   if(parsed.denominator.kind==="sqrt")assert.equal(parsed.denominator.index?.kind,"mn");
 });
 
+test("binomial notation must not be confused with fraction notation",()=>{
+  const parsed=parseMathExpression("\\\\binom{n}{k}");
+  assert.equal(parsed?.kind,"frac");
+  if(parsed?.kind==="frac")assert.equal(parsed.binomial,true);
+});
+
 test("math identifiers, Greek symbols, limits and sets are recognized",()=>{
   const expression="\\lim_{n\\to\\infty}\\sum_{k=1}^{n}\\frac{1}{k^2}\\in\\mathbb{R}";
   const parsed=parseMathExpression(expression);
