@@ -5,6 +5,8 @@ import {
 } from "@/components/semester-bootstrap-controls";
 import { getSemesterBootstrapData, getSemesterBootstrapEntryState } from "@/lib/study/semester-bootstrap-data";
 import { historicalPriorUse } from "@/lib/study/semester-bootstrap";
+import { createClient } from "@/lib/supabase/server";
+import { StudyServiceError } from "@/lib/study/errors";
 
 export const dynamic="force-dynamic";
 
@@ -32,6 +34,40 @@ export default async function SemesterBootstrapPage(){
         <p className="muted">Need to check hosting or OAuth before adding a semester? <Link href="/setup/platform">Inspect platform setup</Link>.</p>
         <InitialSemesterForm/>
       </section>}
+    </main>;
+  }
+
+  // An existing but empty semester is valid. Keep first-run course intake
+  // independent from certification, archived history, Drive, and progress views.
+  const supabase=await createClient();
+  const {count:rosterSize,error:rosterError}=await supabase
+    .from("study_courses")
+    .select("id",{count:"exact",head:true})
+    .eq("semester_id",entry.activeSemester.id)
+    .eq("active",true);
+  if(rosterError)throw new StudyServiceError(
+    "Could not inspect the semester course roster",
+    rosterError.code||"semester_roster_read_failed",
+    rosterError,
+  );
+  if(rosterSize===0){
+    return <main className="shell">
+      <header className="header setup-only-header">
+        <div><p className="eyebrow">StudyOS · Semester setup</p><h1>{entry.activeSemester.display_name}</h1></div>
+      </header>
+      <section className="panel bootstrap-hero">
+        <div className="section-heading">
+          <div><p className="eyebrow">First course</p><h2>Add your actual course roster</h2></div>
+          <span>0 courses</span>
+        </div>
+        <p>Your semester workspace exists, but its course roster is empty. Add one real course to start configuring your semester. No demonstration data is inserted.</p>
+        <p className="muted">You can use the third-semester templates below, or enter a custom course. Check your real course details before saving.</p>
+      </section>
+      <section className="panel bootstrap-intake">
+        <div className="section-heading"><div><p className="eyebrow">Course intake</p><h2>Choose your first course</h2></div></div>
+        <BootstrapCourseForm existingCourseKeys={[]}/>
+      </section>
+      <p className="muted"><Link href="/setup/platform">Check deployment and account connection</Link></p>
     </main>;
   }
 
