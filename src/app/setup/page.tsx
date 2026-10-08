@@ -17,7 +17,9 @@ function Gate({title,percent,ready,blockers}:{title:string;percent:number;ready:
 export default async function SetupPage(){
   const state=await getStudyWorkspaceState();
   if(!state.activeSemester)redirect(state.hasAnySemester?"/semester/rollover":"/semester/bootstrap");
-  const data=await getActivationData();const {evaluation,snapshot,courses,server,semester}=data;
+  const data=await getActivationData();const {evaluation,snapshot,courses,server,semester,firstWeekProof}=data;
+  const proofByCourse=new Map(firstWeekProof.map(row=>[row.courseId,row]));
+  const majorCourses=courses.filter(course=>course.course_kind==="major");
   const startLabel=semester.starts_on
     ?new Date(String(semester.starts_on)+"T12:00:00Z").toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})
     :"start date not configured";
