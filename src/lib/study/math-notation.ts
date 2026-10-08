@@ -28,7 +28,7 @@ const OPS: Record<string,string> = {
   ne:"≠",neq:"≠",approx:"≈",equiv:"≡",sim:"∼",cong:"≅",to:"→",rightarrow:"→",
   leftarrow:"←",leftrightarrow:"↔",Rightarrow:"⇒",Leftrightarrow:"⇔",
   in:"∈",notin:"∉",subset:"⊂",subseteq:"⊆",supset:"⊃",supseteq:"⊇",
-  cup:"∪",cap:"∩",setminus:"∖",forall:"∀",exists:"∃",neg:"¬",
+  cup:"∪",cap:"∩",setminus:"∖",mid:"∣",nmid:"∤",forall:"∀",exists:"∃",neg:"¬",
   land:"∧",lor:"∨",wedge:"∧",vee:"∨",partial:"∂",nabla:"∇",
   infty:"∞",infinity:"∞",emptyset:"∅",varnothing:"∅",
   sum:"∑",prod:"∏",int:"∫",oint:"∮",lim:"lim",
