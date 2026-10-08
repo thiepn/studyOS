@@ -3,14 +3,18 @@
 import { useCallback, useEffect, useState } from "react";
 import { flushPendingAttempts, listPendingAttempts, STUDY_SYNC_CHANGE_EVENT } from "@/lib/study/offline-attempts";
 import { flushPendingSessionFinishes, flushPendingSessionStarts, pendingSessionCount } from "@/lib/study/offline-sessions";
+import { currentPendingOwner } from "@/lib/study/pending-owner";
 
 export function StudySyncBridge() {
   const [pending, setPending] = useState(0);
   const [syncing, setSyncing] = useState(false);
 
-  const refreshCount = useCallback(() => setPending(listPendingAttempts().length + pendingSessionCount()), []);
+  const refreshCount = useCallback(async () => {
+    const userId=await currentPendingOwner();
+    setPending(userId?listPendingAttempts(userId).length+pendingSessionCount(userId):0);
+  }, []);
   const sync = useCallback(async () => {
-    if (typeof navigator !== "undefined" && !navigator.onLine) { refreshCount(); return; }
+    if (typeof navigator !== "undefined" && !navigator.onLine) { await refreshCount(); return; }
     setSyncing(true);
     try {
       await flushPendingSessionStarts();
@@ -18,15 +22,15 @@ export function StudySyncBridge() {
       await flushPendingSessionFinishes();
     } finally {
       setSyncing(false);
-      refreshCount();
+      await refreshCount();
     }
   }, [refreshCount]);
 
   useEffect(() => {
-    refreshCount();
+    void refreshCount();
     void sync();
     const online = () => void sync();
-    const changed = () => refreshCount();
+    const changed = () => {void refreshCount();};
     window.addEventListener("online", online);
     window.addEventListener(STUDY_SYNC_CHANGE_EVENT, changed);
     return () => {
