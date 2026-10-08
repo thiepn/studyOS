@@ -55,6 +55,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
         findings={data.findings}
         skills={data.skills}
         resources={data.resources}
+        weekPractice={data.weekPractice}
       />
 
       <CourseMasterMap topics={data.masterMap} />
