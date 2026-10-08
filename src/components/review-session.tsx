@@ -61,8 +61,12 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
 
   const current = queue[index] ?? null;
   const draftFingerprint=useMemo(
-    ()=>studyQueueFingerprint(sessionType,courseId,queue.map(x=>({id:x.question.id,prompt:x.question.prompt,answer_key_or_rubric:x.question.answer_key_or_rubric}))),
-    [sessionType,courseId,queue],
+    ()=>studyQueueFingerprint(
+      sessionType,courseId,
+      queue.map(x=>({id:x.question.id,prompt:x.question.prompt,answer_key_or_rubric:x.question.answer_key_or_rubric})),
+      [returnHref,completionNote??""].join("|"),
+    ),
+    [sessionType,courseId,queue,returnHref,completionNote],
   );
   const draftKey=studyDraftStorageKey(draftFingerprint);
   const questionIds=useMemo(()=>queue.map(item=>item.question.id),[queue]);
