@@ -65,7 +65,7 @@ export default async function SemesterBootstrapPage(){
         <span>{data.courses.length}</span>
       </div>
       <p className="muted">Add only courses that actually belong to this semester. Stable keys become the internal identity used for historical lineage and Drive classification.</p>
-      <BootstrapCourseForm/>
+      <BootstrapCourseForm existingCourseKeys={data.courses.map(course=>course.stableKey)}/>
     </section>
 
     <section className="bootstrap-course-grid">
