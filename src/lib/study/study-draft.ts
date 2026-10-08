@@ -32,6 +32,7 @@ export type StudyDraft = {
   verifiedExternally: boolean;
   errorTypes: StudyErrorType[];
   lockedDuration: number;
+  activeSeconds: number;
   outcomes: DraftOutcome[];
 };
 
@@ -87,6 +88,7 @@ export function parseStudyDraft(
     ||typeof d.verifiedExternally!=="boolean"
     ||!Array.isArray(d.errorTypes)||d.errorTypes.some(x=>!ERRORS.has(String(x)))
     ||!Number.isInteger(d.lockedDuration)||Number(d.lockedDuration)<0
+    ||!Number.isInteger(d.activeSeconds)||Number(d.activeSeconds)<0||Number(d.activeSeconds)>43200
     ||!Array.isArray(d.outcomes)||d.outcomes.length>questionIds.length)return null;
   if(d.phase!=="answering" && d.confidence===null)return null;
   if(d.phase==="answering" && (d.independence==="solution_exposed"||d.result!==null))return null;
