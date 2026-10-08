@@ -38,16 +38,30 @@ export function parseCandidateInput(value:unknown):IngestionCandidateInput{
 
 export async function getResourcesData():Promise<ResourcesData>{
   const supabase=await createClient(); const {semesterId}=await ensureStudyWorkspace(supabase);
-  const [coursesResult,resourcesResult,runsResult,driveResult,intakeResult]=await Promise.all([
+  const [coursesResult,driveResult,intakeResult]=await Promise.all([
     supabase.from("study_courses").select("id,display_name,short_name,sort_order,drive_folder_url").eq("semester_id",semesterId).eq("active",true).order("sort_order"),
-    supabase.from("study_resources").select("*").eq("active",true).order("created_at",{ascending:false}),
-    supabase.from("study_ingestion_runs").select("*").order("created_at",{ascending:false}),
     supabase.from("study_drive_connections").select("status,google_account_email,inbox_folder_url,last_scan_at,last_scan_status,last_error").maybeSingle(),
     supabase.from("study_intake_items").select("*").eq("semester_id",semesterId).order("last_seen_at",{ascending:false}).limit(100),
   ]);
-  const error=coursesResult.error||resourcesResult.error||runsResult.error||driveResult.error||intakeResult.error;
-  if(error)throw new StudyServiceError("Could not load resource inbox",error.code||"resource_read_failed",error);
-  return {semesterId,courses:coursesResult.data??[],resources:resourcesResult.data??[],ingestionRuns:runsResult.data??[],driveConnection:driveResult.data??null,intakeItems:intakeResult.data??[]};
+  const baseError=coursesResult.error||driveResult.error||intakeResult.error;
+  if(baseError)throw new StudyServiceError("Could not load resource inbox",baseError.code||"resource_read_failed",baseError);
+  const courses=coursesResult.data??[];
+  const courseIds=courses.map(course=>course.id);
+  // Never blend registered resources from archived semesters into the active study inbox.
+  // The current semester's active roster defines the only allowed course IDs.
+  let resources:ResourcesData["resources"]=[];
+  let ingestionRuns:ResourcesData["ingestionRuns"]=[];
+  if(courseIds.length){
+    const [resourcesResult,runsResult]=await Promise.all([
+      supabase.from("study_resources").select("*").in("course_id",courseIds).eq("active",true).order("created_at",{ascending:false}),
+      supabase.from("study_ingestion_runs").select("*").in("course_id",courseIds).order("created_at",{ascending:false}),
+    ]);
+    const error=resourcesResult.error||runsResult.error;
+    if(error)throw new StudyServiceError("Could not load source records",error.code||"resource_read_failed",error);
+    resources=resourcesResult.data??[];
+    ingestionRuns=runsResult.data??[];
+  }
+  return {semesterId,courses,resources,ingestionRuns,driveConnection:driveResult.data??null,intakeItems:intakeResult.data??[]};
 }
 
 export async function registerResource(input:ResourceRegistrationInput){
