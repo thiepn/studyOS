@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import type { ReconciliationFinding, SkillOption, WeekActionRow, WeekResource } from "@/lib/study/workflow";
 import { actionDescription, actionLabel, milestoneForAction } from "@/lib/study/workflow-state";
 import { featuredTeachingWeek, orderedTeachingWeeks } from "@/lib/study/week-focus";
@@ -39,6 +39,24 @@ export function WeekWorkflowPanel({
   const [independentConfirmed,setIndependentConfirmed]=useState<string[]>([]);
   const featuredId=featuredTeachingWeek(weeks);
   const orderedWeeks=orderedTeachingWeeks(weeks);
+  // Hash links from course practice and deep links must open the intended
+  // binder week rather than scrolling to a collapsed inaccessible panel.
+  useEffect(()=>{
+    const openWeek=()=>{
+      const match=/^#week-(\d+)$/.exec(window.location.hash);
+      if(!match)return;
+      const target=weeks.find(item=>item.week_no===Number(match[1]));
+      if(!target)return;
+      setCollapsedFeatured(current=>current.filter(id=>id!==target.teaching_week_id));
+      setExpandedOther(current=>current.includes(target.teaching_week_id)?current:[...current,target.teaching_week_id]);
+      window.requestAnimationFrame(()=>{
+        document.getElementById(`week-${target.week_no}`)?.scrollIntoView({block:"start"});
+      });
+    };
+    window.addEventListener("hashchange",openWeek);
+    openWeek();
+    return ()=>window.removeEventListener("hashchange",openWeek);
+  },[weeks]);
   const findingsByWeek = useMemo(() => {
     const map = new Map<string, ReconciliationFinding[]>();
     for (const finding of findings) {
@@ -127,6 +145,17 @@ export function WeekWorkflowPanel({
               <span className={`health-badge health-${week.health_status}`}>{week.health_status.replaceAll("_", " ")}</span>
             </div>
             <p className="workflow-description">{actionDescription(week.next_action)}</p>
+            <ol className="week-academic-sequence" aria-label="Teaching week progress">
+              {([
+                ["Lecture retrieval",week.lecture_retrieval_completed_at],
+                ["Independent sheet",week.exercise_attempt_completed_at],
+                ["Solution reconciliation",week.solution_reconciled_at],
+                ["Cumulative check",week.checkpoint_completed_at],
+              ] as const).map(([label,completed],step)=><li key={label} className={completed?"completed":""}>
+                <span aria-hidden="true">{completed?"✓":String(step+1).padStart(2,"0")}</span>
+                <span>{label}</span>
+              </li>)}
+            </ol>
 
             <div className="week-metrics">
               <span>{week.lecture_count} lectures</span>
@@ -147,6 +176,7 @@ export function WeekWorkflowPanel({
             {hiddenSolutions.length ? <p className="solution-access-note" role="note">{hiddenSolutions.length} solution file{hiddenSolutions.length===1?" is":"s are"} intentionally hidden. Record your independent exercise attempt first; opening a solution early undermines the evidence. This hides links in StudyOS, not permissions in Drive.</p> : null}
 
             <div className="button-row">
+              {week.skill_count>0 ? <Link className="secondary-button" href={`/practice?mode=week&course=${courseId}&week=${week.week_no}`}>Practice week {week.week_no} skills</Link> : null}
               {week.next_action === "process_material" ? <Link className="primary-button" href={"/resources?course="+courseId+"#processing-queue"}>Process this course’s material</Link> : null}
               {["await_material","await_exercise","await_solution"].includes(week.next_action) ?
                 <Link className="secondary-button" href={`/resources?course=${courseId}&week=${week.week_no}#manual-registration`}>Open week {week.week_no} materials</Link> : null}

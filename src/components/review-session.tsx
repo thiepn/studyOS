@@ -8,6 +8,7 @@ import { assessmentReady, assessmentSourceVerified, canRevealRubric, escalateInd
 import { submitAttemptWithFallback } from "@/lib/study/offline-attempts";
 import { finishSessionWithFallback, startSessionWithFallback } from "@/lib/study/offline-sessions";
 import { composeProblemWork } from "@/lib/study/problem-work";
+import { parseStudyDraft, studyDraftStorageKey, studyQueueFingerprint, type StudyDraft } from "@/lib/study/study-draft";
 
 const ERROR_OPTIONS: { value: StudyErrorType; label: string }[] = [
   { value: "concept", label: "Concept" }, { value: "recall", label: "Recall" },
@@ -35,6 +36,10 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
   const [index, setIndex] = useState(0);
   const [questionStartedAt, setQuestionStartedAt] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
+  const [requestId,setRequestId]=useState("");
+  const [draftHydrated,setDraftHydrated]=useState(false);
+  const [draftNotice,setDraftNotice]=useState<string|null>(null);
+  const [draftStatus,setDraftStatus]=useState<"saved"|"unavailable"|null>(null);
   const [lockedDuration, setLockedDuration] = useState(0);
   const [responseText, setResponseText] = useState("");
   const [workingText,setWorkingText]=useState("");
@@ -52,14 +57,99 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
   const [error, setError] = useState<string | null>(null);
 
   const current = queue[index] ?? null;
+  const draftFingerprint=useMemo(
+    ()=>studyQueueFingerprint(sessionType,courseId,queue.map(x=>({id:x.question.id,prompt:x.question.prompt,answer_key_or_rubric:x.question.answer_key_or_rubric}))),
+    [sessionType,courseId,queue],
+  );
+  const draftKey=studyDraftStorageKey(draftFingerprint);
+  const questionIds=useMemo(()=>queue.map(item=>item.question.id),[queue]);
 
-  useEffect(() => {
-    if (phase !== "answering" || !questionStartedAt) return;
-    const tick = () => setElapsed(Math.max(0, Math.floor((Date.now() - Date.parse(questionStartedAt)) / 1000)));
-    tick();
-    const timer = window.setInterval(tick, 1000);
-    return () => window.clearInterval(timer);
-  }, [phase, questionStartedAt]);
+  // Recover only the same queue in this browser tab. A local draft does not
+  // substitute for a server-saved attempt, nor is it accessible cross-device.
+  useEffect(()=>{
+    try{
+      const raw=window.sessionStorage.getItem(draftKey);
+      const restored=parseStudyDraft(raw,draftFingerprint,questionIds);
+      if(restored){
+        setSessionId(restored.sessionId);setSessionStartedAt(restored.sessionStartedAt);
+        setQuestionStartedAt(restored.questionStartedAt);setIndex(restored.index);
+        setPhase(restored.phase);setRequestId(restored.requestId);
+        setAnswerSurface(restored.answerSurface);setWorkingText(restored.workingText);
+        setResponseText(restored.responseText);setConfidence(restored.confidence);
+        setIndependence(restored.independence);setHint1Visible(restored.hint1Visible);
+        setHint2Visible(restored.hint2Visible);setResult(restored.result);
+        setVerifiedExternally(restored.verifiedExternally);setErrorTypes(restored.errorTypes);
+        setLockedDuration(restored.lockedDuration);setElapsed(restored.activeSeconds);
+        setOutcomes(restored.outcomes);
+        setDraftNotice(restored.phase==="answering"
+          ?"Unfinished work restored from this browser tab. Continue solving before revealing the answer."
+          :"Locked answer restored. The rubric has already been revealed; finish grading this attempt.");
+      }else if(raw){
+        window.sessionStorage.removeItem(draftKey);
+      }
+    }catch{setDraftStatus("unavailable");}
+    setDraftHydrated(true);
+  },[draftKey,draftFingerprint,questionIds]);
+
+  // Count visible activity only. Background tabs, sleep and page reloads must
+  // not inflate the time used to assess independent problem solving.
+  useEffect(()=>{
+    if(phase!=="answering"||!questionStartedAt)return;
+    let last=performance.now();
+    let remainder=0;
+    const tick=()=>{
+      const now=performance.now();
+      const delta=Math.max(0,Math.min(now-last,5000));
+      last=now;
+      if(document.visibilityState!=="visible"){remainder=0;return;}
+      remainder+=delta;
+      const whole=Math.floor(remainder/1000);
+      if(whole){remainder-=whole*1000;setElapsed(value=>Math.min(43200,value+whole));}
+    };
+    const timer=window.setInterval(tick,1000);
+    const visibility=()=>{last=performance.now();remainder=0;};
+    document.addEventListener("visibilitychange",visibility);
+    return ()=>{window.clearInterval(timer);document.removeEventListener("visibilitychange",visibility);};
+  },[phase,questionStartedAt]);
+
+  const draftSnapshot=useMemo<StudyDraft|null>(()=>{
+    if(!draftHydrated || !sessionId || !sessionStartedAt || !questionStartedAt
+      || !current || !requestId || !["answering","grading","submitting"].includes(phase))return null;
+    return {
+      version:1,fingerprint:draftFingerprint,savedAt:new Date().toISOString(),
+      sessionId,sessionStartedAt,questionStartedAt,questionId:current.question.id,index,
+      phase:phase as StudyDraft["phase"],requestId,answerSurface,
+      workingText,responseText,confidence,independence,hint1Visible,hint2Visible,
+      result,verifiedExternally,errorTypes,lockedDuration,activeSeconds:elapsed,outcomes,
+    };
+  },[draftHydrated,draftFingerprint,sessionId,sessionStartedAt,questionStartedAt,
+    current,index,phase,requestId,answerSurface,workingText,responseText,confidence,
+    independence,hint1Visible,hint2Visible,result,verifiedExternally,errorTypes,lockedDuration,elapsed,outcomes]);
+  const draftRef=useRef<StudyDraft|null>(null);
+  useEffect(()=>{draftRef.current=draftSnapshot;},[draftSnapshot]);
+  useEffect(()=>{
+    if(!draftHydrated)return;
+    if(phase==="complete"){
+      try{window.sessionStorage.removeItem(draftKey);}catch{}
+      return;
+    }
+    if(!draftSnapshot)return;
+    const timer=window.setTimeout(()=>{
+      try{window.sessionStorage.setItem(draftKey,JSON.stringify(draftSnapshot));setDraftStatus("saved");}
+      catch{setDraftStatus("unavailable");}
+    },350);
+    return ()=>window.clearTimeout(timer);
+  },[draftHydrated,draftKey,phase,draftSnapshot]);
+  useEffect(()=>{
+    if(!draftHydrated)return;
+    const flush=()=>{
+      if(!draftRef.current)return;
+      try{window.sessionStorage.setItem(draftKey,JSON.stringify(draftRef.current));}
+      catch{setDraftStatus("unavailable");}
+    };
+    window.addEventListener("pagehide",flush);
+    return ()=>window.removeEventListener("pagehide",flush);
+  },[draftHydrated,draftKey]);
 
   const summary = useMemo(() => {
     const attempted = outcomes.filter((x) => !x.skipped);
@@ -76,6 +166,7 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
 
   function resetQuestion(nextIndex: number) {
     setIndex(nextIndex); setQuestionStartedAt(new Date().toISOString()); setElapsed(0); setLockedDuration(0);
+    setRequestId(crypto.randomUUID());setDraftNotice(null);
     setResponseText(""); setWorkingText(""); setAnswerSurface("typed"); setIndependence("independent"); setHint1Visible(false); setHint2Visible(false);
     setResult(null); setConfidence(null); setVerifiedExternally(false); setErrorTypes([]); setNotice(null); setError(null); setPhase("answering");
   }
@@ -97,7 +188,7 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
 
   function revealForGrading(gaveUp = false) {
     if (!canRevealRubric(confidence, answerSurface, composedResponse, gaveUp)) return;
-    const duration = questionStartedAt ? Math.max(1, Math.floor((Date.now() - Date.parse(questionStartedAt)) / 1000)) : Math.max(1, elapsed);
+    const duration = Math.max(1,Math.min(43200,elapsed));
     setLockedDuration(duration);
     if (gaveUp) {
       setIndependence((x) => escalateIndependence(x, "solution_exposed"));
@@ -133,6 +224,8 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
       const note=[completionNote,pending ? `${pending} attempt(s) were pending local sync when the session ended.` : null].filter(Boolean).join(" · ") || undefined;
       await finishSessionWithFallback({ sessionId, endedAt, note });
     }
+    draftRef.current=null;
+    try{window.sessionStorage.removeItem(draftKey);}catch{}
     setPhase("complete");
   }
 
@@ -143,7 +236,7 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
     const completedAt = new Date().toISOString();
     try {
       const submitted = await submitAttemptWithFallback({
-        clientRequestId: crypto.randomUUID(), questionId: current.question.id, sessionId: sessionId ?? undefined,
+        clientRequestId: requestId || crypto.randomUUID(), questionId: current.question.id, sessionId: sessionId ?? undefined,
         startedAt: questionStartedAt ?? undefined, result, independence, durationSeconds: Math.max(1, lockedDuration),
         responseText: composedResponse.trim().slice(0,20000) || undefined, selfConfidence: confidence ?? undefined, errorTypes, completedAt,
       });
@@ -161,6 +254,8 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
   }
 
   if (!queue.length) return <section className="panel empty-state"><h2>No questions in this set</h2><p>There are no questions available for this session. That can mean nothing is due, the course has no approved questions, or the current time budget cannot fit a question.</p><div className="button-row"><Link className="secondary-button" href="/courses">View courses</Link><Link className="secondary-button" href="/resources">Check materials</Link></div></section>;
+
+  if (!draftHydrated) return <section className="panel review-start"><p className="muted">Checking this tab for unfinished work…</p></section>;
 
   if (phase === "ready" || phase === "starting") return (
     <section className="panel review-start">
@@ -197,6 +292,7 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
         <Link href={returnHref==="/"?"/practice":returnHref} className="review-back-link">← {returnHref==="/"?"Study":returnLabel}</Link>
         <button className="review-focus-toggle" type="button" aria-pressed={focusMode} onClick={()=>setFocusMode(value=>!value)}>{focusMode?"Show navigation":"Focus on question"}</button>
       </div>
+      {draftNotice ? <p className="draft-recovery-note" role="status">{draftNotice}</p> : null}
       <div className="review-topline" aria-live="polite">
         <span>Question {index + 1} of {queue.length}</span>
         <span>{formatSeconds(phase === "answering" ? elapsed : lockedDuration)} · target {expected} min</span>
@@ -215,6 +311,20 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
             <div className="math-symbol-row" aria-label="Insert common mathematical notation">
               {["⇒","⇔","∀","∃","∈","⊂","≤","≥","∑","∫","√","∞","∂","≈"].map(symbol=><button key={symbol} type="button" onClick={()=>insertMathSymbol(symbol)} aria-label={`Insert ${symbol} into working`}>{symbol}</button>)}
             </div>
+            <details className="math-patterns">
+              <summary>Insert a working structure</summary>
+              <div className="math-patterns-actions">
+                {([
+                  ["Proof","Assume ...\\nThen ...\\nTherefore ..."],
+                  ["Cases","Case 1: ...\\nCase 2: ...\\nThus ..."],
+                  ["Derivation","Start: ...\\n⇒ ...\\n⇒ ..."],
+                  ["Integral","∫ f(x) dx = ..."],
+                  ["Differential equation","y'(t) = ...; y(0) = ...\\n⇒ ..."],
+                  ["Probability","P(A | B) = P(A ∩ B) / P(B) = ..."],
+                ] as const).map(([label,structure])=><button type="button" key={label}
+                  onClick={()=>insertMathSymbol(structure.replaceAll("\\\\n","\\n"))}>{label}</button>)}
+              </div>
+            </details>
             <label className="field-label" htmlFor="review-working">Steps, argument or proof <span>Ctrl/⌘ + Enter to lock</span></label>
             <textarea id="review-working" ref={workingRef} className="answer-box math-working-input" value={workingText} onChange={event=>setWorkingText(event.target.value)} maxLength={17000}
               onKeyDown={event=>{if((event.ctrlKey||event.metaKey)&&event.key==="Enter"){event.preventDefault();revealForGrading(false);}}}
@@ -224,6 +334,11 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
               onKeyDown={event=>{if((event.ctrlKey||event.metaKey)&&event.key==="Enter"){event.preventDefault();revealForGrading(false);}}}
               placeholder="e.g. x = 0 is the unique critical point, or a concise proof conclusion" rows={3} />
             <p className="math-work-helper">Your working and conclusion are stored together in the existing attempt record. This editor does not automatically check mathematical correctness.</p>
+            {(workingText.trim()||responseText.trim())?<details className="math-reading-view">
+              <summary>Preview reading layout (plain text)</summary>
+              {workingText.trim()?<div><strong>Working / proof</strong><pre>{workingText}</pre></div>:null}
+              {responseText.trim()?<div><strong>Conclusion</strong><pre>{responseText}</pre></div>:null}
+            </details>:null}
           </div> : <p className="paper-work-note">Solve independently on paper. When finished, lock your work before revealing the rubric. You can switch to typing to record your reasoning or conclusion.</p>}
           <div className="hint-stack">{current.question.hint_1 ? <button className="hint-button" type="button" onClick={() => showHint(1)} disabled={hint1Visible}>Hint 1</button> : null}{current.question.hint_2 ? <button className="hint-button" type="button" onClick={() => showHint(2)} disabled={hint2Visible}>Hint 2</button> : null}</div>
           {hint1Visible && current.question.hint_1 ? <div className="support-box"><strong>Hint 1</strong><p>{current.question.hint_1}</p></div> : null}
@@ -250,6 +365,8 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
           <div className="button-row review-actions"><button className="primary-button button-reset" type="button" disabled={!canSubmit} onClick={() => void submitAssessment()}>{phase === "submitting" ? "Saving…" : "Save & next"}</button><span className="review-save-note">Revealed questions must be recorded before moving on.</span></div>
         </>}
       </article>
+      {draftStatus==="saved" ? <p className="math-draft-status">Work saved in this tab · not synced across devices</p> : null}
+      {draftStatus==="unavailable" ? <p className="math-draft-warning" role="status">Browser draft storage is unavailable. Copy your work before navigating away.</p> : null}
       {notice ? <p className="sync-note">{notice}</p> : null}
       {sessionStartedAt ? <p className="session-footnote">Session started {new Date(sessionStartedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.</p> : null}
     </section>

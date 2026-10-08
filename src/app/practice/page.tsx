@@ -29,18 +29,33 @@ export default async function PracticePage({ searchParams }: { searchParams: Pro
         {data.sourceLinks.some(source=>source.resource_type==="exercise")?<details><summary>Original exercise sheet</summary><div className="resource-links">{data.sourceLinks.filter(source=>source.resource_type==="exercise").map(source=>source.drive_url?<a key={source.id} href={source.drive_url} target="_blank" rel="noreferrer">{source.title}</a>:<span key={source.id}>{source.title}</span>)}</div></details>:null}
         {data.sourceLinks.some(source=>["solution","exam_solution"].includes(source.resource_type))?<p className="muted tiny">The linked official solution remains in the course binder. It is not linked here before an independent repair attempt.</p>:null}
       </section>:null}
-      <ReviewSession queue={data.queue} plannedMinutes={Math.max(1,data.queueMinutes)}
+      <ReviewSession key={`repair-${data.course.id}-${data.skill.id}-${data.finding?.id??"general"}`}
+        queue={data.queue} plannedMinutes={Math.max(1,data.queueMinutes)}
         sessionType="relearning" courseId={data.course.id} eyebrow="Independent repair · exact skill"
         intro="The set draws only from this skill. Lock your full solution and compare it with the source. A later correct, fully independent recorded attempt is required before the finding can be resolved."
         completionNote={data.finding?`Targeted repair for finding ${data.finding.id}`:undefined}
         returnHref={`/courses/${data.course.id}`} returnLabel="Back to course" />
     </main>;
   }
+  if(mode==="week"){
+    const data=await getCourseWeekCheckpointData(course,week,"week");
+    return <main className="shell practice-shell">
+      <header className="header"><div><p className="eyebrow">Teaching week {data.weekNo} · Course practice</p><h1>{data.course.display_name}</h1></div><Nav /></header>
+      <ReviewSession key={`week-${data.course.id}-${data.weekNo}`}
+        queue={data.queue} plannedMinutes={Math.max(1,data.queueMinutes)}
+        sessionType="coursework" courseId={data.course.id}
+        eyebrow={`Week ${data.weekNo} · independent course questions`}
+        intro="Work through this teaching week's approved questions before consulting the solution. This practice does not automatically certify the exercise-sheet milestone or replace cumulative review."
+        returnHref={`/courses/${data.course.id}#week-${data.weekNo}`}
+        returnLabel={`Back to week ${data.weekNo}`}
+      />
+    </main>;
+  }
   if(mode==="weekly-checkpoint"){
     const data=await getCourseWeekCheckpointData(course,week);
     return <main className="shell practice-shell">
       <header className="header"><div><p className="eyebrow">Cumulative course check · Week {data.weekNo}</p><h1>{data.course.display_name}</h1></div><Nav /></header>
-      <ReviewSession
+      <ReviewSession key={`week-checkpoint-${data.course.id}-${data.weekNo}`}
         queue={data.queue}
         plannedMinutes={Math.max(1,data.queueMinutes)}
         sessionType="checkpoint"
@@ -48,8 +63,8 @@ export default async function PracticePage({ searchParams }: { searchParams: Pro
         eyebrow={`Week ${data.weekNo} · closed-book cumulative checkpoint`}
         intro="Practice the current and earlier weeks independently. Your session must contain at least one recorded, non-solution-exposed attempt before its weekly checkpoint can be marked complete."
         completionNote={weeklyCheckpointSessionNote(data.course.id,data.weekNo)}
-        returnHref={`/courses/${data.course.id}`}
-        returnLabel="Back to course"
+        returnHref={`/courses/${data.course.id}#week-${data.weekNo}`}
+        returnLabel={`Back to week ${data.weekNo}`}
       />
     </main>;
   }
@@ -81,7 +96,7 @@ export default async function PracticePage({ searchParams }: { searchParams: Pro
           <div><p className="eyebrow">{data.profile.status}</p><h2>{data.profile.independentAttempts} independent attempts · {data.profile.distinctSkills} skills sampled</h2></div>
           <p>{data.profile.recommendation}</p>
         </section> : null}
-        <ReviewSession
+        <ReviewSession key={`calibration-${data.course?.courseId??"none"}`}
           queue={data.queue}
           plannedMinutes={Math.max(1,data.queueMinutes)}
           sessionType="coursework"
