@@ -49,7 +49,9 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
         resources={data.resources}
       />
 
+      <CourseMasterMap topics={data.masterMap} />
 
+      <ExamIntelligence papers={exam.papers} blueprint={exam.blueprint} strategy={exam.strategy} />
 
       <details className="course-settings-drawer">
         <summary>
