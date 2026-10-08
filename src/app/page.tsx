@@ -60,7 +60,7 @@ export default async function TodayPage() {
     ? {title:structuralConcern.shortName??structuralConcern.displayName,body:structuralConcern.analytics.recommendation,href:"/strategy?course="+structuralConcern.courseId,label:"Adjust study method"}
     : topDrift
       ? {title:topDrift.shortName??topDrift.displayName,body:topDrift.profile.recommendation,href:"/progress#course-"+topDrift.courseId,label:"See evidence"}
-      : topRisk&&Number(topRisk.risk_score)>0
+      : topRisk&&(topRisk.risk_band==="at_risk"||topRisk.risk_band==="critical")
         ? {title:topRisk.short_name??topRisk.display_name,body:"This course currently has the highest study pressure.",href:"/progress#course-"+topRisk.course_id,label:"See why"}
         : null;
 
