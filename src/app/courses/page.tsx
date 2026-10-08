@@ -28,14 +28,14 @@ export default async function CoursesPage() {
               <div className="course-ledger-body">
               <div className="status-line">
                 <div>
-                  <strong>{c.display_name}</strong>
+                  {c.course_id?<Link className="course-ledger-title" href={"/courses/"+c.course_id}>{c.display_name}</Link>:<strong>{c.display_name}</strong>}
                   <p>{c.course_kind}{placeholder ? " · configuration needed" : ""}</p>
                 </div>
                 <span>{latest?.health_status ?? "not started"}</span>
               </div>
               <p>{c.total_skills ?? 0} skills · {c.unresolved_errors ?? 0} unresolved errors · {c.unverified_resources ?? 0} resources pending verification</p>
               {weeks.length ? <div className="week-strip">{weeks.map((w) => <span className={`week-chip week-${w.health_status ?? "empty"}`} key={w.teaching_week_id ?? `${c.course_id}-${w.week_no}`}>W{w.week_no} · {w.health_status?.replace("_"," ")}</span>)}</div> : <p className="muted">No teaching week has material yet.</p>}
-              {c.course_id ? <div className="button-row"><Link className={placeholder ? "primary-button" : "secondary-button"} href={`/courses/${c.course_id}`}>{placeholder ? "Configure course" : "Open course workflow"}</Link></div> : null}
+              {c.course_id ? <div className="button-row"><Link className={placeholder ? "primary-button" : "secondary-button"} href={`/courses/${c.course_id}`}>{placeholder ? "Set up course" : "Open binder →"}</Link></div> : null}
               </div>
             </article>
           );
