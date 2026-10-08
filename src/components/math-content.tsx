@@ -12,7 +12,9 @@ function Node({node}:{node:MathNode}):ReactNode{
     case "mo":return <mo>{node.value}</mo>;
     case "mtext":return <mtext>{node.value}</mtext>;
     case "row":return <mrow>{node.children.map((child,i)=><Node key={i} node={child}/>)}</mrow>;
-    case "frac":return <mfrac><Node node={node.numerator}/><Node node={node.denominator}/></mfrac>;
+    case "frac":return node.binomial
+      ? <mrow><mo>(</mo><mfrac linethickness="0"><Node node={node.numerator}/><Node node={node.denominator}/></mfrac><mo>)</mo></mrow>
+      : <mfrac><Node node={node.numerator}/><Node node={node.denominator}/></mfrac>;
     case "sqrt":
       return node.index
         ? <mroot><Node node={node.radicand}/><Node node={node.index}/></mroot>
