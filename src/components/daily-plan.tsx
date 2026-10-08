@@ -14,7 +14,7 @@ export function DailyPlan({plan}:{plan:DailyPlanType}){
 
   return <section className="study-sequence" aria-labelledby="today-sequence-title">
     <div className="study-sequence-heading">
-      <div><span className="section-kicker">Study order</span><h2 id="today-sequence-title">Do this, then stop.</h2></div>
+      <div><span className="section-kicker">Study order</span><h2 id="today-sequence-title">Your study order</h2></div>
       <span className="study-budget">{plan.usedMinutes}<small> / {plan.budgetMinutes} min</small></span>
     </div>
 
