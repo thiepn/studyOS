@@ -3,6 +3,7 @@ import type { StudyErrorType } from "@/lib/supabase/database.types";
 import { ensureStudyWorkspace } from "./bootstrap";
 import { StudyServiceError } from "./errors";
 import type { WeekMilestone } from "./workflow-state";
+import { isCompletedWeeklyCheckpointSession } from "./course-study-flow";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const ERROR_TYPES = new Set<StudyErrorType>([
@@ -198,6 +199,32 @@ export function parseMilestone(value: unknown): { weekNo: number; milestone: Wee
 export async function markWeekMilestone(courseId: string, input: ReturnType<typeof parseMilestone>) {
   if (!UUID.test(courseId)) throw new StudyServiceError("Invalid course ID", "invalid_milestone");
   const supabase = await createClient();
+  if (input.milestone === "weekly_checkpoint") {
+    // Completing an empty review, or simply pressing Mark, is not a checkpoint.
+    // Confirm an ended course/week-tagged session with recorded independent evidence.
+    const {semesterId}=await ensureStudyWorkspace(supabase);
+    const db=supabase as any;
+    const courseResult=await db.from("study_courses").select("id").eq("id",courseId)
+      .eq("semester_id",semesterId).eq("active",true).maybeSingle();
+    if(courseResult.error)throw new StudyServiceError("Could not verify checkpoint course",courseResult.error.code||"checkpoint_evidence_failed",courseResult.error);
+    if(!courseResult.data)throw new StudyServiceError("Course is not active in this semester","invalid_milestone");
+    const sessionsResult=await db.from("study_sessions").select("id,note,ended_at")
+      .eq("course_id",courseId).eq("session_type","checkpoint").not("ended_at","is",null)
+      .order("ended_at",{ascending:false}).limit(100);
+    if(sessionsResult.error)throw new StudyServiceError("Could not verify checkpoint sessions",sessionsResult.error.code||"checkpoint_evidence_failed",sessionsResult.error);
+    const matching=(sessionsResult.data??[]).filter((session:{note:string|null;ended_at:string|null})=>
+      isCompletedWeeklyCheckpointSession(session,courseId,input.weekNo));
+    if(!matching.length) {
+      throw new StudyServiceError("Complete this course-week checkpoint in Study before marking it done.","checkpoint_session_required");
+    }
+    const attemptsResult=await db.from("study_attempts").select("id")
+      .in("session_id",matching.map((session:{id:string})=>session.id))
+      .neq("independence","solution_exposed").limit(1);
+    if(attemptsResult.error)throw new StudyServiceError("Could not verify checkpoint attempts",attemptsResult.error.code||"checkpoint_evidence_failed",attemptsResult.error);
+    if(!attemptsResult.data?.length) {
+      throw new StudyServiceError("The checkpoint needs at least one saved, non-solution-exposed attempt. Finish syncing any offline attempts first.","checkpoint_session_required");
+    }
+  }
   const { data, error } = await (supabase.rpc as any)("study_mark_week_milestone", {
     p_course_id: courseId, p_week_no: input.weekNo, p_milestone: input.milestone,
     p_note: input.note ?? null, p_completed_at: new Date().toISOString(),
