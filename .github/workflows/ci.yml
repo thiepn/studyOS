@@ -39,3 +39,14 @@ jobs:
 
       - name: Next.js production build
         run: npm run build
+
+      - name: Production server acceptance smoke
+        run: |
+          set -euo pipefail
+          npm run start -- --hostname 127.0.0.1 --port 3107 > /tmp/studyos-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          if ! node scripts/acceptance-smoke.mjs; then
+            cat /tmp/studyos-server.log
+            exit 1
+          fi
