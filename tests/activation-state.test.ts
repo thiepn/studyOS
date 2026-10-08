@@ -37,7 +37,7 @@ test("course activity counters alone never certify a semester",()=>{
   const result=evaluateActivation(platform,snapshot);
   assert.equal(result.preSemesterReady,true);
   assert.equal(result.firstWeekCertified,false);
-  assert.equal(result.firstWeekPercent,0);
+  assert.equal(result.firstWeekPercent,25); // Only the roster exists; zero source, question or attempt proof.
 });
 test("a missing approved Week-1 source blocks academic certification",()=>{
   const result=evaluate(snapshot,platform,majorIds,proofs.map((row,i)=>i===0?{...row,verifiedResources:0,sourceLinkedQuestions:0,independentAttempts:0}:row));
