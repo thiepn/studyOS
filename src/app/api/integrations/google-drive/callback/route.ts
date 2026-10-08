@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
     const identity = await fetchGoogleIdentity(tokens.access_token);
     await saveDriveConnection({
       userId, googleSub: identity.sub, email: identity.email,
-      scopes: tokens.scope.split(/\s+/).filter(Boolean), refreshToken: tokens.refresh_token,
+      scopes: (tokens.scope ?? "").split(/\s+/).filter(Boolean), refreshToken: tokens.refresh_token,
     });
 
     try {
