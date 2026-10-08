@@ -707,3 +707,11 @@ See `docs/P30.md` for the visual-system contract and invariants.
 - Health reports the true package version; production setup requires a real HTTPS origin; empty first-time Setup routes into semester bootstrap.
 - GitHub CI now starts the production-built server and checks health, login protections and unauthenticated API routes. Vercel deployment and live browser/device acceptance remain pending.
 - Version **0.36.0**. Full findings and real-device runbook: `docs/P37.md`.
+
+### P38 — Real semester activation foundation
+
+- A dedicated `studyos` Vercel project is provisioned in the intended team and connected to `thiepn/studyOS`, using the **THIEPN Account** public Supabase project; no server secret or production acceptance is inferred.
+- The first-week certification gate now requires a **verified Week-1 lecture/exercise**, a live question explicitly linked to that source, and a **saved fully independent attempt on that same question** for each active major. Mere course activity and hint-assisted answers cannot pass.
+- The `/setup` page exposes per-course source/question/attempt proof, with direct next-action links.
+- First-semester setup offers **opt-in**, editable DGL, Stochastik, TI and AMP templates; no academic records are generated without explicit submission.
+- Version `0.37.0`. See `docs/P38.md` for exact infrastructure status and remaining authenticated/device acceptance.
