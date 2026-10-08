@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import { availablePresets } from "@/lib/study/semester-presets";
 
 type Course={courseId:string;displayName:string;shortName:string|null;courseKind:string};
 type PriorOption={id:string;semester_id:string;semester_name:string;display_name:string;short_name:string|null;course_kind:string;stable_key:string};
@@ -46,13 +47,17 @@ export function InitialSemesterForm(){
   </form>;
 }
 
-export function BootstrapCourseForm(){
+export function BootstrapCourseForm({existingCourseKeys=[]}:{existingCourseKeys?:string[]}){
   const router=useRouter();
   const [busy,setBusy]=useState(false);
   const [message,setMessage]=useState<string|null>(null);
+  const [presetId,setPresetId]=useState<string|null>(null);
+  const available=availablePresets(existingCourseKeys);
+  const preset=available.find(option=>option.id===presetId);
   async function submit(event:React.FormEvent<HTMLFormElement>){
     event.preventDefault();setBusy(true);setMessage(null);
-    const fd=new FormData(event.currentTarget);
+    const form=event.currentTarget;
+    const fd=new FormData(form);
     const rawExam=String(fd.get("examAt")??"").trim();
     try{
       const response=await fetch("/api/study/semester-bootstrap/course",{
@@ -64,30 +69,52 @@ export function BootstrapCourseForm(){
           examDurationMinutes:fd.get("examDurationMinutes"),examFormat:fd.get("examFormat"),
           expectedLecturesPerWeek:fd.get("expectedLecturesPerWeek"),
           expectsExercise:fd.get("expectsExercise")==="on",expectsSolution:fd.get("expectsSolution")==="on",
+          sortOrder:fd.get("sortOrder"),
         }),
       });
-      const body=await response.json();if(!response.ok)throw new Error(body?.error||"Could not add course");
-      event.currentTarget.reset();setMessage("Course added. Provision Drive again to create its folder.");
+      const body=await response.json();
+      if(!response.ok||body?.ok!==true)throw new Error(body?.error||"Could not add course");
+      form.reset();setPresetId(null);
+      setMessage("Course added. Review source links and provision its Drive folder.");
       router.refresh();
     }catch(error){setMessage(error instanceof Error?error.message:"Could not add course");}
     finally{setBusy(false);}
   }
-  return <form className="bootstrap-course-form" onSubmit={submit}>
-    <label><span>Stable key</span><input required name="stableKey" pattern="[a-z0-9_]{2,80}" placeholder="analysis_iii"/></label>
-    <label className="wide"><span>Course name</span><input required name="displayName" placeholder="Analysis III"/></label>
-    <label><span>Short name</span><input name="shortName" placeholder="Ana III"/></label>
-    <label><span>Kind</span><select name="courseKind" defaultValue="major"><option value="major">Major</option><option value="minor">Minor</option><option value="retake">Retake</option></select></label>
-    <label><span>Professor</span><input name="professor"/></label>
-    <label><span>ECTS</span><input name="credits" type="number" min="0.5" max="60" step="0.5"/></label>
-    <label><span>Exam</span><input name="examAt" type="datetime-local"/></label>
-    <label><span>Duration (min)</span><input name="examDurationMinutes" type="number" min="15" max="600"/></label>
-    <label><span>Exam format</span><input name="examFormat" placeholder="written, oral, coding…"/></label>
-    <label><span>Lectures / week</span><input name="expectedLecturesPerWeek" type="number" min="0" max="7"/></label>
-    <label className="check"><input name="expectsExercise" type="checkbox" defaultChecked/> Exercise expected</label>
-    <label className="check"><input name="expectsSolution" type="checkbox" defaultChecked/> Official solution expected</label>
-    <div className="wide button-row"><button className="primary-button button-reset" disabled={busy}>{busy?"Adding…":"Add course"}</button></div>
-    {message?<p className="wide form-message" role="status">{message}</p>:null}
-  </form>;
+  return <div className="study-course-add">
+    <div className="study-course-presets" role="group" aria-label="Optional third-semester course templates">
+      <span className="section-kicker">Optional third-semester templates</span>
+      <div className="study-course-preset-options">
+        {available.map(option=><button className={presetId===option.id?"selected":""}
+          type="button" key={option.id} disabled={busy} aria-pressed={presetId===option.id}
+          onClick={()=>{setPresetId(option.id);setMessage(null);}}>{option.shortName}</button>)}
+        <button type="button" disabled={busy} aria-pressed={presetId===null}
+          className={presetId===null?"selected":""} onClick={()=>{setPresetId(null);setMessage(null);}}>Custom</button>
+      </div>
+      <p>Choose a template to fill the form, then review and submit it. Nothing is created automatically. Exam dates, ECTS, lecturers and actual syllabi remain yours to verify.</p>
+    </div>
+    <form key={presetId??"custom"} className="bootstrap-course-form" onSubmit={submit}>
+      <label><span>Stable key</span><input required name="stableKey" pattern="[a-z0-9_]{2,80}"
+        defaultValue={preset?.stableKey??""} placeholder="differentialgleichungen"/></label>
+      <label className="wide"><span>Course name</span><input required name="displayName"
+        defaultValue={preset?.displayName??""} placeholder="Course title from university"/></label>
+      <label><span>Short name</span><input name="shortName" defaultValue={preset?.shortName??""} placeholder="DGL"/></label>
+      <label><span>Kind</span><select name="courseKind" defaultValue={preset?.courseKind??"major"}>
+        <option value="major">Major</option><option value="minor">Minor</option><option value="retake">Retake</option>
+      </select></label>
+      <label><span>Professor</span><input name="professor"/></label>
+      <label><span>ECTS</span><input name="credits" type="number" min="0.5" max="60" step="0.5"/></label>
+      <label><span>Exam</span><input name="examAt" type="datetime-local"/></label>
+      <label><span>Duration (min)</span><input name="examDurationMinutes" type="number" min="15" max="600"/></label>
+      <label><span>Exam format</span><input name="examFormat" placeholder="written, oral, coding…"/></label>
+      <label><span>Lectures / week</span><input name="expectedLecturesPerWeek" type="number" min="0" max="7"/></label>
+      <input type="hidden" name="sortOrder" defaultValue={preset?.sortOrder??""}/>
+      <label className="check"><input name="expectsExercise" type="checkbox" defaultChecked/> Exercise expected</label>
+      <label className="check"><input name="expectsSolution" type="checkbox" defaultChecked/> Official solution expected</label>
+      <div className="wide button-row"><button className="primary-button button-reset" disabled={busy}>
+        {busy?"Adding…":"Add verified course"}</button></div>
+    </form>
+    {message?<p className="form-message" role="status">{message}</p>:null}
+  </div>;
 }
 
 export function BootstrapPriorForm({courses,options}:{courses:Course[];options:PriorOption[]}){
