@@ -949,3 +949,120 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   .intervention-summary-grid{grid-template-columns:repeat(2,1fr)}
   .intervention-summary-grid>div:nth-child(even){border-right:0}
 }
+
+
+/* P31 — workflow over instrumentation */
+.today-briefline{
+  display:flex;align-items:center;flex-wrap:wrap;gap:8px 18px;
+  padding:8px 0 12px;margin:0 0 16px;
+  border-bottom:1px solid var(--line);
+  font-size:.74rem;color:var(--muted);
+}
+.today-briefline strong{color:var(--ink);font-weight:750;text-transform:capitalize}
+.today-briefline span+span:before{content:"·";margin-right:18px;color:var(--line-strong)}
+.today-shell .study-sequence{margin-top:28px}
+.all-clear-line{margin:0;padding:19px 0;color:var(--muted);font-size:.84rem;border-bottom:1px solid var(--line)}
+.after-plan-heading h2{font-size:1.2rem}
+
+/* More is an actual destination, not a dropdown or dashboard. */
+.more-shell{max-width:1020px}
+.more-intro{max-width:64ch;color:var(--muted);font-size:.91rem;margin:0 0 28px;line-height:1.6}
+.more-directory{border-top:2px solid var(--ink);border-bottom:1px solid var(--line-strong)}
+.more-section{display:grid;grid-template-columns:minmax(160px,.36fr) minmax(0,1fr);gap:26px;padding:24px 0;border-bottom:1px solid var(--line)}
+.more-section:last-child{border-bottom:0}
+.more-section-head h2{font:500 1.35rem/1.1 Georgia,"Times New Roman",serif;margin:0 0 7px}
+.more-section-head p{font-size:.8rem;color:var(--muted);margin:0;max-width:25ch}
+.more-section-links{border-top:1px solid var(--line)}
+.more-entry{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:11px 4px;text-decoration:none;border-bottom:1px solid var(--line)}
+.more-entry:hover,.more-entry:focus-visible{background:var(--sheet-muted)}
+.more-entry>span:first-child{display:grid;gap:2px}
+.more-entry strong{font-size:.87rem;font-weight:700}
+.more-entry small{font-size:.74rem}
+.more-entry>span:last-child{font-size:.9rem;color:var(--muted);padding-right:7px}
+
+/* Study is a task, not a page that needs dashboard chrome while solving. */
+.review-session-tools{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:4px 2px 14px}
+.review-back-link,.review-focus-toggle{font-size:.78rem;font-weight:700;color:var(--ink);text-decoration:none}
+.review-focus-toggle{cursor:pointer;border:0;border-bottom:1px solid var(--line-strong);background:transparent;padding:7px 1px}
+.review-focus-toggle:hover{border-color:var(--ink)}
+.review-session-progress{display:block;appearance:none;width:100%;height:3px;margin:0 0 20px;border:0;background:var(--paper-deep)}
+.review-session-progress::-webkit-progress-bar{background:var(--paper-deep)}
+.review-session-progress::-webkit-progress-value{background:var(--accent)}
+.review-session-progress::-moz-progress-bar{background:var(--accent)}
+.answer-surface-choice{display:flex;gap:0;margin:0 0 17px 18px;border-bottom:1px solid var(--line)}
+.answer-surface-choice button{padding:10px 14px;border:0;border-bottom:2px solid transparent;background:transparent;cursor:pointer;color:var(--muted);font-size:.79rem;font-weight:750}
+.answer-surface-choice button.selected{border-color:var(--ink);color:var(--ink)}
+.paper-work-note{margin:12px 0 26px 18px;padding:26px 18px;min-height:160px;border:1px dashed var(--line-strong);color:var(--muted);background:var(--sheet-muted);font-size:.93rem;line-height:1.6}
+.practice-shell:has(>.review-workspace) .practice-modes{display:none}
+.practice-shell:has(>.review-workspace.is-focused) > .header,
+.practice-shell:has(>.review-workspace.is-focused) > .calibration-session-context,
+.practice-shell:has(>.review-workspace.is-focused) > .strategy-session-context{
+  display:none;
+}
+.practice-shell:has(>.review-workspace.is-focused) .review-workspace{padding-top:18px}
+.practice-shell:has(>.review-workspace.is-focused) .review-question{box-shadow:none}
+
+/* Course content leads. Configuration and old weeks are optional. */
+.course-ledger-title{font:500 1.35rem/1.2 Georgia,"Times New Roman",serif;text-decoration:none;letter-spacing:-.018em}
+.course-ledger-title:hover{text-decoration:underline}
+.course-shell .workflow-heading{margin-top:4px}
+.course-settings-drawer{margin-top:42px}
+.week-stack{gap:0;border-top:1px solid var(--line-strong)}
+.week-work-item{border-bottom:1px solid var(--line)}
+.week-work-toggle{
+  width:100%;display:flex;align-items:center;gap:16px;padding:14px 8px 14px 0;
+  border:0;background:transparent;cursor:pointer;text-align:left;color:var(--ink);
+}
+.week-work-toggle:hover{background:var(--sheet-muted)}
+.week-work-number{display:grid;place-items:center;min-width:52px;height:40px;background:var(--sheet-muted);color:var(--muted);font:500 .94rem Georgia,"Times New Roman",serif}
+.week-work-title{display:grid;gap:3px;flex:1;min-width:0}
+.week-work-title strong{font-size:.88rem}
+.week-work-title small{font-size:.71rem}
+.week-work-now{color:var(--course-accent,var(--accent));font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;font-weight:850}
+.week-work-chevron{width:20px;font-size:1.2rem;text-align:center;color:var(--muted);font-weight:400}
+.week-work-featured>.week-work-toggle{border-left:3px solid var(--course-accent,var(--accent));padding-left:8px}
+.week-work-item .week-card{margin:0 0 14px 52px;border-left:2px solid var(--course-accent,var(--accent))}
+.week-work-item .week-card-head{border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:10px}
+
+/* Explain progress first; detailed evidence is opened intentionally. */
+.progress-section-label{display:flex;align-items:end;justify-content:space-between;gap:12px;padding:3px 0 14px}
+.progress-section-label h2{font:500 1.25rem Georgia,"Times New Roman",serif;margin:0}
+.progress-leading-advice{font-size:.89rem;line-height:1.55;margin:18px 0;padding:13px 15px;border-left:2px solid var(--course-accent);background:var(--course-wash);color:var(--ink-soft)}
+.progress-evidence-drawer{border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.progress-evidence-drawer>summary{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;cursor:pointer;padding:11px 2px;list-style:none}
+.progress-evidence-drawer>summary::-webkit-details-marker{display:none}
+.progress-evidence-drawer>summary span{font-size:.78rem;font-weight:750}
+.progress-evidence-drawer>summary small{font-size:.69rem}
+.progress-evidence-drawer[open]>summary{border-bottom:1px solid var(--line)}
+.progress-evidence-content{padding-top:14px}
+.progress-global-drawer{border-top:2px solid var(--ink);border-bottom:1px solid var(--line-strong);margin:42px 0}
+.progress-global-drawer>summary{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:16px 0;cursor:pointer;list-style:none}
+.progress-global-drawer>summary::-webkit-details-marker{display:none}
+.progress-global-drawer>summary>span{display:grid;gap:3px}
+.progress-global-drawer>summary strong{font:500 1.15rem Georgia,"Times New Roman",serif}
+.progress-global-drawer>summary small{font-size:.75rem}
+.progress-global-drawer>summary>b{font-size:.69rem;text-transform:uppercase;letter-spacing:.08em}
+.progress-global-drawer[open]>summary>b{font-size:0}
+.progress-global-drawer[open]>summary>b:after{content:"Close";font-size:.7rem}
+.progress-global-content{padding:0 0 12px}
+.progress-global-content .intervention-summary{margin-bottom:0}
+.progress-course-body>.button-row{margin:14px 0 0}
+
+/* Responsive: fast vertical scanning and reliably tappable controls. */
+@media(max-width:760px){
+  .today-briefline{gap:4px 12px;font-size:.69rem}
+  .today-briefline span+span:before{margin-right:12px}
+  .more-section{grid-template-columns:1fr;gap:12px;padding:20px 0}
+  .more-section-head p{max-width:unset}
+  .more-entry{min-height:54px}
+  .review-session-tools{padding-bottom:12px}
+  .answer-surface-choice{margin-left:15px}
+  .paper-work-note{margin-left:15px}
+  .week-work-number{min-width:42px}
+  .week-work-toggle{gap:10px}
+  .week-work-item .week-card{margin-left:0}
+  .progress-evidence-drawer>summary{align-items:flex-start;flex-direction:column}
+}
+@media(prefers-reduced-motion:reduce){
+  .week-work-toggle,.more-entry,.review-focus-toggle{scroll-behavior:auto;transition:none}
+}
