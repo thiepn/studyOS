@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, type FormEvent } from "react";
 import type { ReconciliationFinding, SkillOption, WeekActionRow, WeekResource } from "@/lib/study/workflow";
 import { actionDescription, actionLabel, milestoneForAction } from "@/lib/study/workflow-state";
-import { featuredTeachingWeek } from "@/lib/study/week-focus";
+import { featuredTeachingWeek, orderedTeachingWeeks } from "@/lib/study/week-focus";
 
 const ERROR_OPTIONS = [
   ["concept","Concept"],["recall","Recall"],["recognition","Recognition"],["method_selection","Method choice"],
@@ -34,6 +34,7 @@ export function WeekWorkflowPanel({
   const [collapsedFeatured,setCollapsedFeatured]=useState<string[]>([]);
   const [expandedOther,setExpandedOther]=useState<string[]>([]);
   const featuredId=featuredTeachingWeek(weeks);
+  const orderedWeeks=orderedTeachingWeeks(weeks);
   const findingsByWeek = useMemo(() => {
     const map = new Map<string, ReconciliationFinding[]>();
     for (const finding of findings) {
@@ -87,7 +88,7 @@ export function WeekWorkflowPanel({
 
   return (
     <div className="week-stack">
-      {weeks.map((week) => {
+      {orderedWeeks.map((week) => {
         const milestone = milestoneForAction(week.next_action);
         const weekFindings = findingsByWeek.get(week.teaching_week_id) ?? [];
         const weekResources = resourcesByWeek.get(week.teaching_week_id) ?? [];
