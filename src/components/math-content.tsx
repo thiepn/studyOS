@@ -1,36 +1,42 @@
-import type { ReactNode } from "react";
+import { createElement, type ReactNode } from "react";
 import { parseMathExpression, splitMathContent, type MathNode } from "@/lib/study/math-notation";
 
-/**
- * Native MathML renderer. Every token becomes a React text node; source data
- * can never inject HTML. Broken/unsupported TeX displays as literal source.
- */
-function Node({node}:{node:MathNode}):ReactNode{
+/** MathML elements are constructed explicitly because the project's current
+ * React JSX typings do not expose MathML tags as intrinsic JSX elements.
+ * The browser still receives proper namespaced native MathML through React. */
+function render(node:MathNode):ReactNode{
   switch(node.kind){
-    case "mi":return <mi>{node.value}</mi>;
-    case "mn":return <mn>{node.value}</mn>;
-    case "mo":return <mo>{node.value}</mo>;
-    case "mtext":return <mtext>{node.value}</mtext>;
-    case "row":return <mrow>{node.children.map((child,i)=><Node key={i} node={child}/>)}</mrow>;
-    case "frac":return node.binomial
-      ? <mrow><mo>(</mo><mfrac linethickness="0"><Node node={node.numerator}/><Node node={node.denominator}/></mfrac><mo>)</mo></mrow>
-      : <mfrac><Node node={node.numerator}/><Node node={node.denominator}/></mfrac>;
+    case "mi":
+    case "mn":
+    case "mo":
+    case "mtext":
+      return createElement(node.kind,null,node.value);
+    case "row":
+      return createElement("mrow",null,...node.children.map(render));
+    case "frac":
+      return node.binomial
+        ? createElement("mrow",null,
+          createElement("mo",null,"("),
+          createElement("mfrac",{linethickness:"0"},render(node.numerator),render(node.denominator)),
+          createElement("mo",null,")"))
+        : createElement("mfrac",null,render(node.numerator),render(node.denominator));
     case "sqrt":
       return node.index
-        ? <mroot><Node node={node.radicand}/><Node node={node.index}/></mroot>
-        : <msqrt><Node node={node.radicand}/></msqrt>;
+        ? createElement("mroot",null,render(node.radicand),render(node.index))
+        : createElement("msqrt",null,render(node.radicand));
     case "script":
       return node.sub&&node.sup
-        ? <msubsup><Node node={node.base}/><Node node={node.sub}/><Node node={node.sup}/></msubsup>
+        ? createElement("msubsup",null,render(node.base),render(node.sub),render(node.sup))
         : node.sub
-          ? <msub><Node node={node.base}/><Node node={node.sub}/></msub>
-          : <msup><Node node={node.base}/><Node node={node.sup!}/></msup>;
+          ? createElement("msub",null,render(node.base),render(node.sub))
+          : createElement("msup",null,render(node.base),render(node.sup!));
     case "table":
-      return <mrow>
-        {node.opening?<mo>{node.opening}</mo>:null}
-        <mtable>{node.rows.map((cells,i)=><mtr key={i}>{cells.map((cell,j)=><mtd key={j}><Node node={cell}/></mtd>)}</mtr>)}</mtable>
-        {node.closing?<mo>{node.closing}</mo>:null}
-      </mrow>;
+      return createElement("mrow",null,
+        node.opening?createElement("mo",null,node.opening):null,
+        createElement("mtable",null,...node.rows.map((cells,i)=>
+          createElement("mtr",{key:i},...cells.map((cell,j)=>
+            createElement("mtd",{key:j},render(cell)))))),
+        node.closing?createElement("mo",null,node.closing):null);
   }
 }
 
@@ -41,9 +47,7 @@ export function MathContent({text,className}:{text:string;className?:string}){
       ? <span key={i} className="study-math-prose">{part.value}</span>
       : part.parsed
         ? <span key={i} className={part.display?"study-math-display":"study-math-inline"}>
-          <math display={part.display?"block":"inline"} aria-label={part.source}>
-            <Node node={part.parsed}/>
-          </math>
+          {createElement("math",{display:part.display?"block":"inline","aria-label":part.source},render(part.parsed))}
         </span>
         : <code key={i} className="study-math-fallback" title="This LaTeX expression is not supported by the built-in renderer">{part.display?"\\[":"\\("}{part.source}{part.display?"\\]":"\\)"}</code>
     )}
@@ -51,11 +55,10 @@ export function MathContent({text,className}:{text:string;className?:string}){
 }
 
 export function MathPreview({source,label}:{source:string;label:string}){
-  // An explicit preview may show a raw TeX body, even without delimiters.
   const parsed=parseMathExpression(source);
   return <div className="study-math-single-preview">
     <span className="section-kicker">{label}</span>
-    {parsed?<math display="block" aria-label={source}><Node node={parsed}/></math>
+    {parsed?createElement("math",{display:"block","aria-label":source},render(parsed))
       :<code className="study-math-fallback">{source}</code>}
   </div>;
 }
