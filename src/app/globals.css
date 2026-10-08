@@ -1274,3 +1274,26 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .study-first-week-row dd{margin:0;font-variant-numeric:tabular-nums;font-weight:700}
 .study-first-week-row>a{text-decoration:underline;text-underline-offset:4px;font-size:.75rem;font-weight:650;line-height:1.4}
 @media(max-width:780px){.study-first-week-row{grid-template-columns:minmax(0,1fr);gap:10px}.study-first-week-row dl{max-width:500px}.study-first-week-row>a{min-height:42px;display:inline-flex;align-items:center}.study-course-preset-options button{min-height:44px}}
+
+/* P39 — deployment setup reads as a compact technical checklist, not a dashboard. */
+.study-admission{max-width:980px}
+.study-admission-summary{padding:12px 0 20px;border-bottom:2px solid var(--ink);display:flex;justify-content:space-between;align-items:center;gap:24px}
+.study-admission-summary h2{font-size:clamp(1.3rem,2.5vw,1.85rem);margin:7px 0 10px;letter-spacing:-.035em}
+.study-admission-summary p{max-width:70ch;line-height:1.6;font-size:.88rem;color:var(--muted);margin:0}
+.study-admission-score{font-variant-numeric:tabular-nums;font-size:2rem;letter-spacing:-.04em;white-space:nowrap}
+.study-admission-list{margin:0;padding:0;list-style:none}
+.study-admission-list li{display:grid;grid-template-columns:35px minmax(0,1fr) auto;align-items:start;gap:16px;border-bottom:1px solid var(--line);padding:17px 0}
+.study-admission-number{font-size:.73rem;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:4px}
+.study-admission-list strong{font-size:.94rem}
+.study-admission-list p{margin:6px 0 0;line-height:1.55;font-size:.82rem;color:var(--muted);max-width:75ch}
+.study-admission-state{font-size:.73rem;font-weight:700;min-width:83px;text-align:right}
+.study-admission-state.ready{color:var(--success)}
+.study-admission-state.pending{color:var(--danger)}
+.study-admission-details{margin:30px 0 10px;max-width:880px}
+.study-admission-details h2{font-size:1.15rem;margin-bottom:8px}
+.study-admission-details p{font-size:.85rem;line-height:1.55;color:var(--muted)}
+.study-admission-details dl{margin:18px 0;border-top:1px solid var(--line)}
+.study-admission-details dl>div{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;border-bottom:1px solid var(--line);padding:10px 0}
+.study-admission-details dt{color:var(--muted);font-size:.78rem}
+.study-admission-details dd{margin:0;overflow-wrap:anywhere;font-size:.82rem}
+@media(max-width:640px){.study-admission-summary{align-items:flex-start}.study-admission-list li{grid-template-columns:24px minmax(0,1fr)}.study-admission-state{grid-column:2;min-width:0;text-align:left}.study-admission-details dl>div{grid-template-columns:minmax(0,1fr);gap:5px}}
