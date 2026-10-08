@@ -42,9 +42,14 @@ export function buildReviewQueue(dueSkills: DueSkill[], questions: StudyQuestion
     const candidates=bySkill.get(skill.skill_id!) ?? []; if(!candidates.length) continue;
     const target=weakestRequiredDimension(skill);
     const relearning=Boolean(skill.relearning_until && new Date(skill.relearning_until)>=new Date());
-    const question=[...candidates].sort((a,b)=>questionRank(a,target,relearning)-questionRank(b,target,relearning))[0];
-    const minutes=Math.max(1,Math.ceil(Number(question.expected_minutes)));
-    if(used+minutes>budgetMinutes) continue;
+    // Do not discard a due skill merely because its highest-ranked question
+    // is longer than the remaining study budget. Choose the best fitting one.
+    const fitting=candidates.filter(q=>q.active && Number.isFinite(Number(q.expected_minutes))
+      && Math.ceil(Number(q.expected_minutes))>=1
+      && used+Math.ceil(Number(q.expected_minutes))<=budgetMinutes);
+    if(!fitting.length) continue;
+    const question=[...fitting].sort((a,b)=>questionRank(a,target,relearning)-questionRank(b,target,relearning))[0];
+    const minutes=Math.ceil(Number(question.expected_minutes));
     queue.push({
       skillId:skill.skill_id!,courseId:skill.course_id!,skillTitle:skill.skill_title!,
       priorityScore:Number(skill.priority_score ?? 0),targetDimension:target,
