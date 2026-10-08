@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { StudyAttemptResult, StudyErrorType, StudyIndependence } from "@/lib/supabase/database.types";
 import type { QueueItem } from "@/lib/study/types";
-import { assessmentReady, canRevealRubric, escalateIndependence, isMasteryCreditable, resultLabel } from "@/lib/study/review-state";
+import { assessmentReady, assessmentSourceVerified, canRevealRubric, escalateIndependence, isMasteryCreditable, resultLabel } from "@/lib/study/review-state";
 import { submitAttemptWithFallback } from "@/lib/study/offline-attempts";
 import { finishSessionWithFallback, startSessionWithFallback } from "@/lib/study/offline-sessions";
 
@@ -41,6 +41,7 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
   const [hint2Visible, setHint2Visible] = useState(false);
   const [result, setResult] = useState<StudyAttemptResult | null>(null);
   const [confidence, setConfidence] = useState<number | null>(null);
+  const [verifiedExternally, setVerifiedExternally] = useState(false);
   const [errorTypes, setErrorTypes] = useState<StudyErrorType[]>([]);
   const [outcomes, setOutcomes] = useState<Outcome[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
@@ -72,7 +73,7 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
   function resetQuestion(nextIndex: number) {
     setIndex(nextIndex); setQuestionStartedAt(new Date().toISOString()); setElapsed(0); setLockedDuration(0);
     setResponseText(""); setAnswerSurface("typed"); setIndependence("independent"); setHint1Visible(false); setHint2Visible(false);
-    setResult(null); setConfidence(null); setErrorTypes([]); setNotice(null); setError(null); setPhase("answering");
+    setResult(null); setConfidence(null); setVerifiedExternally(false); setErrorTypes([]); setNotice(null); setError(null); setPhase("answering");
   }
 
   async function start() {
@@ -121,7 +122,8 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
   }
 
   async function submitAssessment() {
-    if (!current || !result || !assessmentReady(result, confidence, errorTypes)) return;
+    if (!current || !result || !assessmentReady(result, confidence, errorTypes)
+      || !assessmentSourceVerified(Boolean(current.question.answer_key_or_rubric?.trim()), verifiedExternally, independence)) return;
     setPhase("submitting"); setError(null);
     const completedAt = new Date().toISOString();
     try {
@@ -167,7 +169,9 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
   if (!current) return null;
   const expected = Math.ceil(Number(current.question.expected_minutes));
   const creditable = isMasteryCreditable(independence);
-  const canSubmit = assessmentReady(result, confidence, errorTypes) && phase !== "submitting";
+  const hasRubric = Boolean(current.question.answer_key_or_rubric?.trim());
+  const canSubmit = assessmentReady(result, confidence, errorTypes)
+    && assessmentSourceVerified(hasRubric, verifiedExternally, independence) && phase !== "submitting";
   const canLock = canRevealRubric(confidence, answerSurface, responseText);
   const canGiveUp = canRevealRubric(confidence, answerSurface, responseText, true);
   const gaveUp = independence === "solution_exposed";
@@ -208,7 +212,11 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
           {!canLock ? <p className="review-gate-note">To compare your work, select confidence and {answerSurface==="typed"?"write an attempt (or switch to paper mode)":"then lock your paper attempt"}.</p> : null}
         </> : <>
           <div className="locked-answer"><span>Your locked answer</span><p>{responseText.trim() || (answerSurface==="paper"?"Worked on paper.":"No typed answer.")}</p></div>
-          <div className="solution-box"><span>Answer key / rubric</span><p>{current.question.answer_key_or_rubric || "No answer key is attached yet. Grade only if you can verify the result from the official material."}</p></div>
+          <div className="solution-box"><span>Answer key / rubric</span><p>{current.question.answer_key_or_rubric || "No rubric attached. Check an official solution or a verified course source before assigning a grade."}</p></div>
+          {!hasRubric && !gaveUp ? <label className="rubric-verification">
+            <input type="checkbox" checked={verifiedExternally} onChange={event=>setVerifiedExternally(event.target.checked)} disabled={phase==="submitting"} />
+            <span>I compared my work with an official or independently verified source. <Link href={courseId?"/courses/"+courseId:"/resources"}>Open source material</Link></span>
+          </label> : null}
           <p className={`evidence-note ${creditable ? "" : "evidence-zero"}`}>{creditable ? `Evidence mode: ${independence.replace("_", " ")}. Revealing the rubric after locking does not reduce this.` : "Solution was exposed before answer lock: this attempt records the failure but gives zero mastery credit."}</p>
           <p className="locked-confidence"><strong>Confidence before reveal:</strong> {confidence}/5 · locked before the rubric was shown</p>
           {gaveUp ? <p className="review-gate-note">You revealed the solution without locking an attempt. This records an incorrect answer with zero mastery credit; classify the error to save it.</p>
