@@ -724,3 +724,12 @@ See `docs/P30.md` for the visual-system contract and invariants.
 - CI adds built-server OAuth-origin denial and protected platform-route checks.
 - Vercel project has no verified deployment due to a team-level rate limit, and real semester records remain absent.
 - Version `0.38.0`. Full details: `docs/P39.md`.
+
+### P40 — First-semester backend recovery and live release qualification
+
+- Restored two **missing live THIEPN Account migrations** from the existing P29 repository SQL: authenticated initial semester creation and generic current-semester readiness. No student records or fake attempts were inserted.
+- Pre-semester `/setup/platform` now calls a **read-only authenticated StudyOS readiness RPC** to detect real backend schema drift before first use.
+- First-semester requests explain unavailable account binding or missing database function with a proper 503 response.
+- Added repo migration contract tests and a read-only `npm run qualify:live` verifier, requiring a real HTTPS host and exact deployed Git commit.
+- Live Vercel build and real OAuth/student testing remain blocked/unverified; the new project still has no deployment.
+- Version `0.39.0`; see `docs/P40.md` for executed SQL migration records and launch instructions.
