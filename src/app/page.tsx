@@ -74,12 +74,11 @@ export default async function TodayPage() {
         <Nav />
       </header>
 
-      <section className="day-status" aria-label="Today at a glance">
-        <div><span>Planned</span><strong>{plan.usedMinutes} / {plan.budgetMinutes} min</strong></div>
-        <div><span>Mode</span><strong>{capacity.mode.replace("_"," ")}</strong></div>
-        <div><span>Review</span><strong>{data.queueMinutes} min due</strong></div>
-        <div><span>Week</span><strong>{weekRuntime?weekRuntime.progress.completionPercent+"% complete":"not committed"}</strong></div>
-      </section>
+      <p className="today-briefline" aria-label="Today's study context">
+        <span><strong>{capacity.mode.replace("_"," ")} day</strong></span>
+        <span>{data.queueMinutes} min of reviews due</span>
+        <span>{weekRuntime?weekRuntime.progress.completionPercent+"% of weekly commitment complete":"Weekly plan not yet committed"}</span>
+      </p>
 
       {!orchestration.bootstrapCertified ? <section className="workflow-notice workflow-notice-required">
         <div><span className="notice-label">Setup required</span><strong>Finish the semester setup before StudyOS schedules normal course work.</strong><p>Your real deadlines remain visible; generated discretionary study work stays paused until the curriculum is anchored.</p></div>
@@ -110,14 +109,12 @@ export default async function TodayPage() {
       <DailyPlan plan={plan}/>
 
       <section className="after-plan">
-        <div className="after-plan-heading"><span className="section-kicker">Keep an eye on</span><h2>Only what can change the plan.</h2></div>
+        <div className="after-plan-heading"><span className="section-kicker">Changes & exceptions</span><h2>Only what needs a decision.</h2></div>
         <div className="signal-list">
-          {weekRuntime ? <Link href="/week" className={"signal-row "+(weekConcern?"signal-"+weekConcern.paceStatus:"")}>
-            <div><span>This week</span><strong>{weekRuntime.progress.totalCompletedMinutes} / {weekRuntime.progress.totalTargetMinutes} course min</strong></div>
-            <p>{weekConcern
-              ? (weekConcern.shortName??weekConcern.displayName)+" has "+weekConcern.remainingMinutes+" min left and is "+weekConcern.paceStatus.replace("_"," ")+"."
-              :"All committed course time is complete."}</p><b>Open week →</b>
-          </Link> : <Link href="/week" className="signal-row"><div><span>This week</span><strong>No weekly plan committed</strong></div><p>Choose a feasible weekly allocation before the week drifts.</p><b>Plan week →</b></Link>}
+          {weekRuntime ? (weekConcern&&(weekConcern.paceStatus==="behind"||weekConcern.paceStatus==="not_started") ? <Link href="/week" className={"signal-row signal-"+weekConcern.paceStatus}>
+            <div><span>Weekly commitment</span><strong>{weekConcern.shortName??weekConcern.displayName} needs attention</strong></div>
+            <p>{weekConcern.remainingMinutes} min left for this course · {weekConcern.paceStatus.replace("_"," ")}.</p><b>Adjust week →</b>
+          </Link> : null) : <Link href="/week" className="signal-row"><div><span>This week</span><strong>No weekly plan committed</strong></div><p>Choose a feasible allocation before the week drifts.</p><b>Plan week →</b></Link>}
 
           {checkpoint?.due ? <Link href="/practice?mode=checkpoint" className="signal-row">
             <div><span>Checkpoint</span><strong>{checkpoint.short_name??checkpoint.display_name}</strong></div>
@@ -132,6 +129,7 @@ export default async function TodayPage() {
           {attention ? <Link href={attention.href} className="signal-row signal-attention">
             <div><span>Needs attention</span><strong>{attention.title}</strong></div><p>{attention.body}</p><b>{attention.label} →</b>
           </Link> : null}
+          {weekRuntime&&!((weekConcern&&(weekConcern.paceStatus==="behind"||weekConcern.paceStatus==="not_started"))||checkpoint?.due||examCommand.active||attention) ? <p className="all-clear-line">No exceptional changes to your study plan. Continue in the order above.</p> : null}
         </div>
       </section>
 
