@@ -4,7 +4,7 @@ export type RepairEvidence = {
   completed_at: string;
   result: string;
   independence: string;
-  question?: { primary_skill_id?: string | null } | null;
+  skill_id: string;
 };
 
 export function isIndependentRepairEvidence(
@@ -16,7 +16,7 @@ export function isIndependentRepairEvidence(
   const created=Date.parse(createdAt);
   return Number.isFinite(completed) && Number.isFinite(created) && completed>created
     && attempt.result==="correct" && attempt.independence==="independent"
-    && attempt.question?.primary_skill_id===skillId;
+    && attempt.skill_id===skillId;
 }
 
 /** Prefer executable and transfer work, then an independently checkable rubric.
