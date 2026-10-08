@@ -64,7 +64,7 @@ async function flushQueue<T extends {sessionId:string;ownerId?:string}>(key:stri
   const items=read<T>(key).filter(item=>canReplayPending(item.ownerId,ownerId));
   for(const item of items){
     try{
-      await post(path,item as ReviewSessionStartInput|ReviewSessionFinishInput);
+      await post(path,item as unknown as ReviewSessionStartInput|ReviewSessionFinishInput);
       write(key,read<T>(key).filter(row=>row.sessionId!==item.sessionId||row.ownerId!==ownerId));
     }catch(error){
       if((error instanceof StudySyncError && error.authRequired)
