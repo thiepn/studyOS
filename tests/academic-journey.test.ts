@@ -34,7 +34,7 @@ test("Differentialgleichungen: solve before answer key, preserve work, classify 
 
 test("Stochastik: rubric missing means confidence cannot manufacture positive evidence",()=>{
   const problem="Calculate \\(P(A \\mid B)=\\frac{P(A\\cap B)}{P(B)}\\).";
-  assert.ok(splitMathContent(problem).some(p=>p.kind==="math"));
+  assert.ok(splitMathContent(problem).some(p=>p.kind==="math" && p.parsed!==null));
   assert.equal(assessmentSourceVerified(false,false,"independent"),false);
   assert.equal(assessmentSourceVerified(false,true,"independent"),true);
   assert.equal(assessmentSourceVerified(false,false,"solution_exposed"),true);
