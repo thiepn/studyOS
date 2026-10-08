@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { listGoogleCalendarEvents, refreshCalendarAccessToken } from "./client";
 import { zonedDateTimeToUtc } from "@/lib/study/calendar-scheduler";
+import { isStudyOwnedCalendarEvent } from "./event-policy";
 
 function classify(summary:string,courses:Array<{id:string;display_name:string;short_name:string|null;stable_key:string}>){
   const s=summary.toLocaleLowerCase("de-DE");
@@ -23,18 +24,24 @@ function deadlineDueAt(event:any,bounds:{startAt:string;allDay:boolean},timezone
 }
 export async function syncStudyCalendar(userId:string){
   const admin=createAdminClient(); const now=new Date();
-  const [connectionResult,sourcesResult,semesterResult,coursesResult]=await Promise.all([
+  const [connectionResult,sourcesResult,semesterResult]=await Promise.all([
     admin.from("study_calendar_connections").select("*").eq("user_id",userId).single(),
     admin.from("study_calendar_sources").select("*").eq("user_id",userId).eq("selected",true),
     admin.from("study_semesters").select("id,timezone").eq("user_id",userId).eq("active",true).order("starts_on",{ascending:false}).limit(1).single(),
-    admin.from("study_courses").select("id,display_name,short_name,stable_key").eq("user_id",userId).eq("active",true),
   ]);
   if(connectionResult.error||connectionResult.data?.status!=="connected")throw new Error("Study Calendar is not connected");
   if(sourcesResult.error)throw new Error("Could not read selected calendars");
+  if(semesterResult.error||!semesterResult.data?.id)throw new Error("Could not load active semester for Calendar sync");
   const settingsResult=semesterResult.data?.id?await admin.from("study_calendar_planning_settings").select("sync_past_days,sync_future_days").eq("user_id",userId).eq("semester_id",semesterResult.data.id).maybeSingle():{data:null,error:null};
+  if(settingsResult.error)throw new Error("Could not load Calendar planning settings");
   const past=Number(settingsResult.data?.sync_past_days??2),future=Number(settingsResult.data?.sync_future_days??21);
   const timeMin=new Date(now.getTime()-past*86400000).toISOString(),timeMax=new Date(now.getTime()+future*86400000).toISOString();
-  const token=await refreshCalendarAccessToken(userId); const courses=(coursesResult.data??[]) as any[];
+  const {data:semesterCourses,error:courseError}=await admin.from("study_courses")
+    .select("id,display_name,short_name,stable_key").eq("user_id",userId)
+    .eq("semester_id",semesterResult.data.id).eq("active",true);
+  if(courseError)throw new Error("Could not scope Calendar courses to active semester");
+  const token=await refreshCalendarAccessToken(userId);
+  const courses=semesterCourses??[];
   let count=0;
   try{
     for(const source of sourcesResult.data??[]){
@@ -45,7 +52,7 @@ export async function syncStudyCalendar(userId:string){
         const bounds=eventBounds(event,timezone); if(!bounds)continue;
         ids.push(event.id); const c=classify(event.summary??"",courses);
         rows.push({user_id:userId,calendar_id:source.calendar_id,event_id:event.id,course_id:c.courseId,summary:event.summary??null,start_at:bounds.startAt,end_at:bounds.endAt,all_day:bounds.allDay,status:event.status??null,transparency:event.transparency??null,
-          event_type:event.eventType??null,event_role:c.role,location:event.location??null,event_url:event.htmlLink??null,recurring_event_id:event.recurringEventId??null,study_owned:c.role==="study_block",
+          event_type:event.eventType??null,event_role:c.role,location:event.location??null,event_url:event.htmlLink??null,recurring_event_id:event.recurringEventId??null,study_owned:isStudyOwnedCalendarEvent(event),
           source_updated_at:event.updated??null,synced_at:new Date().toISOString(),updated_at:new Date().toISOString()});
 
         if(c.role==="deadline"&&semesterResult.data?.id){
@@ -72,7 +79,9 @@ export async function syncStudyCalendar(userId:string){
       if(rows.length){const {error}=await admin.from("study_calendar_events").upsert(rows,{onConflict:"user_id,calendar_id,event_id"});if(error)throw new Error(error.message);}
       let stale=admin.from("study_calendar_events").delete().eq("user_id",userId).eq("calendar_id",source.calendar_id).gte("start_at",timeMin).lt("start_at",timeMax);
       if(ids.length) stale=stale.not("event_id","in","("+ids.map(id=>'"'+id.replaceAll('"','')+'"').join(",")+")");
-      await stale; count+=rows.length;
+      const {error:staleError}=await stale;
+      if(staleError)throw new Error("Could not clear stale Calendar events");
+      count+=rows.length;
     }
     await admin.from("study_calendar_connections").update({last_sync_at:new Date().toISOString(),last_sync_status:"ok",last_error:null,updated_at:new Date().toISOString()}).eq("user_id",userId);
     return {events:count,timeMin,timeMax};
