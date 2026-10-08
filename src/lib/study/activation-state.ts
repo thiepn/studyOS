@@ -1,4 +1,4 @@
-import { type FirstWeekProof, proofCertifiedForAllMajors } from "./first-week-proof";
+import { type FirstWeekProof, proofCertifiedForAllMajors } from "./first-week-proof.ts";
 export type ActivationSnapshot={
   course_count:number;major_course_count:number;retake_course_count:number;bootstrap_certified:boolean;
   drive_connected:boolean;drive_tree_ready:boolean;calendar_connected:boolean;calendar_synced:boolean;
