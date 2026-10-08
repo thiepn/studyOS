@@ -1255,3 +1255,22 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 @media(max-width:760px){
   .week-practice-qualification{padding:9px 12px;font-size:.78rem}
 }
+
+/* P38 — course-first onboarding and verifiable academic evidence. */
+.study-course-add{display:grid;gap:12px}
+.study-course-presets{border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:4px}
+.study-course-presets p{font-size:.78rem;max-width:74ch;color:var(--muted);line-height:1.55;margin:7px 0 0}
+.study-course-preset-options{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}
+.study-course-preset-options button{background:var(--surface);border:1px solid var(--line);border-radius:3px;min-height:40px;padding:8px 14px;cursor:pointer;color:var(--ink);font-weight:650}
+.study-course-preset-options button.selected{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.study-course-preset-options button:disabled{opacity:.5;cursor:wait}
+.study-first-week-roster{border-top:1px solid var(--line);margin:15px 0 9px}
+.study-first-week-row{padding:13px 0;display:grid;grid-template-columns:minmax(155px,1.2fr) minmax(280px,2fr) auto;gap:15px;align-items:center;border-bottom:1px solid var(--line)}
+.study-first-week-row>div:first-child{display:grid;gap:5px}
+.study-first-week-row>div:first-child>span{font-size:.72rem;color:var(--muted)}
+.study-first-week-row dl{margin:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.study-first-week-row dl>div{display:grid;gap:3px}
+.study-first-week-row dt{font-size:.7rem;color:var(--muted)}
+.study-first-week-row dd{margin:0;font-variant-numeric:tabular-nums;font-weight:700}
+.study-first-week-row>a{text-decoration:underline;text-underline-offset:4px;font-size:.75rem;font-weight:650;line-height:1.4}
+@media(max-width:780px){.study-first-week-row{grid-template-columns:minmax(0,1fr);gap:10px}.study-first-week-row dl{max-width:500px}.study-first-week-row>a{min-height:42px;display:inline-flex;align-items:center}.study-course-preset-options button{min-height:44px}}
