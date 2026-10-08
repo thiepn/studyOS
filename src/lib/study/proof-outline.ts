@@ -1,6 +1,6 @@
 export type ProofAnchor = { label:string; offset:number; line:number };
 
-const SECTION=/^\s*((?:(?:step|case)\s+\d+|lemma(?:\s+\d+)?|claim(?:\s+\d+)?|assumption|proof|conclusion|therefore|induction(?:\s+(?:base|step))?)\b[^:\n]{0,65}[:.]?)/i;
+const SECTION=/^\s*((?:(?:step|case)\s+\d+|lemma(?:\s+\d+)?|claim(?:\s+\d+)?|assumption|assume|proof|conclusion|therefore|induction(?:\s+(?:base|step))?)\b[^:\n]{0,65}[:.]?)/i;
 
 /** Derive a navigable outline from the user's own working text.
  * No extra state or second notes store is required. */
