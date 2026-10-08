@@ -48,6 +48,22 @@ export async function syncStudyCalendar(userId:string){
       const events=await listGoogleCalendarEvents(token,String(source.calendar_id),timeMin,timeMax); const ids:string[]=[];
       const rows=[];
       for(const event of events){
+        // Deleted recurring instances may not contain start/end dates. Always
+        // cancel their previously imported deadline instead of keeping a
+        // phantom open commitment on the study plan.
+        if(event.status==="cancelled"){
+          const previous=await admin.from("study_commitments").select("id,status")
+            .eq("user_id",userId).eq("calendar_id",source.calendar_id)
+            .eq("calendar_event_id",event.id).maybeSingle();
+          if(previous.error)throw new Error("Could not inspect cancelled Calendar deadline");
+          if(previous.data?.status==="open"){
+            const result=await admin.from("study_commitments").update({
+              status:"cancelled",source_updated_at:event.updated??null,updated_at:new Date().toISOString(),
+            }).eq("id",previous.data.id).eq("user_id",userId);
+            if(result.error)throw new Error("Could not cancel synced Calendar deadline");
+          }
+          continue;
+        }
         const timezone=String(source.timezone??connectionResult.data.timezone??semesterResult.data?.timezone??"Europe/Berlin");
         const bounds=eventBounds(event,timezone); if(!bounds)continue;
         ids.push(event.id); const c=classify(event.summary??"",courses);
