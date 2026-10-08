@@ -25,7 +25,7 @@ function formatSeconds(seconds: number) {
   return `${min}:${String(sec).padStart(2, "0")}`;
 }
 
-export function ReviewSession({ queue, plannedMinutes, sessionType = "review", courseId, eyebrow = "Daily retrieval", intro, completionNote }: { queue: QueueItem[]; plannedMinutes: number; sessionType?: "review"|"checkpoint"|"exam_simulation"|"relearning"|"coursework"; courseId?: string; eyebrow?: string; intro?: string; completionNote?: string }) {
+export function ReviewSession({ queue, plannedMinutes, sessionType = "review", courseId, eyebrow = "Daily retrieval", intro, completionNote, returnHref = "/", returnLabel = "Back to Today" }: { queue: QueueItem[]; plannedMinutes: number; sessionType?: "review"|"checkpoint"|"exam_simulation"|"relearning"|"coursework"; courseId?: string; eyebrow?: string; intro?: string; completionNote?: string; returnHref?: string; returnLabel?: string }) {
   const [phase, setPhase] = useState<Phase>("ready");
   const [focusMode, setFocusMode] = useState(true);
   const [answerSurface, setAnswerSurface] = useState<"typed"|"paper">("typed");
@@ -162,7 +162,7 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
       <p className="eyebrow">{sessionType === "checkpoint" ? "Checkpoint complete" : "Session complete"}</p><h2>{summary.attempted} attempts completed</h2>
       <div className="summary-grid"><div><strong>{summary.correct}</strong><span>correct</span></div><div><strong>{summary.partial}</strong><span>partial</span></div><div><strong>{summary.incorrect}</strong><span>incorrect</span></div><div><strong>{summary.skipped}</strong><span>skipped</span></div></div>
       <p>{formatSeconds(summary.seconds)} active solving time{summary.queued ? ` · ${summary.queued} attempt(s) waiting for sync` : ""}.</p>
-      <div className="button-row"><Link className="primary-button" href="/">Back to Today</Link><Link className="secondary-button" href="/progress">View progress</Link></div>
+      <div className="button-row"><Link className="primary-button" href={returnHref}>{returnLabel}</Link><Link className="secondary-button" href="/progress">View progress</Link></div>
     </section>
   );
 
@@ -179,7 +179,7 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
   return (
     <section className={"review-workspace "+(focusMode?"is-focused":"")}>
       <div className="review-session-tools">
-        <Link href="/practice" className="review-back-link">← Study</Link>
+        <Link href={returnHref==="/"?"/practice":returnHref} className="review-back-link">← {returnHref==="/"?"Study":returnLabel}</Link>
         <button className="review-focus-toggle" type="button" aria-pressed={focusMode} onClick={()=>setFocusMode(value=>!value)}>{focusMode?"Show navigation":"Focus on question"}</button>
       </div>
       <div className="review-topline" aria-live="polite">
