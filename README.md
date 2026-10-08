@@ -657,3 +657,12 @@ See `docs/P30.md` for the visual-system contract and invariants.
 - Revealed solutions cannot be dismissed with Skip; findings forms retain input on failed submission.
 - Version 0.30.0; first implementation of P32. Semester workflow consolidation and real-device qualification remain open.
 - See `docs/P32.md` for the behavior and evidence contract.
+
+### P32B course workflow consolidation
+
+- Course binders now lead directly to the next teaching-week action and provide a scoped material desk.
+- Source processing, registration, review and intake show only the selected course when opened from its binder. Active-semester source queries no longer list older semester data.
+- Solution links are withheld until a user-confirmed independent sheet attempt is recorded; this is a UI-level learning safeguard, not Drive access control.
+- Each teaching week can run its own course-specific cumulative checkpoint. Finishing and marking it requires a saved, non-solution-exposed attempt associated with that exact course/week; global checkpoint rotation remains separate.
+- In-context save errors and honest empty-course actions reduce navigation friction.
+- Version 0.31.0. See `docs/P32.md`.
