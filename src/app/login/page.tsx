@@ -1,15 +1,12 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-
-function safeNext(value: string | undefined) {
-  return value && value.startsWith("/") && !value.startsWith("//") ? value : "/";
-}
+import { safeStudyReturnPath } from "@/lib/study/auth-return";
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string; next?: string }> }) {
   const supabase = await createClient();
   const { data } = await supabase.auth.getClaims();
   const params = await searchParams;
-  const next = safeNext(params.next);
+  const next = safeStudyReturnPath(params.next);
   if (data?.claims?.sub) redirect(next);
   return (
     <main className="login-shell">
