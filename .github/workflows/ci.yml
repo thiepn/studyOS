@@ -34,6 +34,9 @@ jobs:
       - name: Pure behavior tests
         run: npm test
 
+      - name: Live qualification script syntax
+        run: node --check scripts/verify-live-deployment.mjs
+
       - name: TypeScript
         run: npm run typecheck
 

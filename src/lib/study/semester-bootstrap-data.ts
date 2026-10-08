@@ -45,12 +45,19 @@ export async function createInitialSemester(value:unknown){
   if(state.activeSemester||state.hasAnySemester)throw new StudyServiceError("Semester history already exists; use Semester Rollover instead.","invalid_initial_semester");
 
   const connection=await supabase.rpc("connect_thiepn_app",{p_app_slug:"semester-os"});
-  if(connection.error)throw new StudyServiceError("Could not connect StudyOS to THIEPN Account",connection.error.code||"account_connection_failed",connection.error);
+  if(connection.error)throw new StudyServiceError(
+    "StudyOS could not connect to THIEPN Account. Verify its active semester-os registration and your authenticated session.",
+    "account_connection_unavailable",connection.error);
 
   const {data,error}=await (supabase.rpc as any)("study_create_initial_semester",{
     p_stable_key:stableKey,p_display_name:displayName,p_starts_on:startsOn,p_ends_on:endsOn,p_timezone:timezone,
   });
-  if(error)throw new StudyServiceError("Could not create the first semester",error.code||"initial_semester_failed",error);
+  if(error){
+    if(error.code==="PGRST202"||error.code==="42883")throw new StudyServiceError(
+      "The first-semester database function is not installed. The StudyOS database migrations must be repaired before retrying.",
+      "initial_semester_schema_unavailable",error);
+    throw new StudyServiceError("Could not create the first semester",error.code||"initial_semester_failed",error);
+  }
   return data;
 }
 
