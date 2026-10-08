@@ -78,7 +78,7 @@ export async function getCheckpointData() {
 
 /** A course-week cumulative checkpoint is separate from the semester rotation.
  * It reuses the existing checkpoint queue and recorded session evidence. */
-export async function getCourseWeekCheckpointData(courseId: string | undefined, weekValue: string | undefined) {
+export async function getCourseWeekCheckpointData(courseId: string | undefined, weekValue: string | undefined, scope: "cumulative"|"week"="cumulative") {
   const weekNo=parseTeachingWeek(weekValue);
   if (!courseId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(courseId) || weekNo==null) {
     throw new StudyServiceError("A valid course and teaching week are required", "invalid_checkpoint");
@@ -91,9 +91,12 @@ export async function getCourseWeekCheckpointData(courseId: string | undefined, 
   if(courseResult.error)throw new StudyServiceError("Could not load checkpoint course",courseResult.error.code||"checkpoint_failed",courseResult.error);
   if(!courseResult.data)throw new StudyServiceError("This course does not belong to the active semester", "invalid_checkpoint");
 
-  const skillsResult=await db.from("study_skill_retention_diagnostics").select("*")
-    .eq("semester_id",semesterId).eq("course_id",courseId)
-    .or(`first_week_no.is.null,first_week_no.lte.${weekNo}`);
+  const skillQuery=db.from("study_skill_retention_diagnostics").select("*")
+    .eq("semester_id",semesterId).eq("course_id",courseId);
+  // Coursework introduces only the week's approved skills; checkpoint uses
+  // all previously encountered skills to measure cumulative retention.
+  const skillsResult=await (scope==="week"?skillQuery.eq("first_week_no",weekNo)
+    :skillQuery.or(`first_week_no.is.null,first_week_no.lte.${weekNo}`));
   if(skillsResult.error)throw new StudyServiceError("Could not load cumulative course skills",skillsResult.error.code||"checkpoint_failed",skillsResult.error);
   const skills=(skillsResult.data??[]) as CheckpointSkill[];
   const ids=skills.map(skill=>skill.skill_id);
@@ -103,6 +106,6 @@ export async function getCourseWeekCheckpointData(courseId: string | undefined, 
     if(questionResult.error)throw new StudyServiceError("Could not load checkpoint questions",questionResult.error.code||"checkpoint_failed",questionResult.error);
     questions=(questionResult.data??[]) as StudyQuestion[];
   }
-  const queue=buildCheckpointQueue(skills,questions,weekNo,60);
+  const queue=buildCheckpointQueue(skills,questions,weekNo,scope==="week"?35:60);
   return {course:courseResult.data as {id:string;display_name:string;short_name:string|null},weekNo,queue,queueMinutes:queueMinutes(queue)};
 }
