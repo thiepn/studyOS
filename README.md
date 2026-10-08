@@ -645,3 +645,15 @@ See `docs/P30.md` for the visual-system contract and invariants.
 - Progress exposes recommendations and three headline evidence metrics before deep diagnostics.
 - More is a genuine navigable page rather than a popup overlay.
 - Version 0.29.0; see `docs/P31.md`.
+
+
+## P32 course-context and trustworthy review
+
+- Course binders and weekly findings now open due retrieval scoped to the corresponding course instead of an unrelated all-course session.
+- The scope is applied **before** the fixed daily budget is allocated; all existing filtering and retention ceilings remain in force.
+- Cumulative checkpoint actions open checkpoint mode directly.
+- Confidence is rated **before** any rubric is revealed and cannot be rewritten afterward.
+- Typed review requires a written attempt or deliberate paper mode; giving up is a zero-credit incorrect attempt, not a bypass.
+- Revealed solutions cannot be dismissed with Skip; findings forms retain input on failed submission.
+- Version 0.30.0; first implementation of P32. Semester workflow consolidation and real-device qualification remain open.
+- See `docs/P32.md` for the behavior and evidence contract.
