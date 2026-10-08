@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildReviewQueue, queueMinutes, weakestRequiredDimension } from "../src/lib/study/queue.ts";
+import { buildReviewQueue, queueMinutes, scopeDueSkills, weakestRequiredDimension } from "../src/lib/study/queue.ts";
 import type { DueSkill, StudyQuestion } from "../src/lib/study/types.ts";
 
 const due = (overrides: Partial<DueSkill> = {}): DueSkill => ({
