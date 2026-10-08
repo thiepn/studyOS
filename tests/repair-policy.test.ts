@@ -15,9 +15,9 @@ test("targeted repair uses exact skill and prefers high-order questions",()=>{
   assert.deepEqual(picked.map(x=>x.id),["c","d"]);
 });
 test("repair credit requires later correct independent skill evidence",()=>{
-  const input={completed_at:"2026-10-08T14:00:00Z",result:"correct",independence:"independent",question:{primary_skill_id:"s"}};
+  const input={completed_at:"2026-10-08T14:00:00Z",result:"correct",independence:"independent",skill_id:"s"};
   assert.equal(isIndependentRepairEvidence(input,"s","2026-10-08T13:00:00Z"),true);
-  for(const x of [{...input,independence:"hint_1"},{...input,result:"partial"},{...input,question:{primary_skill_id:"x"}},{...input,completed_at:"2026-10-07T13:00:00Z"}]) assert.equal(isIndependentRepairEvidence(x,"s","2026-10-08T13:00:00Z"),false);
+  for(const x of [{...input,independence:"hint_1"},{...input,result:"partial"},{...input,skill_id:"x"},{...input,completed_at:"2026-10-07T13:00:00Z"}]) assert.equal(isIndependentRepairEvidence(x,"s","2026-10-08T13:00:00Z"),false);
 });
 test("finding source references cannot point to another week or resource class",()=>{
   const r={id:"r",teaching_week_id:"w",resource_type:"solution"};
