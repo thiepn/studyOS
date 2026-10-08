@@ -9,6 +9,8 @@ import { getDailyOrchestration } from "@/lib/study/planning";
 import { getCalendarAutopilot } from "@/lib/study/calendar-autopilot";
 import type { PlanningMode } from "@/lib/study/planner";
 import { getStudyWorkspaceState } from "@/lib/study/bootstrap";
+import { createClient } from "@/lib/supabase/server";
+import { StudyServiceError } from "@/lib/study/errors";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +21,18 @@ function dayLabel(date:string){
 export default async function TodayPage() {
   const workspace=await getStudyWorkspaceState();
   if(!workspace.activeSemester)redirect("/semester/bootstrap");
+  // First-run users have no usable daily plan yet. Route them to the
+  // semester intake instead of invoking the full analytics/planning fan-out.
+  const supabase=await createClient();
+  const {count:activeCourseCount,error:activeCourseCountError}=await supabase
+    .from("study_courses").select("id",{count:"exact",head:true})
+    .eq("semester_id",workspace.activeSemester.id).eq("active",true);
+  if(activeCourseCountError)throw new StudyServiceError(
+    "Could not inspect the active course roster",
+    activeCourseCountError.code||"course_roster_read_failed",
+    activeCourseCountError,
+  );
+  if(!activeCourseCount)redirect("/semester/bootstrap");
   const orchestration=await getDailyOrchestration();
   const calendar=await getCalendarAutopilot(orchestration);
   const {today:data,pulse,capacity,plan,commitments,courses,settings}=orchestration;
