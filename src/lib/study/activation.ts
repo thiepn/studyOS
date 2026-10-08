@@ -3,6 +3,7 @@ import { serverConfigurationStatus } from "@/lib/env";
 import { ensureStudyWorkspace } from "./bootstrap";
 import { evaluateActivation, type ActivationSnapshot } from "./activation-state";
 import { StudyServiceError } from "./errors";
+import { getFirstWeekProof } from "./first-week-proof-data";
 
 export type ActivationCourseStatus={
   user_id:string;semester_id:string;course_id:string;stable_key:string;display_name:string;short_name:string|null;
@@ -13,7 +14,7 @@ export type ActivationCourseStatus={
 };
 
 export async function getActivationData(){
-  const supabase=await createClient();const {semesterId}=await ensureStudyWorkspace(supabase);const db=supabase as any;
+  const supabase=await createClient();const {semesterId,userId}=await ensureStudyWorkspace(supabase);const db=supabase as any;
   const [snapshotResult,coursesResult,baselineResult,driveResult,calendarResult,semesterResult]=await Promise.all([
     db.from("study_activation_snapshot").select("*").eq("semester_id",semesterId).single(),
     db.from("study_activation_course_status").select("*").eq("semester_id",semesterId).order("sort_order"),
@@ -26,14 +27,17 @@ export async function getActivationData(){
   if(error)throw new StudyServiceError("Could not load semester activation state",error.code||"activation_read_failed",error);
 
   const snapshot=snapshotResult.data as ActivationSnapshot;
+  const courses=(coursesResult.data??[]) as ActivationCourseStatus[];
+  const majorCourseIds=courses.filter(course=>course.course_kind==="major").map(course=>course.course_id);
+  const firstWeekProof=await getFirstWeekProof(db,userId,majorCourseIds);
   const server=serverConfigurationStatus();
   const evaluation=evaluateActivation({
     secureOrigin:server.secureOrigin,hasSupabaseSecret:server.hasSupabaseSecret,
     googleDriveConfigured:server.googleDriveConfigured,googleCalendarConfigured:server.googleCalendarConfigured,
-  },snapshot);
+  },snapshot,majorCourseIds,firstWeekProof);
   return {
-    semesterId,server,snapshot,evaluation,
-    courses:(coursesResult.data??[]) as ActivationCourseStatus[],
+    semesterId,server,snapshot,evaluation,firstWeekProof,
+    courses,
     baselines:baselineResult.data??[],
     drive:driveResult.data??null,calendar:calendarResult.data??null,semester:semesterResult.data,
   };

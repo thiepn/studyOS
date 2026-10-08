@@ -1,3 +1,4 @@
+import { type FirstWeekProof, proofCertifiedForAllMajors } from "./first-week-proof.ts";
 export type ActivationSnapshot={
   course_count:number;major_course_count:number;retake_course_count:number;bootstrap_certified:boolean;
   drive_connected:boolean;drive_tree_ready:boolean;calendar_connected:boolean;calendar_synced:boolean;
@@ -15,7 +16,8 @@ export type ActivationEvaluation={
 
 function pct(done:number,total:number){return Math.round((done/Math.max(1,total))*100);}
 
-export function evaluateActivation(platform:PlatformActivation,snapshot:ActivationSnapshot):ActivationEvaluation{
+export function evaluateActivation(platform:PlatformActivation,snapshot:ActivationSnapshot,
+  majorCourseIds:readonly string[]=[],proofs:readonly FirstWeekProof[]=[]):ActivationEvaluation{
   const platformChecks=[
     [platform.hasSupabaseSecret,"Supabase server secret is not configured."],
     [platform.secureOrigin,"Production origin is not HTTPS."],
@@ -36,10 +38,18 @@ export function evaluateActivation(platform:PlatformActivation,snapshot:Activati
   ] as const;
   const activationBlockers=activationChecks.filter(([ok])=>!ok).map(([,message])=>message);
 
+  const rosterVerified=snapshot.major_course_count>0 && majorCourseIds.length===snapshot.major_course_count;
+  const byId=new Map(proofs.map(proof=>[proof.courseId,proof]));
+  const everyMajor=(predicate:(p:FirstWeekProof)=>boolean)=>rosterVerified
+    &&majorCourseIds.every(id=>{
+      const proof=byId.get(id);
+      return Boolean(proof&&predicate(proof));
+    });
   const firstWeekChecks=[
-    [snapshot.major_course_count===0||snapshot.majors_with_week1_material>=snapshot.major_course_count,"Process at least one verified Week-1 source for every major course."],
-    [snapshot.major_course_count===0||snapshot.majors_with_study_map>=snapshot.major_course_count,"Produce at least one active skill and review question for every major course."],
-    [snapshot.major_course_count===0||snapshot.majors_with_attempts>=snapshot.major_course_count,"Record at least one real retrieval/practice attempt in every major course."],
+    [snapshot.major_course_count>0,"Add at least one real major course before certifying a first-week learning loop."],
+    [everyMajor(p=>p.verifiedResources>0),"Process at least one verified Week-1 lecture or exercise for every major course."],
+    [everyMajor(p=>p.sourceLinkedQuestions>0),"Approve at least one active question linked to verified Week-1 material for every major course."],
+    [rosterVerified && proofCertifiedForAllMajors(proofs,majorCourseIds),"Record a fully independent attempt on a source-linked Week-1 question in every major course."],
   ] as const;
   const firstWeekBlockers=firstWeekChecks.filter(([ok])=>!ok).map(([,message])=>message);
 

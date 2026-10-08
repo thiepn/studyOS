@@ -17,7 +17,9 @@ function Gate({title,percent,ready,blockers}:{title:string;percent:number;ready:
 export default async function SetupPage(){
   const state=await getStudyWorkspaceState();
   if(!state.activeSemester)redirect(state.hasAnySemester?"/semester/rollover":"/semester/bootstrap");
-  const data=await getActivationData();const {evaluation,snapshot,courses,server,semester}=data;
+  const data=await getActivationData();const {evaluation,snapshot,courses,server,semester,firstWeekProof}=data;
+  const proofByCourse=new Map(firstWeekProof.map(row=>[row.courseId,row]));
+  const majorCourses=courses.filter(course=>course.course_kind==="major");
   const startLabel=semester.starts_on
     ?new Date(String(semester.starts_on)+"T12:00:00Z").toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})
     :"start date not configured";
@@ -80,7 +82,30 @@ export default async function SetupPage(){
       <div className="section-heading"><div><p className="eyebrow">End-to-end proof</p><h2>First-week operational contract</h2></div><span>{evaluation.firstWeekCertified?"CERTIFIED":"PENDING"}</span></div>
       <p>Every active major course must independently prove the real path below. One successful course does not certify the rest.</p>
       <pre>Week-1 source in Study Drive → verified processing → skill/question map → closed-book attempt → daily planning</pre>
-      <div className="readiness-stats"><span><strong>{snapshot.majors_with_week1_material}/{snapshot.major_course_count}</strong> verified W1 material</span><span><strong>{snapshot.majors_with_study_map}/{snapshot.major_course_count}</strong> study maps</span><span><strong>{snapshot.majors_with_attempts}/{snapshot.major_course_count}</strong> real attempts</span></div>
+      <p className="muted">A Week-1 source must be approved, a question must be explicitly linked to that lecture or exercise, and an independent answer must be recorded on that precise question. Hints and unrelated older attempts do not satisfy this evidence gate.</p>
+      <div className="readiness-stats">
+        <span><strong>{firstWeekProof.filter(p=>p.verifiedResources>0).length}/{majorCourses.length}</strong> verified W1 lecture or exercise</span>
+        <span><strong>{firstWeekProof.filter(p=>p.sourceLinkedQuestions>0).length}/{majorCourses.length}</strong> source-linked questions</span>
+        <span><strong>{firstWeekProof.filter(p=>p.independentAttempts>0).length}/{majorCourses.length}</strong> independent attempts</span>
+      </div>
+      <div className="study-first-week-roster">
+        {majorCourses.map(course=>{
+          const proof=proofByCourse.get(course.course_id);
+          const ready=Boolean(proof&&proof.verifiedResources>0&&proof.sourceLinkedQuestions>0&&proof.independentAttempts>0);
+          return <article key={course.course_id} className="study-first-week-row">
+            <div><strong>{course.short_name??course.display_name}</strong><span>{ready?"Week 1 proven":"Week 1 evidence pending"}</span></div>
+            <dl><div><dt>Sources</dt><dd>{proof?.verifiedResources??0}</dd></div>
+              <div><dt>Linked questions</dt><dd>{proof?.sourceLinkedQuestions??0}</dd></div>
+              <div><dt>Independent attempts</dt><dd>{proof?.independentAttempts??0}</dd></div>
+            </dl>
+            <Link href={proof?.sourceLinkedQuestions? `/practice?mode=week&course=${course.course_id}&week=1`:
+              `/resources?course=${course.course_id}&week=1`}>
+              {proof?.sourceLinkedQuestions?"Work on Week 1":"Add/verify Week-1 material"}
+            </Link>
+          </article>;
+        })}
+        {!majorCourses.length?<p>No major courses have been configured. Add the actual semester roster first; a zero-course semester cannot be marked academically certified.</p>:null}
+      </div>
       <div className="button-row"><Link className="secondary-button" href="/semester/bootstrap">Semester setup</Link><Link className="secondary-button" href="/resources">Material intake</Link><Link className="secondary-button" href="/practice">Practice</Link><Link className="secondary-button" href="/">Today</Link></div>
     </section>
 
