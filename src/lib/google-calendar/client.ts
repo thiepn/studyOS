@@ -7,7 +7,8 @@ export type GoogleCalendarListEntry={
 };
 export type GoogleCalendarEvent={
   id:string;summary?:string;status?:string;transparency?:string;eventType?:string;location?:string;htmlLink?:string;
-  recurringEventId?:string;updated?:string;start:{dateTime?:string;date?:string;timeZone?:string};end:{dateTime?:string;date?:string;timeZone?:string};
+  recurringEventId?:string;updated?:string;extendedProperties?:{private?:Record<string,string>};
+  start:{dateTime?:string;date?:string;timeZone?:string};end:{dateTime?:string;date?:string;timeZone?:string};
 };
 
 export async function refreshCalendarAccessToken(userId:string){
