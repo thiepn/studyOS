@@ -1083,3 +1083,20 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .rubric-verification{display:flex;align-items:flex-start;gap:10px;padding:12px 0;border-bottom:1px solid var(--line);font-size:.8rem;line-height:1.55;color:var(--ink-soft)}
 .rubric-verification input{margin-top:3px;min-width:18px;min-height:18px;accent-color:var(--accent)}
 .rubric-verification a{text-underline-offset:3px;font-weight:700}
+
+/* P32B: course workbench — controlled sources and independent attempts. */
+.course-shell .course-back-row{align-items:center;gap:8px;margin-bottom:22px}
+.course-shell .course-back-row .primary-button{font-size:.8rem}
+.week-work-item{scroll-margin-top:18px}
+.resource-context-nav{display:flex;align-items:center;gap:18px;padding:11px 0;border-top:1px solid var(--line-strong);border-bottom:1px solid var(--line);margin:-6px 0 24px;font-size:.79rem}
+.resource-context-nav p{margin:0;flex:1;color:var(--muted);line-height:1.45}
+.resource-context-nav a{font-weight:700;text-underline-offset:3px;white-space:nowrap}
+.solution-access-note{margin:14px 0;padding:12px 14px;background:var(--sheet-muted);border-left:2px solid var(--line-strong);line-height:1.55;font-size:.78rem;color:var(--ink-soft)}
+.independent-confirmation{display:flex;align-items:flex-start;gap:10px;margin:18px 0 4px;padding:12px 0;border-top:1px solid var(--line);font-size:.82rem;line-height:1.5;color:var(--ink-soft)}
+.independent-confirmation input{accent-color:var(--accent);width:18px;height:18px;flex:none;margin:1px 0 0}
+.week-evidence-guidance{display:block;line-height:1.5;margin:12px 0 0;color:var(--muted);max-width:66ch}
+@media(max-width:760px){
+  .resource-context-nav{align-items:flex-start;flex-wrap:wrap;gap:8px 16px}
+  .resource-context-nav p{flex-basis:100%}
+  .course-shell .course-back-row .primary-button{width:100%;justify-content:center}
+}
