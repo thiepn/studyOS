@@ -36,6 +36,7 @@ export default async function SetupPage(){
 
     <section className="activation-gates">
       <Gate title="1 · Platform certification" percent={evaluation.platformPercent} ready={evaluation.platformReady} blockers={evaluation.platformBlockers}/>
+      <p className="muted"><Link href="/setup/platform">Inspect detailed deployment and OAuth configuration</Link></p>
       <Gate title="2 · Pre-semester activation" percent={evaluation.activationPercent} ready={evaluation.preSemesterReady} blockers={evaluation.activationBlockers}/>
       <Gate title="3 · First-week certification" percent={evaluation.firstWeekPercent} ready={evaluation.firstWeekCertified} blockers={evaluation.firstWeekBlockers}/>
     </section>
