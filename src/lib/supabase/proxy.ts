@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { env } from "@/lib/env";
 import { isApiRoute,isPublicHealthRoute } from "@/lib/study/api-boundary";
+import { safeStudyReturnPath } from "@/lib/study/auth-return";
 import type { Database } from "./database.types";
 
 const PUBLIC_PREFIXES = ["/login", "/auth/"];
@@ -34,7 +35,7 @@ export async function updateSession(request: NextRequest) {
     }
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    url.searchParams.set("next", request.nextUrl.pathname + request.nextUrl.search);
+    url.searchParams.set("next", safeStudyReturnPath(request.nextUrl.pathname + request.nextUrl.search));
     return NextResponse.redirect(url);
   }
   if (claims && request.nextUrl.pathname === "/login") {
