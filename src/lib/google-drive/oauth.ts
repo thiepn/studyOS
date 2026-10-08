@@ -1,14 +1,12 @@
 import { createHash, randomBytes } from "node:crypto";
 import { requireDriveServerEnv } from "@/lib/env";
 
-import { DRIVE_FILE_SCOPE } from "./scope-validation";
-export { DRIVE_FILE_SCOPE } from "./scope-validation";
-export const DRIVE_READONLY_SCOPE = "https://www.googleapis.com/auth/drive.readonly";
+import { requestedDriveScopes, parseDriveAboutIdentity } from "./scope-validation";
+export { DRIVE_FILE_SCOPE, DRIVE_READONLY_SCOPE } from "./scope-validation";
 export function driveScopes() {
   const { scopeMode } = requireDriveServerEnv();
-  // One non-sign-in scope avoids Google's separate granular consent screen.
-  // No OIDC profile/email scopes are needed: Drive about.get supplies identity.
-  return [DRIVE_FILE_SCOPE, ...(scopeMode === "readonly" ? [DRIVE_READONLY_SCOPE] : [])];
+  // No OIDC scopes required: Drive about.get provides account identity.
+  return requestedDriveScopes(scopeMode);
 }
 
 export function createOAuthState() {
@@ -60,7 +58,5 @@ export async function fetchDriveAccountIdentity(accessToken: string) {
   );
   if (!response.ok) throw new Error("Could not identify authorized Google Drive account ("+response.status+")");
   const data = await response.json() as { user?: { permissionId?:string;emailAddress?:string } };
-  const permissionId = data.user?.permissionId;
-  if (!permissionId) throw new Error("Google Drive did not provide an account identifier");
-  return { sub: "drive:" + permissionId, email: data.user?.emailAddress ?? undefined };
+  return parseDriveAboutIdentity(data);
 }
