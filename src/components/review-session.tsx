@@ -8,6 +8,8 @@ import { assessmentReady, assessmentSourceVerified, canRevealRubric, escalateInd
 import { submitAttemptWithFallback } from "@/lib/study/offline-attempts";
 import { finishSessionWithFallback, startSessionWithFallback } from "@/lib/study/offline-sessions";
 import { composeProblemWork } from "@/lib/study/problem-work";
+import { MathContent } from "@/components/math-content";
+import { outlineProof } from "@/lib/study/proof-outline";
 import { parseStudyDraft, studyDraftStorageKey, studyQueueFingerprint, type StudyDraft } from "@/lib/study/study-draft";
 
 const ERROR_OPTIONS: { value: StudyErrorType; label: string }[] = [
@@ -45,6 +47,7 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
   const [workingText,setWorkingText]=useState("");
   const workingRef=useRef<HTMLTextAreaElement>(null);
   const composedResponse=composeProblemWork(workingText,responseText);
+  const proofOutline=useMemo(()=>outlineProof(workingText),[workingText]);
   const [independence, setIndependence] = useState<StudyIndependence>("independent");
   const [hint1Visible, setHint1Visible] = useState(false);
   const [hint2Visible, setHint2Visible] = useState(false);
@@ -208,6 +211,13 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
     });
   }
 
+  function jumpToProof(offset:number){
+    const textarea=workingRef.current;
+    if(!textarea)return;
+    textarea.focus();
+    textarea.setSelectionRange(offset,offset);
+  }
+
   function showHint(level: 1 | 2) {
     if (level === 1) { setHint1Visible(true); setIndependence((x) => escalateIndependence(x, "hint_1")); }
     else { setHint1Visible(true); setHint2Visible(true); setIndependence((x) => escalateIndependence(x, "hint_2")); }
@@ -300,7 +310,7 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
       <progress className="review-session-progress" value={index} max={queue.length} aria-label="Questions completed" />
       <article className="panel review-question">
         <div className="question-meta"><span>{current.skillTitle}</span><span>{current.targetDimension} · difficulty {current.question.difficulty}/5</span></div>
-        <h2>{current.question.prompt}</h2>
+        <h2 className="math-question-text"><MathContent text={current.question.prompt}/></h2>
         {phase === "answering" ? <>
           <div className="answer-surface-choice" role="group" aria-label="How are you solving?">
             <button type="button" aria-pressed={answerSurface==="typed"} className={answerSurface==="typed"?"selected":""} onClick={()=>setAnswerSurface("typed")}>Type here</button>
@@ -325,24 +335,41 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
                   onClick={()=>insertMathSymbol(structure.replaceAll("\\\\n","\\n"))}>{label}</button>)}
               </div>
             </details>
+            <div className="math-latex-actions" aria-label="Insert rendered math">
+              {([
+                ["Fraction",String.raw`\\(\\frac{a}{b}\\)`],
+                ["Superscript",String.raw`\\(x^{n}\\)`],
+                ["Root",String.raw`\\(\\sqrt{x}\\)`],
+                ["Integral",String.raw`\\[\\int_0^1 f(x)\\,dx\\]`],
+                ["Summation",String.raw`\\[\\sum_{n=1}^{\\infty} a_n\\]`],
+                ["Matrix",String.raw`\\[\\begin{pmatrix}a & b \\\\ c & d\\end{pmatrix}\\]`],
+              ] as const).map(([label,syntax])=><button key={label} type="button"
+                onClick={()=>insertMathSymbol(syntax.replaceAll("\\\\","\\").replaceAll("\\( ","\\("))}>{label}</button>)}
+            </div>
             <label className="field-label" htmlFor="review-working">Steps, argument or proof <span>Ctrl/⌘ + Enter to lock</span></label>
             <textarea id="review-working" ref={workingRef} className="answer-box math-working-input" value={workingText} onChange={event=>setWorkingText(event.target.value)} maxLength={17000}
               onKeyDown={event=>{if((event.ctrlKey||event.metaKey)&&event.key==="Enter"){event.preventDefault();revealForGrading(false);}}}
               placeholder="Definitions → method → transformations → justification… Use plain text or LaTeX-style notation." rows={9} />
+            {proofOutline.length>0?<nav className="proof-outline" aria-label="Jump to proof section">
+              <span className="section-kicker">Proof outline</span>
+              <div>{proofOutline.map(anchor=><button type="button" key={anchor.offset}
+                onClick={()=>jumpToProof(anchor.offset)} title={`Go to line ${anchor.line}`}>
+                {anchor.label}</button>)}</div>
+            </nav>:null}
             <label className="field-label" htmlFor="review-response">Conclusion, final value or key claim <span>Optional for longer proofs</span></label>
             <textarea id="review-response" className="answer-box math-answer-input" value={responseText} onChange={event=>setResponseText(event.target.value)} maxLength={2500}
               onKeyDown={event=>{if((event.ctrlKey||event.metaKey)&&event.key==="Enter"){event.preventDefault();revealForGrading(false);}}}
               placeholder="e.g. x = 0 is the unique critical point, or a concise proof conclusion" rows={3} />
-            <p className="math-work-helper">Your working and conclusion are stored together in the existing attempt record. This editor does not automatically check mathematical correctness.</p>
+            <p className="math-work-helper">Use <code>\\(x^2\\)</code> for inline math or <code>\\[\\frac{a}{b}\\]</code> for a display equation. Unsupported TeX stays visible as typed source. Your proof and conclusion remain one attempt; rendering is not mathematical verification.</p>
             {(workingText.trim()||responseText.trim())?<details className="math-reading-view">
-              <summary>Preview reading layout (plain text)</summary>
-              {workingText.trim()?<div><strong>Working / proof</strong><pre>{workingText}</pre></div>:null}
-              {responseText.trim()?<div><strong>Conclusion</strong><pre>{responseText}</pre></div>:null}
+              <summary>Preview mathematical reading layout</summary>
+              {workingText.trim()?<div><strong>Working / proof</strong><div className="math-proof-reading"><MathContent text={workingText}/></div></div>:null}
+              {responseText.trim()?<div><strong>Conclusion</strong><div className="math-proof-reading"><MathContent text={responseText}/></div></div>:null}
             </details>:null}
           </div> : <p className="paper-work-note">Solve independently on paper. When finished, lock your work before revealing the rubric. You can switch to typing to record your reasoning or conclusion.</p>}
           <div className="hint-stack">{current.question.hint_1 ? <button className="hint-button" type="button" onClick={() => showHint(1)} disabled={hint1Visible}>Hint 1</button> : null}{current.question.hint_2 ? <button className="hint-button" type="button" onClick={() => showHint(2)} disabled={hint2Visible}>Hint 2</button> : null}</div>
-          {hint1Visible && current.question.hint_1 ? <div className="support-box"><strong>Hint 1</strong><p>{current.question.hint_1}</p></div> : null}
-          {hint2Visible && current.question.hint_2 ? <div className="support-box"><strong>Hint 2</strong><p>{current.question.hint_2}</p></div> : null}
+          {hint1Visible && current.question.hint_1 ? <div className="support-box"><strong>Hint 1</strong><p><MathContent text={current.question.hint_1}/></p></div> : null}
+          {hint2Visible && current.question.hint_2 ? <div className="support-box"><strong>Hint 2</strong><p><MathContent text={current.question.hint_2}/></p></div> : null}
           <fieldset className="grade-group confidence-before-reveal"><legend>How confident are you in your answer? <span>Choose before seeing the solution</span></legend>
             <div className="choice-row confidence-row">{[1,2,3,4,5].map(value=><button type="button" key={value} aria-pressed={confidence===value} className={`choice-button ${confidence===value?"selected":""}`} onClick={()=>setConfidence(value)} aria-label={`Confidence ${value} of 5`}>{value}</button>)}</div>
             <small>1 = guessing or unable to solve · 5 = certain. This rating is locked when you reveal the rubric.</small>
@@ -350,8 +377,8 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
           <div className="button-row review-actions"><button className="primary-button button-reset" type="button" disabled={!canLock} onClick={() => revealForGrading(false)}>Lock answer & compare</button><button className="danger-link" type="button" disabled={!canGiveUp} onClick={() => revealForGrading(true)}>I give up — show solution</button><button className="secondary-button button-reset" type="button" onClick={() => void skip()}>Skip without revealing</button></div>
           {!canLock ? <p className="review-gate-note">To compare your work, select confidence and {answerSurface==="typed"?"write your working or conclusion (or switch to paper mode)":"then lock your paper attempt"}.</p> : null}
         </> : <>
-          <div className="locked-answer"><span>Your locked answer</span><p className="math-locked-work">{composedResponse.trim() || (answerSurface==="paper"?"Worked on paper.":"No typed answer.")}</p></div>
-          <div className="solution-box"><span>Answer key / rubric</span><p>{current.question.answer_key_or_rubric || "No rubric attached. Check an official solution or a verified course source before assigning a grade."}</p></div>
+          <div className="locked-answer"><span>Your locked answer</span><p className="math-locked-work"><MathContent text={composedResponse.trim() || (answerSurface==="paper"?"Worked on paper.":"No typed answer.")}/></p></div>
+          <div className="solution-box"><span>Answer key / rubric</span><p className="math-rubric-text"><MathContent text={current.question.answer_key_or_rubric || "No rubric attached. Check an official solution or a verified course source before assigning a grade."}/></p></div>
           {!hasRubric && !gaveUp ? <label className="rubric-verification">
             <input type="checkbox" checked={verifiedExternally} onChange={event=>setVerifiedExternally(event.target.checked)} disabled={phase==="submitting"} />
             <span>I compared my work with an official or independently verified source. <Link href={courseId?"/courses/"+courseId:"/resources"}>Open source material</Link></span>
