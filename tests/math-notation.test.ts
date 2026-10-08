@@ -12,7 +12,7 @@ test("fractions, indexed roots and scripts form native MathML structures",()=>{
 });
 
 test("binomial notation must not be confused with fraction notation",()=>{
-  const parsed=parseMathExpression("\\\\binom{n}{k}");
+  const parsed=parseMathExpression("\\binom{n}{k}");
   assert.equal(parsed?.kind,"frac");
   if(parsed?.kind==="frac")assert.equal(parsed.binomial,true);
 });
