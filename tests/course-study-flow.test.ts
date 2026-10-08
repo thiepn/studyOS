@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { canOpenWeekSolutions, isCompletedWeeklyCheckpointSession, parseTeachingWeek, weeklyCheckpointSessionNote } from "../src/lib/study/course-study-flow.ts";
+import { canOpenWeekSolutions, isCompletedWeeklyCheckpointSession, parseTeachingWeek, scopeCourseRecords, weeklyCheckpointSessionNote } from "../src/lib/study/course-study-flow.ts";
 
 test("solution link gate follows recorded independent attempt",()=>{
   assert.equal(canOpenWeekSolutions({exercise_count:1,exercise_attempt_completed_at:null}),false);
@@ -21,4 +21,11 @@ test("course teaching-week query only accepts valid weeks",()=>{
   assert.equal(parseTeachingWeek("1"),1);
   assert.equal(parseTeachingWeek("40"),40);
   for (const value of ["0","41","-1","3.5","01","3x","",null,undefined]) assert.equal(parseTeachingWeek(value),null);
+});
+
+test("source desk filters course records without mutating the full collection",()=>{
+  const data=[{course_id:"a",id:1},{course_id:"b",id:2},{course_id:"a",id:3}];
+  assert.deepEqual(scopeCourseRecords(data,"a").map(x=>x.id),[1,3]);
+  assert.deepEqual(scopeCourseRecords(data,null).map(x=>x.id),[1,2,3]);
+  assert.deepEqual(data.map(x=>x.id),[1,2,3]);
 });
