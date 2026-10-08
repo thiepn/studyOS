@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Nav } from "@/components/nav";
-import { parseTeachingWeek } from "@/lib/study/course-study-flow";
+import { parseTeachingWeek, scopeCourseRecords } from "@/lib/study/course-study-flow";
 import { ResourceRegisterForm } from "@/components/resource-register-form";
 import { IngestionDecisionButtons } from "@/components/ingestion-decision-buttons";
 import { DriveControls } from "@/components/drive-controls";
@@ -31,9 +31,9 @@ export default async function ResourcesPage({searchParams}:{searchParams:Promise
   const data = await getResourcesData();
   const selectedCourse=data.courses.find(item=>item.id===query.course)??null;
   const selectedWeek=selectedCourse?parseTeachingWeek(query.week):null;
-  const resources=selectedCourse?data.resources.filter(item=>item.course_id===selectedCourse.id):data.resources;
-  const ingestionRuns=selectedCourse?data.ingestionRuns.filter(item=>item.course_id===selectedCourse.id):data.ingestionRuns;
-  const intakeItems=selectedCourse?data.intakeItems.filter(item=>item.course_id===selectedCourse.id):data.intakeItems;
+  const resources=scopeCourseRecords(data.resources,selectedCourse?.id??null);
+  const ingestionRuns=scopeCourseRecords(data.ingestionRuns,selectedCourse?.id??null);
+  const intakeItems=scopeCourseRecords(data.intakeItems,selectedCourse?.id??null);
   const courseById = new Map(data.courses.map((course) => [course.id, course.display_name]));
   const resourceById = new Map(resources.map((resource) => [resource.id, resource]));
   const queued = ingestionRuns.filter((run) => run.status === "queued");
