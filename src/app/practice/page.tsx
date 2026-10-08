@@ -61,7 +61,7 @@ export default async function PracticePage({ searchParams }: { searchParams: Pro
         sessionType="checkpoint"
         courseId={data.course.id}
         eyebrow={`Week ${data.weekNo} · closed-book cumulative checkpoint`}
-        intro="Practice the current and earlier weeks independently. Your session must contain at least one recorded, non-solution-exposed attempt before its weekly checkpoint can be marked complete."
+        intro="Practice the current and earlier weeks independently. Your session must contain at least one recorded, fully independent attempt before its weekly checkpoint can be marked complete."
         completionNote={weeklyCheckpointSessionNote(data.course.id,data.weekNo)}
         returnHref={`/courses/${data.course.id}#week-${data.weekNo}`}
         returnLabel={`Back to week ${data.weekNo}`}
