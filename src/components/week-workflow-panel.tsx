@@ -85,6 +85,8 @@ export function WeekWorkflowPanel({
       errorType: fd.get("errorType"),
       severity: fd.get("severity"),
       skillId: fd.get("skillId"),
+      exerciseResourceId: fd.get("exerciseResourceId"),
+      solutionResourceId: fd.get("solutionResourceId"),
     }, `finding-${week.teaching_week_id}`);
     if(saved)form.reset();
   }
@@ -148,7 +150,7 @@ export function WeekWorkflowPanel({
               {week.next_action === "process_material" ? <Link className="primary-button" href={"/resources?course="+courseId+"#processing-queue"}>Process this course’s material</Link> : null}
               {["await_material","await_exercise","await_solution"].includes(week.next_action) ?
                 <Link className="secondary-button" href={`/resources?course=${courseId}&week=${week.week_no}#manual-registration`}>Open week {week.week_no} materials</Link> : null}
-              {week.next_action === "repair_findings" ? <a className="primary-button" href={"/practice?course="+courseId}>Review due course skills</a> : null}
+              {week.next_action === "repair_findings" ? <Link className="primary-button" href={weekFindings.find(f=>f.skill_id)?`/practice?mode=repair&course=${courseId}&skill=${weekFindings.find(f=>f.skill_id)?.skill_id}&finding=${weekFindings.find(f=>f.skill_id)?.id}`:`/practice?course=${courseId}`}>{weekFindings.some(f=>f.skill_id)?"Repair first mapped mistake":"Review course skills"}</Link> : null}
               {week.next_action === "weekly_checkpoint" ? <Link className="primary-button" href={`/practice?mode=weekly-checkpoint&course=${courseId}&week=${week.week_no}`}>Run week {week.week_no} checkpoint</Link> : null}
               {milestone==="exercise_attempt" ? <label className="independent-confirmation">
                 <input type="checkbox" checked={exerciseConfirmed} onChange={event=>setIndependentConfirmed(current=>event.target.checked?[...new Set([...current,week.teaching_week_id])]:current.filter(id=>id!==week.teaching_week_id))} />
@@ -180,12 +182,30 @@ export function WeekWorkflowPanel({
                 <h3>Solution findings</h3>
                 {weekFindings.length ? <div className="finding-list">{weekFindings.map((finding) => (
                   <article key={finding.id}>
-                    <div><strong>{finding.title}</strong><span>{finding.skill_id ? "repair scheduled" : "unmapped"}</span></div>
+                    <div><strong>{finding.title}</strong><span>{finding.status==="repair_scheduled"?"repair scheduled":finding.skill_id?"mapped":"unmapped"}</span></div>
                     {finding.detail ? <p>{finding.detail}</p> : null}
+                    {finding.exercise_resource_id||finding.solution_resource_id?<p className="finding-sources">{[finding.exercise_resource_id,finding.solution_resource_id].filter(Boolean).map(id=>{
+                      const resource=weekResources.find(item=>item.id===id);
+                      if(!resource)return null;
+                      const label=resourceLabel(resource.resource_type)+" · "+resource.title;
+                      if(["solution","exam_solution"].includes(resource.resource_type)&&!solutionsVisible)return <span key={id}>Solution linked · locked until independent attempt</span>;
+                      return resource.drive_url?<a key={id} href={resource.drive_url} rel="noreferrer" target="_blank">{label}</a>:<span key={id}>{label}</span>;
+                    })}</p>:null}
                     <div className="button-row">
-                      {finding.skill_id ? <a className="secondary-button" href={"/practice?course="+courseId}>Review due course skills</a> : null}
-                      <button className="secondary-button button-reset" disabled={Boolean(busy)} type="button" onClick={() => void post(`/api/study/findings/${finding.id}/resolve`, { note: "Resolved after independent repair." }, `resolve-${finding.id}`)}>Resolve</button>
+                      {finding.skill_id ? <Link className="primary-button" href={`/practice?mode=repair&course=${courseId}&skill=${finding.skill_id}&finding=${finding.id}`}>Repair this skill</Link> : <span className="muted tiny">No skill mapped. To close without repair evidence, give a dismissal reason below.</span>}
+                      <button className="secondary-button button-reset" disabled={Boolean(busy)||!finding.skill_id} type="button" onClick={() => void post(`/api/study/findings/${finding.id}/resolve`, { note: "Verified independent correct practice on the mapped skill." }, `resolve-${finding.id}`)}>Verify &amp; resolve</button>
                     </div>
+                    <details className="finding-dismiss"><summary>Dismiss without repair</summary>
+                      <form onSubmit={event=>{
+                        event.preventDefault();
+                        const form=event.currentTarget;
+                        const note=new FormData(form).get("reason");
+                        void post(`/api/study/findings/${finding.id}/resolve`,{dismiss:true,note},`resolve-${finding.id}`);
+                      }}>
+                        <label><span>Reason for dismissal</span><input name="reason" required minLength={10} maxLength={500} placeholder="e.g. Duplicated by the mapped finding above" /></label>
+                        <button className="secondary-button button-reset" disabled={Boolean(busy)} type="submit">Dismiss with reason</button>
+                      </form>
+                    </details>
                   </article>
                 ))}</div> : <p className="muted">No discrepancy recorded.</p>}
 
@@ -195,7 +215,9 @@ export function WeekWorkflowPanel({
                     <label className="wide"><span>What went wrong?</span><textarea name="detail" rows={3} placeholder="Short diagnostic note, not a copied solution." /></label>
                     <label><span>Error type</span><select name="errorType" defaultValue="method_selection">{ERROR_OPTIONS.map(([value,label]) => <option value={value} key={value}>{label}</option>)}</select></label>
                     <label><span>Severity</span><select name="severity" defaultValue="2"><option value="1">1 · minor</option><option value="2">2 · meaningful</option><option value="3">3 · major</option></select></label>
-                    <label className="wide"><span>Map to skill <em>optional</em></span><select name="skillId" defaultValue=""><option value="">Keep unmapped</option>{skills.map((skill) => <option key={skill.id} value={skill.id}>{skill.title}</option>)}</select></label>
+                    <label className="wide"><span>Map to skill <em>required for verifiable repair</em></span><select name="skillId" defaultValue=""><option value="">Not mapped — can only dismiss</option>{skills.map((skill) => <option key={skill.id} value={skill.id}>{skill.title}</option>)}</select></label>
+                    <label><span>Exercise source <em>optional</em></span><select name="exerciseResourceId" defaultValue=""><option value="">No linked sheet</option>{weekResources.filter(r=>r.resource_type==="exercise").map(resource=><option key={resource.id} value={resource.id}>{resource.title}</option>)}</select></label>
+                    <label><span>Official solution <em>optional</em></span><select name="solutionResourceId" defaultValue=""><option value="">No linked solution</option>{weekResources.filter(r=>["solution","exam_solution"].includes(r.resource_type)).map(resource=><option key={resource.id} value={resource.id}>{resource.title}</option>)}</select></label>
                   </div>
                   <div className="button-row"><button className="secondary-button button-reset" type="submit" disabled={Boolean(busy)}>{busy === `finding-${week.teaching_week_id}` ? "Adding…" : "Add finding"}</button></div>
                 </form>

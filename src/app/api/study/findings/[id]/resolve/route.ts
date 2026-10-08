@@ -13,7 +13,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     );
     return NextResponse.json({ ok: true, data });
   } catch (error) {
-    const status = error instanceof StudyServiceError && error.code.startsWith("invalid_") ? 400 : 500;
+    const status = error instanceof StudyServiceError && error.code === "repair_evidence_required" ? 409
+      : error instanceof StudyServiceError && error.code.startsWith("invalid_") ? 400 : 500;
     return NextResponse.json({ ok: false, error: error instanceof Error ? error.message : "Unknown error" }, { status });
   }
 }

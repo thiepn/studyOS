@@ -666,3 +666,11 @@ See `docs/P30.md` for the visual-system contract and invariants.
 - Each teaching week can run its own course-specific cumulative checkpoint. Finishing and marking it requires a saved, non-solution-exposed attempt associated with that exact course/week; global checkpoint rotation remains separate.
 - In-context save errors and honest empty-course actions reduce navigation friction.
 - Version 0.31.0. See `docs/P32.md`.
+
+### P33 — Mathematical working & targeted repair
+
+- Mathematics questions now use a structured proof/working area with notation shortcuts and a separate conclusion field; the complete attempt is stored in the existing review evidence record.
+- A recorded course discrepancy opens practice for **that mapped skill**, not a generic course-wide daily queue.
+- Exercise and solution references on findings are verified against the corresponding teaching week and course.
+- Resolution is withheld until a later **correct, fully independent, synced attempt** exists for the exact skill; a user may instead dismiss a mistaken or duplicate finding with a reason.
+- Version 0.32.0. Full contracts and non-goals in `docs/P33.md`.

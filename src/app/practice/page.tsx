@@ -4,6 +4,7 @@ import { ReviewSession } from "@/components/review-session";
 import { getTodayData } from "@/lib/study/queries";
 import { getCheckpointData, getCourseWeekCheckpointData } from "@/lib/study/pulse";
 import { weeklyCheckpointSessionNote } from "@/lib/study/course-study-flow";
+import { getTargetedRepair } from "@/lib/study/repair";
 import { getAvailableExamPapers } from "@/lib/study/exams";
 import { getCalibrationPractice, getSemesterCalibration } from "@/lib/study/calibration-data";
 import { getStrategyPractice } from "@/lib/study/strategy-data";
@@ -14,8 +15,27 @@ function metric(value:number|null,suffix=""){
   return value==null?"—":String(value)+suffix;
 }
 
-export default async function PracticePage({ searchParams }: { searchParams: Promise<{ mode?: string; course?: string; strategy?: string; week?: string }> }) {
-  const { mode,course,strategy,week } = await searchParams;
+export default async function PracticePage({ searchParams }: { searchParams: Promise<{ mode?: string; course?: string; strategy?: string; week?: string; skill?: string; finding?: string }> }) {
+  const { mode,course,strategy,week,skill,finding } = await searchParams;
+  if(mode==="repair"){
+    const data=await getTargetedRepair(course,skill,finding);
+    return <main className="shell practice-shell">
+      <header className="header"><div><p className="eyebrow">Skill repair · {data.course.display_name}</p><h1>{data.skill.title}</h1></div><Nav /></header>
+      {data.finding?<section className="repair-brief" aria-label="Mistake to repair">
+        <span className="section-kicker">Original discrepancy</span>
+        <h2>{data.finding.title}</h2>
+        {data.finding.detail?<p>{data.finding.detail}</p>:null}
+        <p className="muted">Solve the questions independently before reviewing any solutions. Returning to this mistake alone is not evidence of mastery.</p>
+        {data.sourceLinks.some(source=>source.resource_type==="exercise")?<details><summary>Original exercise sheet</summary><div className="resource-links">{data.sourceLinks.filter(source=>source.resource_type==="exercise").map(source=>source.drive_url?<a key={source.id} href={source.drive_url} target="_blank" rel="noreferrer">{source.title}</a>:<span key={source.id}>{source.title}</span>)}</div></details>:null}
+        {data.sourceLinks.some(source=>["solution","exam_solution"].includes(source.resource_type))?<p className="muted tiny">The linked official solution remains in the course binder. It is not linked here before an independent repair attempt.</p>:null}
+      </section>:null}
+      <ReviewSession queue={data.queue} plannedMinutes={Math.max(1,data.queueMinutes)}
+        sessionType="relearning" courseId={data.course.id} eyebrow="Independent repair · exact skill"
+        intro="The set draws only from this skill. Lock your full solution and compare it with the source. A later correct, fully independent recorded attempt is required before the finding can be resolved."
+        completionNote={data.finding?`Targeted repair for finding ${data.finding.id}`:undefined}
+        returnHref={`/courses/${data.course.id}`} returnLabel="Back to course" />
+    </main>;
+  }
   if(mode==="weekly-checkpoint"){
     const data=await getCourseWeekCheckpointData(course,week);
     return <main className="shell practice-shell">
