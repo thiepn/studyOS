@@ -26,7 +26,8 @@ export default async function PracticePage({ searchParams }: { searchParams: Pro
         <h2>{data.finding.title}</h2>
         {data.finding.detail?<p>{data.finding.detail}</p>:null}
         <p className="muted">Solve the questions independently before reviewing any solutions. Returning to this mistake alone is not evidence of mastery.</p>
-        {data.sourceLinks.length?<details><summary>Linked exercise and official solution</summary><div className="resource-links">{data.sourceLinks.map(source=>source.drive_url?<a key={source.id} href={source.drive_url} target="_blank" rel="noreferrer">{source.resource_type} · {source.title}</a>:<span key={source.id}>{source.resource_type} · {source.title}</span>)}</div></details>:null}
+        {data.sourceLinks.some(source=>source.resource_type==="exercise")?<details><summary>Original exercise sheet</summary><div className="resource-links">{data.sourceLinks.filter(source=>source.resource_type==="exercise").map(source=>source.drive_url?<a key={source.id} href={source.drive_url} target="_blank" rel="noreferrer">{source.title}</a>:<span key={source.id}>{source.title}</span>)}</div></details>:null}
+        {data.sourceLinks.some(source=>["solution","exam_solution"].includes(source.resource_type))?<p className="muted tiny">The linked official solution remains in the course binder. It is not linked here before an independent repair attempt.</p>:null}
       </section>:null}
       <ReviewSession queue={data.queue} plannedMinutes={Math.max(1,data.queueMinutes)}
         sessionType="relearning" courseId={data.course.id} eyebrow="Independent repair · exact skill"
