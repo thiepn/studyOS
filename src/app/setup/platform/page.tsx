@@ -15,7 +15,7 @@ export default async function PlatformSetupPage(){
   const {data,error}=await db.auth.getClaims();
   if(error||!data?.claims?.sub)redirect("/login?next=%2Fsetup%2Fplatform");
 
-  const backend=await inspectStudyBackendReadiness(db as Parameters<typeof inspectStudyBackendReadiness>[0]);
+  const backend=await inspectStudyBackendReadiness(db as unknown as Parameters<typeof inspectStudyBackendReadiness>[0]);
   const evaluation=evaluatePlatformAdmission({
     deploymentEnv:env.deploymentEnv,
     appOrigin:env.appOrigin,
