@@ -22,6 +22,12 @@ function questionRank(question: StudyQuestion, target: StudyEvidenceDimension, r
   return rank;
 }
 
+/** Scope before building the queue so a low-priority course cannot disappear
+ * behind other courses in a fixed daily review budget. */
+export function scopeDueSkills(dueSkills: DueSkill[], courseId?: string | null): DueSkill[] {
+  return courseId ? dueSkills.filter(skill => skill.course_id === courseId) : dueSkills;
+}
+
 export function buildReviewQueue(dueSkills: DueSkill[], questions: StudyQuestion[], budgetMinutes: number): QueueItem[] {
   const bySkill = new Map<string, StudyQuestion[]>();
   for (const question of questions) {
