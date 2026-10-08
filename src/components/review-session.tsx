@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { StudyAttemptResult, StudyErrorType, StudyIndependence } from "@/lib/supabase/database.types";
 import type { QueueItem } from "@/lib/study/types";
 import { assessmentReady, assessmentSourceVerified, canRevealRubric, escalateIndependence, isMasteryCreditable, resultLabel } from "@/lib/study/review-state";
 import { submitAttemptWithFallback } from "@/lib/study/offline-attempts";
 import { finishSessionWithFallback, startSessionWithFallback } from "@/lib/study/offline-sessions";
+import { composeProblemWork } from "@/lib/study/problem-work";
 
 const ERROR_OPTIONS: { value: StudyErrorType; label: string }[] = [
   { value: "concept", label: "Concept" }, { value: "recall", label: "Recall" },
@@ -36,6 +37,9 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
   const [elapsed, setElapsed] = useState(0);
   const [lockedDuration, setLockedDuration] = useState(0);
   const [responseText, setResponseText] = useState("");
+  const [workingText,setWorkingText]=useState("");
+  const workingRef=useRef<HTMLTextAreaElement>(null);
+  const composedResponse=composeProblemWork(workingText,responseText);
   const [independence, setIndependence] = useState<StudyIndependence>("independent");
   const [hint1Visible, setHint1Visible] = useState(false);
   const [hint2Visible, setHint2Visible] = useState(false);
@@ -72,7 +76,7 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
 
   function resetQuestion(nextIndex: number) {
     setIndex(nextIndex); setQuestionStartedAt(new Date().toISOString()); setElapsed(0); setLockedDuration(0);
-    setResponseText(""); setAnswerSurface("typed"); setIndependence("independent"); setHint1Visible(false); setHint2Visible(false);
+    setResponseText(""); setWorkingText(""); setAnswerSurface("typed"); setIndependence("independent"); setHint1Visible(false); setHint2Visible(false);
     setResult(null); setConfidence(null); setVerifiedExternally(false); setErrorTypes([]); setNotice(null); setError(null); setPhase("answering");
   }
 
@@ -92,7 +96,7 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
   }
 
   function revealForGrading(gaveUp = false) {
-    if (!canRevealRubric(confidence, answerSurface, responseText, gaveUp)) return;
+    if (!canRevealRubric(confidence, answerSurface, composedResponse, gaveUp)) return;
     const duration = questionStartedAt ? Math.max(1, Math.floor((Date.now() - Date.parse(questionStartedAt)) / 1000)) : Math.max(1, elapsed);
     setLockedDuration(duration);
     if (gaveUp) {
@@ -100,6 +104,17 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
       setResult("incorrect");
     }
     setPhase("grading");
+  }
+
+  function insertMathSymbol(symbol:string){
+    const input=workingRef.current;
+    const start=input?.selectionStart??workingText.length;
+    const end=input?.selectionEnd??workingText.length;
+    setWorkingText(current=>current.slice(0,start)+symbol+current.slice(end));
+    window.requestAnimationFrame(()=>{
+      workingRef.current?.focus();
+      workingRef.current?.setSelectionRange(start+symbol.length,start+symbol.length);
+    });
   }
 
   function showHint(level: 1 | 2) {
@@ -130,7 +145,7 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
       const submitted = await submitAttemptWithFallback({
         clientRequestId: crypto.randomUUID(), questionId: current.question.id, sessionId: sessionId ?? undefined,
         startedAt: questionStartedAt ?? undefined, result, independence, durationSeconds: Math.max(1, lockedDuration),
-        responseText: responseText.trim() || undefined, selfConfidence: confidence ?? undefined, errorTypes, completedAt,
+        responseText: composedResponse.trim().slice(0,20000) || undefined, selfConfidence: confidence ?? undefined, errorTypes, completedAt,
       });
       const nextOutcomes = [...outcomes, { questionId: current.question.id, result, independence, queued: submitted.queued, durationSeconds: Math.max(1, lockedDuration) }];
       setOutcomes(nextOutcomes);
@@ -172,7 +187,7 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
   const hasRubric = Boolean(current.question.answer_key_or_rubric?.trim());
   const canSubmit = assessmentReady(result, confidence, errorTypes)
     && assessmentSourceVerified(hasRubric, verifiedExternally, independence) && phase !== "submitting";
-  const canLock = canRevealRubric(confidence, answerSurface, responseText);
+  const canLock = canRevealRubric(confidence, answerSurface, composedResponse);
   const canGiveUp = canRevealRubric(confidence, answerSurface, responseText, true);
   const gaveUp = independence === "solution_exposed";
 
@@ -195,12 +210,21 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
             <button type="button" aria-pressed={answerSurface==="typed"} className={answerSurface==="typed"?"selected":""} onClick={()=>setAnswerSurface("typed")}>Type here</button>
             <button type="button" aria-pressed={answerSurface==="paper"} className={answerSurface==="paper"?"selected":""} onClick={()=>setAnswerSurface("paper")}>Work on paper</button>
           </div>
-          {answerSurface==="typed" ? <>
-            <label className="field-label" htmlFor="review-response">Your answer or short work summary <span>Ctrl/⌘ + Enter to lock</span></label>
-            <textarea id="review-response" className="answer-box" value={responseText} onChange={(event) => setResponseText(event.target.value)}
-              onKeyDown={(event)=>{if((event.ctrlKey||event.metaKey)&&event.key==="Enter"){event.preventDefault();revealForGrading(false);}}}
-              placeholder="Final answer, proof outline, or algorithm…" rows={7} />
-          </> : <p className="paper-work-note">Solve independently on paper. When finished, lock your work before revealing the rubric. You can still type a short summary by switching back.</p>}
+          {answerSurface==="typed" ? <div className="math-work-editor">
+            <div className="math-work-header"><strong>Mathematical working</strong><small>Write the method and reasoning before checking the key.</small></div>
+            <div className="math-symbol-row" aria-label="Insert common mathematical notation">
+              {["⇒","⇔","∀","∃","∈","⊂","≤","≥","∑","∫","√","∞","∂","≈"].map(symbol=><button key={symbol} type="button" onClick={()=>insertMathSymbol(symbol)} aria-label={`Insert ${symbol} into working`}>{symbol}</button>)}
+            </div>
+            <label className="field-label" htmlFor="review-working">Steps, argument or proof <span>Ctrl/⌘ + Enter to lock</span></label>
+            <textarea id="review-working" ref={workingRef} className="answer-box math-working-input" value={workingText} onChange={event=>setWorkingText(event.target.value)} maxLength={17000}
+              onKeyDown={event=>{if((event.ctrlKey||event.metaKey)&&event.key==="Enter"){event.preventDefault();revealForGrading(false);}}}
+              placeholder="Definitions → method → transformations → justification… Use plain text or LaTeX-style notation." rows={9} />
+            <label className="field-label" htmlFor="review-response">Conclusion, final value or key claim <span>Optional for longer proofs</span></label>
+            <textarea id="review-response" className="answer-box math-answer-input" value={responseText} onChange={event=>setResponseText(event.target.value)} maxLength={2500}
+              onKeyDown={event=>{if((event.ctrlKey||event.metaKey)&&event.key==="Enter"){event.preventDefault();revealForGrading(false);}}}
+              placeholder="e.g. x = 0 is the unique critical point, or a concise proof conclusion" rows={3} />
+            <p className="math-work-helper">Your working and conclusion are stored together in the existing attempt record. This editor does not automatically check mathematical correctness.</p>
+          </div> : <p className="paper-work-note">Solve independently on paper. When finished, lock your work before revealing the rubric. You can switch to typing to record your reasoning or conclusion.</p>}
           <div className="hint-stack">{current.question.hint_1 ? <button className="hint-button" type="button" onClick={() => showHint(1)} disabled={hint1Visible}>Hint 1</button> : null}{current.question.hint_2 ? <button className="hint-button" type="button" onClick={() => showHint(2)} disabled={hint2Visible}>Hint 2</button> : null}</div>
           {hint1Visible && current.question.hint_1 ? <div className="support-box"><strong>Hint 1</strong><p>{current.question.hint_1}</p></div> : null}
           {hint2Visible && current.question.hint_2 ? <div className="support-box"><strong>Hint 2</strong><p>{current.question.hint_2}</p></div> : null}
@@ -209,9 +233,9 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
             <small>1 = guessing or unable to solve · 5 = certain. This rating is locked when you reveal the rubric.</small>
           </fieldset>
           <div className="button-row review-actions"><button className="primary-button button-reset" type="button" disabled={!canLock} onClick={() => revealForGrading(false)}>Lock answer & compare</button><button className="danger-link" type="button" disabled={!canGiveUp} onClick={() => revealForGrading(true)}>I give up — show solution</button><button className="secondary-button button-reset" type="button" onClick={() => void skip()}>Skip without revealing</button></div>
-          {!canLock ? <p className="review-gate-note">To compare your work, select confidence and {answerSurface==="typed"?"write an attempt (or switch to paper mode)":"then lock your paper attempt"}.</p> : null}
+          {!canLock ? <p className="review-gate-note">To compare your work, select confidence and {answerSurface==="typed"?"write your working or conclusion (or switch to paper mode)":"then lock your paper attempt"}.</p> : null}
         </> : <>
-          <div className="locked-answer"><span>Your locked answer</span><p>{responseText.trim() || (answerSurface==="paper"?"Worked on paper.":"No typed answer.")}</p></div>
+          <div className="locked-answer"><span>Your locked answer</span><p className="math-locked-work">{composedResponse.trim() || (answerSurface==="paper"?"Worked on paper.":"No typed answer.")}</p></div>
           <div className="solution-box"><span>Answer key / rubric</span><p>{current.question.answer_key_or_rubric || "No rubric attached. Check an official solution or a verified course source before assigning a grade."}</p></div>
           {!hasRubric && !gaveUp ? <label className="rubric-verification">
             <input type="checkbox" checked={verifiedExternally} onChange={event=>setVerifiedExternally(event.target.checked)} disabled={phase==="submitting"} />
