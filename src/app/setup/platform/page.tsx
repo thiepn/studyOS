@@ -10,7 +10,18 @@ export const dynamic="force-dynamic";
 
 /** The platform checklist works before the first semester exists.
  * Values of server-side credentials never leave the server. */
-export default async function PlatformSetupPage(){
+export default async function PlatformSetupPage({searchParams}:{searchParams:Promise<{calendar?:string}>}){
+  const query=await searchParams;
+  const notices:Record<string,string>={
+    connected:"Google Calendar connected and initial events synchronized.",
+    permission_required:"Calendar permissions were incomplete. Google must grant calendar list, event reading and owned-event access.",
+    permission_denied:"Calendar permission was declined.",
+    oauth_error:"The Calendar authorization expired or was interrupted. Start a fresh connection.",
+    no_refresh_token:"Google did not issue persistent Calendar authorization.",
+    sync_failed:"Calendar is connected, but its initial event synchronization failed.",
+    setup_error:"Google Calendar setup failed. Saved study data is unchanged.",
+  };
+  const calendarNotice=query.calendar?notices[query.calendar]??null:null;
   const db=await createClient();
   const {data,error}=await db.auth.getClaims();
   if(error||!data?.claims?.sub)redirect("/login?next=%2Fsetup%2Fplatform");
@@ -37,6 +48,9 @@ export default async function PlatformSetupPage(){
       <Nav/>
     </header>
 
+    {calendarNotice ? <p className={query.calendar==="connected"?"form-message":"error"} role="status">
+      {calendarNotice} <Link href="/api/integrations/google-calendar/start">Reconnect Google Calendar</Link>.
+    </p> : null}
     <section className="study-admission-summary">
       <div><p className="eyebrow">Deployment qualification</p>
         <h2>{evaluation.releaseReady&&backend.healthy?"Configuration and database check complete":"Activation is not yet ready"}</h2>
