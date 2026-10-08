@@ -31,7 +31,7 @@ export function parseTeachingWeek(value: unknown): number | null {
 }
 
 /** Contextual views must not mutate the caller's all-semester source collection. */
-export function scopeCourseRecords<T extends {course_id:string}>(
+export function scopeCourseRecords<T extends {course_id:string | null}>(
   records:readonly T[], courseId:string|null,
 ):T[]{
   return courseId?records.filter(record=>record.course_id===courseId):[...records];
