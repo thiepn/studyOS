@@ -69,6 +69,17 @@ export async function saveDriveConnection(input: {
 }
 
 /** Clear DB folder mappings when disconnecting. Never delete actual Google Drive files. */
+/** Preserve connection diagnostics if Google accepted consent but folders could not be provisioned. */
+export async function markDriveSetupFailed(userId: string) {
+  const admin=createAdminClient();
+  const {error}=await admin.from("study_drive_connections").update({
+    status:"error",
+    last_error:"Drive authorization succeeded, but StudyOS could not prepare its folders.",
+    updated_at:new Date().toISOString(),
+  }).eq("user_id",userId);
+  if(error)throw new Error("Could not record Google Drive provisioning failure");
+}
+
 export async function disconnectDrive(userId: string) {
   const admin = createAdminClient();
   const { error: credentialError } = await admin.from("study_drive_credentials").delete().eq("user_id",userId);
