@@ -14,7 +14,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <p className="eyebrow">THIEPN Account</p>
         <h1>StudyOS</h1>
         <p>Sign in with the same Google-backed THIEPN Account used by your other apps.</p>
-        {params.error ? <p className="error">Sign-in could not be completed. Try again.</p> : null}
+        {params.error ? <p className="error">{params.error==="oauth_origin"?"This deployment is not configured for sign-in. Its canonical APP_ORIGIN and OAuth callback must match the public host.":"Sign-in could not be completed. Try again."}</p> : null}
         <a className="primary-button" href={`/auth/google?next=${encodeURIComponent(next)}`}>Continue with Google</a>
       </section>
     </main>
