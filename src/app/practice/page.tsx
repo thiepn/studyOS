@@ -36,6 +36,20 @@ export default async function PracticePage({ searchParams }: { searchParams: Pro
         returnHref={`/courses/${data.course.id}`} returnLabel="Back to course" />
     </main>;
   }
+  if(mode==="week"){
+    const data=await getCourseWeekCheckpointData(course,week,"week");
+    return <main className="shell practice-shell">
+      <header className="header"><div><p className="eyebrow">Teaching week {data.weekNo} · Course practice</p><h1>{data.course.display_name}</h1></div><Nav /></header>
+      <ReviewSession
+        queue={data.queue} plannedMinutes={Math.max(1,data.queueMinutes)}
+        sessionType="coursework" courseId={data.course.id}
+        eyebrow={`Week ${data.weekNo} · independent course questions`}
+        intro="Work through this teaching week's approved questions before consulting the solution. This practice does not automatically certify the exercise-sheet milestone or replace cumulative review."
+        returnHref={`/courses/${data.course.id}#week-${data.weekNo}`}
+        returnLabel={`Back to week ${data.weekNo}`}
+      />
+    </main>;
+  }
   if(mode==="weekly-checkpoint"){
     const data=await getCourseWeekCheckpointData(course,week);
     return <main className="shell practice-shell">
@@ -48,8 +62,8 @@ export default async function PracticePage({ searchParams }: { searchParams: Pro
         eyebrow={`Week ${data.weekNo} · closed-book cumulative checkpoint`}
         intro="Practice the current and earlier weeks independently. Your session must contain at least one recorded, non-solution-exposed attempt before its weekly checkpoint can be marked complete."
         completionNote={weeklyCheckpointSessionNote(data.course.id,data.weekNo)}
-        returnHref={`/courses/${data.course.id}`}
-        returnLabel="Back to course"
+        returnHref={`/courses/${data.course.id}#week-${data.weekNo}`}
+        returnLabel={`Back to week ${data.weekNo}`}
       />
     </main>;
   }
