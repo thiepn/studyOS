@@ -13,7 +13,7 @@ const draft=()=>({
   questionId:"q2",index:1,phase:"answering",requestId:request,answerSurface:"typed",
   workingText:"By induction...",responseText:"",confidence:3,independence:"hint_1",
   hint1Visible:true,hint2Visible:false,result:null,verifiedExternally:false,
-  errorTypes:[],lockedDuration:0,outcomes:[{questionId:"q1",skipped:true}],
+  errorTypes:[],lockedDuration:0,activeSeconds:32,outcomes:[{questionId:"q1",skipped:true}],
 });
 test("draft fingerprint isolates mode and changed rubrics",()=>{
   assert.notEqual(studyQueueFingerprint("checkpoint","c",questions),fingerprint);
@@ -26,6 +26,7 @@ test("valid draft resumes on the precise question, without regenerating request 
   assert.equal(result?.requestId,request);
   assert.equal(result?.workingText,"By induction...");
   assert.equal(result?.independence,"hint_1");
+  assert.equal(result?.activeSeconds,32);
 });
 test("restore a submit-in-progress draft in locked grading, never in answering",()=>{
   const input={...draft(),phase:"submitting",result:"partial",lockedDuration:41};
