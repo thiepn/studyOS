@@ -27,7 +27,7 @@ export function DailyPlan({plan}:{plan:DailyPlanType}){
         <div className="task-meta"><span>{current.scheduledMinutes} min</span>{current.partial?<span>partial block</span>:null}{current.urgent?<span className="urgent-tag">urgent</span>:null}</div>
       </div>
       <ActionLink item={current} label="Start" primary/>
-    </article> : <div className="sequence-empty"><strong>Nothing scheduled.</strong><span>Your current workload fits without another study block.</span></div>}
+    </article> : <div className="sequence-empty"><strong>Nothing scheduled.</strong><span>No tasks were selected for this plan. Check your weekly commitment and course materials if you expected work.</span></div>}
 
     {next.length ? <ol className="next-task-list">{next.map((item,index)=><li key={item.id}>
       <div className="sequence-marker"><span>{index+2}</span><i/></div>
