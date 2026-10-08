@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { encryptRefreshToken } from "./crypto";
+import { hasGrantedDriveFileScope } from "./scope-validation";
 
 export async function saveDriveConnection(input: {
   userId: string;
@@ -8,6 +9,9 @@ export async function saveDriveConnection(input: {
   scopes: string[];
   refreshToken: string;
 }) {
+  if (!hasGrantedDriveFileScope(input.scopes)) {
+    throw new Error("Google Drive file-access permission was not granted.");
+  }
   const admin = createAdminClient();
   const { data: existing } = await admin.from("study_drive_connections")
     .select("google_account_sub")
@@ -80,4 +84,16 @@ export async function disconnectDrive(userId: string) {
     .update({ bootstrap_certified_at: null, updated_at: new Date().toISOString() })
     .eq("user_id", userId).eq("active", true);
   if (certificationError) throw new Error(`Could not invalidate semester bootstrap after Drive disconnect: ${certificationError.message}`);
+}
+
+/** Keeps OAuth-success-but-folder-failure from appearing as a completed setup.
+ * Credentials remain available for diagnosis; reconnect can obtain a fresh grant. */
+export async function markDriveSetupFailed(userId: string) {
+  const admin = createAdminClient();
+  const { error } = await admin.from("study_drive_connections").update({
+    status: "error",
+    last_error: "Google Drive folders could not be prepared. Reconnect and approve Drive file access.",
+    updated_at: new Date().toISOString(),
+  }).eq("user_id", userId);
+  if (error) throw new Error("Could not record Drive setup failure: " + error.message);
 }

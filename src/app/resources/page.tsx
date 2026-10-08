@@ -26,8 +26,18 @@ function candidateCounts(payload: Json | null) {
   return { topics: topics.length, skills, questions };
 }
 
-export default async function ResourcesPage({searchParams}:{searchParams:Promise<{course?:string;week?:string}>}) {
+export default async function ResourcesPage({searchParams}:{searchParams:Promise<{course?:string;week?:string;drive?:string}>}) {
   const query=await searchParams;
+  const driveMessages: Record<string,string> = {
+    connected: "Google Drive authorized and StudyOS folders created.",
+    permission_required: "Google granted only your basic profile, not Drive access. Select Connect Google Drive again, then explicitly approve the Drive file-access permission in Google's consent screen.",
+    permission_denied: "Google Drive permission was declined. Reconnect and grant Drive file access to use this integration.",
+    oauth_error: "Google authorization was interrupted or expired. Start a new connection from this page; don't refresh an old OAuth callback URL.",
+    no_refresh_token: "Google did not return a persistent Drive authorization. Reconnect and approve the requested permissions.",
+    setup_failed: "Google authorized Drive, but StudyOS couldn't finish preparing its folders. Reconnect to retry setup.",
+    callback_failed: "Google Drive authorization couldn't be completed. Please start a new connection instead of refreshing the callback URL.",
+  };
+  const driveMessage=query.drive?driveMessages[query.drive]:null;
   const data = await getResourcesData();
   const selectedCourse=data.courses.find(item=>item.id===query.course)??null;
   const selectedWeek=selectedCourse?parseTeachingWeek(query.week):null;
@@ -50,9 +60,11 @@ export default async function ResourcesPage({searchParams}:{searchParams:Promise
         <Link href="/resources">All materials</Link>
       </div>:query.course?<p className="error" role="status">The requested course is not active in this semester. Showing the current semester's materials.</p>:null}
 
+      {driveMessage ? <p className={query.drive==="connected"?"form-message":"error"} role="status">{driveMessage}</p> : null}
+
       <section className="panel drive-panel">
         <div className="section-heading"><div><p className="eyebrow">Separate integration</p><h2>Study Drive</h2></div><span>{drive?.status === "connected" ? "On" : "Off"}</span></div>
-        <DriveControls connected={drive?.status === "connected"} email={drive?.google_account_email} inboxUrl={drive?.inbox_folder_url} lastScanAt={drive?.last_scan_at} lastScanStatus={drive?.last_scan_status} />
+        <DriveControls connected={drive?.status === "connected"} email={drive?.google_account_email} inboxUrl={drive?.inbox_folder_url} lastScanAt={drive?.last_scan_at} lastScanStatus={drive?.last_scan_status} lastError={drive?.last_error} />
       </section>
 
       <section id="processing-queue" className="panel processing-queue-panel">

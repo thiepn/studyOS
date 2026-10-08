@@ -9,9 +9,10 @@ type Props = {
   inboxUrl?: string | null;
   lastScanAt?: string | null;
   lastScanStatus?: string | null;
+  lastError?: string | null;
 };
 
-export function DriveControls({ connected, email, inboxUrl, lastScanAt, lastScanStatus }: Props) {
+export function DriveControls({ connected, email, inboxUrl, lastScanAt, lastScanStatus, lastError }: Props) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -31,6 +32,7 @@ export function DriveControls({ connected, email, inboxUrl, lastScanAt, lastScan
   if (!connected) return (
     <div className="drive-card">
       <div><strong>Google Drive not connected</strong><p>Connect the Google account you want to use for university material. This is independent of your THIEPN Account login.</p></div>
+      {lastError ? <p className="error" role="status">{lastError}</p> : null}
       <a className="primary-button" href="/api/integrations/google-drive/start">Connect Google Drive</a>
       <p className="muted tiny">Google will show an account chooser. StudyOS creates and uses its own StudyOS folder tree in the account you select.</p>
     </div>

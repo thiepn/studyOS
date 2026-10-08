@@ -1,7 +1,8 @@
 import { createHash, randomBytes } from "node:crypto";
 import { requireDriveServerEnv } from "@/lib/env";
 
-export const DRIVE_FILE_SCOPE = "https://www.googleapis.com/auth/drive.file";
+import { DRIVE_FILE_SCOPE } from "./scope-validation";
+export { DRIVE_FILE_SCOPE } from "./scope-validation";
 export const DRIVE_READONLY_SCOPE = "https://www.googleapis.com/auth/drive.readonly";
 const IDENTITY_SCOPES = ["openid", "email", "profile"];
 
