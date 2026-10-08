@@ -18,7 +18,18 @@ export async function refreshCalendarAccessToken(userId:string){
   const {clientId,clientSecret}=requireCalendarServerEnv();
   const response=await fetch("https://oauth2.googleapis.com/token",{method:"POST",headers:{"content-type":"application/x-www-form-urlencoded"},
     body:new URLSearchParams({client_id:clientId,client_secret:clientSecret,refresh_token:decryptCalendarRefreshToken(String(data.encrypted_refresh_token)),grant_type:"refresh_token"}),cache:"no-store"});
-  if(!response.ok) throw new Error("Google token refresh failed ("+response.status+")");
+  if(!response.ok){
+    const failure=await response.json().catch(()=>null) as {error?:string}|null;
+    if(failure?.error==="invalid_grant"){
+      const {error:stateError}=await admin.from("study_calendar_connections").update({
+        status:"error",last_error:"Google Calendar authorization expired or was revoked. Reconnect Calendar.",
+        updated_at:new Date().toISOString(),
+      }).eq("user_id",userId);
+      if(stateError)throw new Error("Could not record expired Google Calendar authorization");
+      throw new Error("Google Calendar authorization expired or was revoked. Reconnect Calendar.");
+    }
+    throw new Error("Google Calendar token refresh failed ("+response.status+")");
+  }
   const payload=await response.json() as {access_token:string}; return payload.access_token;
 }
 async function calendarFetch<T>(accessToken:string,path:string,init?:RequestInit):Promise<T>{
