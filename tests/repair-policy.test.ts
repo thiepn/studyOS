@@ -10,7 +10,7 @@ test("math work stores actual reasoning and result in a single locked attempt",(
   assert.equal(hasProblemWork(" "," "),false);
 });
 test("targeted repair uses exact skill and prefers high-order questions",()=>{
-  const q=(id:string,skill:string,dimension:string,active=true)=>({id,primary_skill_id:skill,evidence_dimension:dimension,question_type:"problem",active,answer_key_or_rubric:"solution",expected_minutes:10});
+  const q=(id:string,skill:string,dimension:"exam"|"transfer"|"execution"|"recall",active=true)=>({id,primary_skill_id:skill,evidence_dimension:dimension,question_type:"problem" as const,active,answer_key_or_rubric:"solution",expected_minutes:10});
   const picked=chooseRepairQuestions([q("a","other","exam"),q("b","target","recall"),q("c","target","transfer"),q("d","target","execution"),q("e","target","exam",false)],"target");
   assert.deepEqual(picked.map(x=>x.id),["c","d"]);
 });
