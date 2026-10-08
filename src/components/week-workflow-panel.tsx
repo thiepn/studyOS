@@ -1,10 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, type FormEvent } from "react";
 import type { ReconciliationFinding, SkillOption, WeekActionRow, WeekResource } from "@/lib/study/workflow";
 import { actionDescription, actionLabel, milestoneForAction } from "@/lib/study/workflow-state";
 import { featuredTeachingWeek, orderedTeachingWeeks } from "@/lib/study/week-focus";
+import { canOpenWeekSolutions } from "@/lib/study/course-study-flow";
 
 const ERROR_OPTIONS = [
   ["concept","Concept"],["recall","Recall"],["recognition","Recognition"],["method_selection","Method choice"],
@@ -31,8 +33,10 @@ export function WeekWorkflowPanel({
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [messageTarget,setMessageTarget]=useState<string | null>(null);
   const [collapsedFeatured,setCollapsedFeatured]=useState<string[]>([]);
   const [expandedOther,setExpandedOther]=useState<string[]>([]);
+  const [independentConfirmed,setIndependentConfirmed]=useState<string[]>([]);
   const featuredId=featuredTeachingWeek(weeks);
   const orderedWeeks=orderedTeachingWeeks(weeks);
   const findingsByWeek = useMemo(() => {
@@ -54,7 +58,7 @@ export function WeekWorkflowPanel({
   }, [resources]);
 
   async function post(path: string, body: unknown, key: string) {
-    setBusy(key); setMessage(null);
+    setBusy(key); setMessage(null); setMessageTarget(key);
     try {
       const response = await fetch(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
       const payload = await response.json();
@@ -86,7 +90,7 @@ export function WeekWorkflowPanel({
   }
 
   if (!weeks.length) {
-    return <section className="panel empty-week"><h2>No teaching week yet</h2><p>Once a lecture, exercise sheet, or other week-numbered source is registered, its weekly workflow appears here automatically.</p></section>;
+    return <section className="panel empty-week"><h2>No teaching week yet</h2><p>Register your first lecture, exercise sheet or other week-numbered source to create a working week.</p><div className="button-row"><Link href={`/resources?course=${courseId}&week=1#manual-registration`} className="primary-button">Add first source</Link></div></section>;
   }
 
   return (
@@ -95,10 +99,16 @@ export function WeekWorkflowPanel({
         const milestone = milestoneForAction(week.next_action);
         const weekFindings = findingsByWeek.get(week.teaching_week_id) ?? [];
         const weekResources = resourcesByWeek.get(week.teaching_week_id) ?? [];
+        const solutionsVisible=canOpenWeekSolutions(week);
+        const hiddenSolutions=weekResources.filter(item=>["solution","exam_solution"].includes(item.resource_type) && !solutionsVisible);
+        const visibleResources=weekResources.filter(item=>!hiddenSolutions.includes(item));
+        const exerciseConfirmed=independentConfirmed.includes(week.teaching_week_id);
+        const localMessage=message && (messageTarget===`milestone-${week.teaching_week_id}` || messageTarget===`finding-${week.teaching_week_id}`
+          || weekFindings.some(finding=>messageTarget===`resolve-${finding.id}`));
         const isFeatured=week.teaching_week_id===featuredId;
         const isExpanded=isFeatured?!collapsedFeatured.includes(week.teaching_week_id):expandedOther.includes(week.teaching_week_id);
         return (
-          <div className={"week-work-item "+(isFeatured?"week-work-featured":"")} key={week.teaching_week_id}>
+          <div id={"week-"+week.week_no} className={"week-work-item "+(isFeatured?"week-work-featured":"")} key={week.teaching_week_id}>
             <button type="button" className="week-work-toggle" aria-expanded={isExpanded}
               onClick={()=>{
                 if(isFeatured)setCollapsedFeatured(current=>current.includes(week.teaching_week_id)?current.filter(id=>id!==week.teaching_week_id):[...current,week.teaching_week_id]);
@@ -125,27 +135,35 @@ export function WeekWorkflowPanel({
               <span>{week.open_findings} findings</span>
             </div>
 
-            {weekResources.length ? (
-              <div className="resource-links">
-                {weekResources.map((resource) => resource.drive_url
+            {visibleResources.length ? (
+              <div className="resource-links" aria-label="Available source material">
+                {visibleResources.map((resource) => resource.drive_url
                   ? <a key={resource.id} href={resource.drive_url} target="_blank" rel="noreferrer">{resourceLabel(resource.resource_type)} · {resource.title}</a>
                   : <span key={resource.id}>{resourceLabel(resource.resource_type)} · {resource.title}</span>)}
               </div>
             ) : null}
+            {hiddenSolutions.length ? <p className="solution-access-note" role="note">{hiddenSolutions.length} solution file{hiddenSolutions.length===1?" is":"s are"} intentionally hidden. Record your independent exercise attempt first; opening a solution early undermines the evidence. This hides links in StudyOS, not permissions in Drive.</p> : null}
 
             <div className="button-row">
-              {week.next_action === "process_material" ? <a className="primary-button" href="/resources">Open Resources</a> : null}
+              {week.next_action === "process_material" ? <Link className="primary-button" href={"/resources?course="+courseId+"#processing-queue"}>Process this course’s material</Link> : null}
+              {["await_material","await_exercise","await_solution"].includes(week.next_action) ?
+                <Link className="secondary-button" href={`/resources?course=${courseId}&week=${week.week_no}#manual-registration`}>Open week {week.week_no} materials</Link> : null}
               {week.next_action === "repair_findings" ? <a className="primary-button" href={"/practice?course="+courseId}>Review due course skills</a> : null}
-              {week.next_action === "weekly_checkpoint" ? <a className="secondary-button" href="/practice?mode=checkpoint">Run cumulative checkpoint</a> : null}
+              {week.next_action === "weekly_checkpoint" ? <Link className="primary-button" href={`/practice?mode=weekly-checkpoint&course=${courseId}&week=${week.week_no}`}>Run week {week.week_no} checkpoint</Link> : null}
+              {milestone==="exercise_attempt" ? <label className="independent-confirmation">
+                <input type="checkbox" checked={exerciseConfirmed} onChange={event=>setIndependentConfirmed(current=>event.target.checked?[...new Set([...current,week.teaching_week_id])]:current.filter(id=>id!==week.teaching_week_id))} />
+                <span>I attempted this sheet independently before consulting its solutions.</span>
+              </label> : null}
+              {milestone==="weekly_checkpoint" ? <small className="week-evidence-guidance">The checkpoint must be completed and at least one independent attempt saved before it can be marked done. Offline records must sync first.</small> : null}
               {milestone ? (
                 <button
                   className="primary-button button-reset"
                   type="button"
-                  disabled={Boolean(busy)}
+                  disabled={Boolean(busy) || (milestone==="exercise_attempt" && !exerciseConfirmed)}
                   onClick={() => void post(`/api/study/courses/${courseId}/milestone`, {
                     weekNo: week.week_no,
                     milestone,
-                    note: milestone === "exercise_attempt" ? "Independent sheet attempt completed before solution review." : undefined,
+                    note: milestone === "exercise_attempt" ? "Learner confirmed an independent sheet attempt before using solutions." : undefined,
                   }, `milestone-${week.teaching_week_id}`)}
                 >
                   {busy === `milestone-${week.teaching_week_id}` ? "Saving…" :
@@ -157,7 +175,7 @@ export function WeekWorkflowPanel({
               ) : null}
             </div>
 
-            {(week.solution_count > 0 || weekFindings.length > 0) ? (
+            {((week.solution_count > 0 && solutionsVisible) || weekFindings.length > 0) ? (
               <div className="reconcile-block">
                 <h3>Solution findings</h3>
                 {weekFindings.length ? <div className="finding-list">{weekFindings.map((finding) => (
@@ -183,11 +201,11 @@ export function WeekWorkflowPanel({
                 </form>
               </div>
             ) : null}
+              {localMessage ? <p className="form-message" role="status">{message}</p> : null}
             </section>:null}
           </div>
         );
       })}
-      {message ? <p className="form-message" role="status">{message}</p> : null}
     </div>
   );
 }
