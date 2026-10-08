@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Nav } from "@/components/nav";
 import { ReviewSession } from "@/components/review-session";
 import { getTodayData } from "@/lib/study/queries";
-import { getCheckpointData } from "@/lib/study/pulse";
+import { getCheckpointData, getCourseWeekCheckpointData } from "@/lib/study/pulse";
+import { weeklyCheckpointSessionNote } from "@/lib/study/course-study-flow";
 import { getAvailableExamPapers } from "@/lib/study/exams";
 import { getCalibrationPractice, getSemesterCalibration } from "@/lib/study/calibration-data";
 import { getStrategyPractice } from "@/lib/study/strategy-data";
@@ -13,8 +14,25 @@ function metric(value:number|null,suffix=""){
   return value==null?"—":String(value)+suffix;
 }
 
-export default async function PracticePage({ searchParams }: { searchParams: Promise<{ mode?: string; course?: string; strategy?: string }> }) {
-  const { mode,course,strategy } = await searchParams;
+export default async function PracticePage({ searchParams }: { searchParams: Promise<{ mode?: string; course?: string; strategy?: string; week?: string }> }) {
+  const { mode,course,strategy,week } = await searchParams;
+  if(mode==="weekly-checkpoint"){
+    const data=await getCourseWeekCheckpointData(course,week);
+    return <main className="shell practice-shell">
+      <header className="header"><div><p className="eyebrow">Cumulative course check · Week {data.weekNo}</p><h1>{data.course.display_name}</h1></div><Nav /></header>
+      <ReviewSession
+        queue={data.queue}
+        plannedMinutes={Math.max(1,data.queueMinutes)}
+        sessionType="checkpoint"
+        courseId={data.course.id}
+        eyebrow={`Week ${data.weekNo} · closed-book cumulative checkpoint`}
+        intro="Practice the current and earlier weeks independently. Your session must contain at least one recorded, non-solution-exposed attempt before its weekly checkpoint can be marked complete."
+        completionNote={weeklyCheckpointSessionNote(data.course.id,data.weekNo)}
+        returnHref={`/courses/${data.course.id}`}
+        returnLabel="Back to course"
+      />
+    </main>;
+  }
   if(mode==="checkpoint"){
     const data=await getCheckpointData();
     const rotation=data.rotation;
