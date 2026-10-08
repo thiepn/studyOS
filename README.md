@@ -698,3 +698,12 @@ See `docs/P30.md` for the visual-system contract and invariants.
 - Browser-tab draft identities include the exact teaching week / finding to prevent restoring an unfinished session against a different checkpoint.
 - Tests cover realistic Differentialgleichungen, Stochastik, TI and AMP workflows; live device/browser and production Supabase qualification are still outstanding.
 - Version 0.35.0. See `docs/P36.md`.
+
+### P37 — Production-readiness qualification and safe offline sync
+
+- Live read-only verification found StudyOS tables and security-invoker views in **THIEPN Account**, not Core; there are no real user semesters/questions/attempts to certify academically yet.
+- Anonymous study API requests return `401` JSON instead of redirecting to a `200` HTML login page. Offline replays cannot delete pending evidence without an explicit `ok:true` JSON acknowledgment.
+- Pending offline submissions are linked to the originating browser account; old untagged entries are retained but never auto-replayed into an unknown identity.
+- Health reports the true package version; production setup requires a real HTTPS origin; empty first-time Setup routes into semester bootstrap.
+- GitHub CI now starts the production-built server and checks health, login protections and unauthenticated API routes. Vercel deployment and live browser/device acceptance remain pending.
+- Version **0.36.0**. Full findings and real-device runbook: `docs/P37.md`.

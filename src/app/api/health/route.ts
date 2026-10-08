@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import packageInfo from "../../../../package.json";
 
 export const dynamic = "force-dynamic";
 
@@ -7,7 +8,7 @@ export async function GET() {
     {
       status: "ok",
       app: "studyOS",
-      version: "0.25.0",
+      version: packageInfo.version,
       environment: process.env.VERCEL_ENV ?? process.env.NODE_ENV ?? "unknown",
       commit: process.env.VERCEL_GIT_COMMIT_SHA ?? null,
       timestamp: new Date().toISOString(),

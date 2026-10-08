@@ -1,12 +1,13 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { env } from "@/lib/env";
+import { isApiRoute,isPublicHealthRoute } from "@/lib/study/api-boundary";
 import type { Database } from "./database.types";
 
 const PUBLIC_PREFIXES = ["/login", "/auth/"];
 
 export async function updateSession(request: NextRequest) {
-  if (request.nextUrl.pathname === "/api/health") return NextResponse.next();
+  if (isPublicHealthRoute(request.nextUrl.pathname)) return NextResponse.next();
 
   let response = NextResponse.next({ request });
   const supabase = createServerClient<Database>(env.supabaseUrl, env.supabasePublishableKey, {
@@ -26,6 +27,11 @@ export async function updateSession(request: NextRequest) {
   const isPublic = PUBLIC_PREFIXES.some((prefix) => request.nextUrl.pathname === prefix || request.nextUrl.pathname.startsWith(prefix));
 
   if (!claims && !isPublic) {
+    if (isApiRoute(request.nextUrl.pathname)) {
+      return NextResponse.json({ok:false,error:"Authentication required"},{
+        status:401,headers:{"cache-control":"no-store"},
+      });
+    }
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", request.nextUrl.pathname + request.nextUrl.search);

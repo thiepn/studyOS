@@ -1,3 +1,4 @@
+import { isQualifiedAppOrigin } from "@/lib/study/origin-qualification";
 function requiredPublic(name: "NEXT_PUBLIC_SUPABASE_URL" | "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY") {
   const value = process.env[name];
   if (!value) throw new Error(`Missing required environment variable: ${name}`);
@@ -61,8 +62,7 @@ export function requireDriveServerEnv() {
 }
 
 export function serverConfigurationStatus() {
-  const localOrigin = env.appOrigin.startsWith("http://localhost") || env.appOrigin.startsWith("http://127.0.0.1");
-  const secureOrigin = env.appOrigin.startsWith("https://") || localOrigin;
+  const secureOrigin=isQualifiedAppOrigin(env.appOrigin,env.deploymentEnv);
   return {
     deploymentEnv: env.deploymentEnv,
     appOrigin: env.appOrigin,
