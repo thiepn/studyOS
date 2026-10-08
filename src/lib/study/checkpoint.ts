@@ -76,7 +76,13 @@ export function buildCheckpointQueue(
     const available = bySkill.get(skill.skill_id) ?? [];
     if (!available.length) return [];
     const target = targetDimension(skill, available);
-    const question = [...available].sort((a,b) => questionRank(a,target,skill) - questionRank(b,target,skill))[0];
+    // Prefer the best question that actually fits this session's budget.
+    // A 45-minute proof must not suppress a viable 15-minute derivation.
+    const fitting=available.filter(q=>Number.isFinite(Number(q.expected_minutes))
+      && Math.ceil(Number(q.expected_minutes))>=1
+      && Math.ceil(Number(q.expected_minutes))<=budgetMinutes);
+    if(!fitting.length)return [];
+    const question = [...fitting].sort((a,b) => questionRank(a,target,skill) - questionRank(b,target,skill))[0];
     return [{
       skill,
       target,
