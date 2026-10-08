@@ -360,7 +360,7 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
             <textarea id="review-response" className="answer-box math-answer-input" value={responseText} onChange={event=>setResponseText(event.target.value)} maxLength={2500}
               onKeyDown={event=>{if((event.ctrlKey||event.metaKey)&&event.key==="Enter"){event.preventDefault();revealForGrading(false);}}}
               placeholder="e.g. x = 0 is the unique critical point, or a concise proof conclusion" rows={3} />
-            <p className="math-work-helper">Use <code>\\(x^2\\)</code> for inline math or <code>\\[\\frac{a}{b}\\]</code> for a display equation. Unsupported TeX stays visible as typed source. Your proof and conclusion remain one attempt; rendering is not mathematical verification.</p>
+            <p className="math-work-helper">Use <code>\\(x^2\\)</code> for inline math or <code>{String.raw`\\[\\frac{a}{b}\\]`}</code> for a display equation. Unsupported TeX stays visible as typed source. Your proof and conclusion remain one attempt; rendering is not mathematical verification.</p>
             {(workingText.trim()||responseText.trim())?<details className="math-reading-view">
               <summary>Preview mathematical reading layout</summary>
               {workingText.trim()?<div><strong>Working / proof</strong><div className="math-proof-reading"><MathContent text={workingText}/></div></div>:null}
