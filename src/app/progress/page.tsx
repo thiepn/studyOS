@@ -53,12 +53,9 @@ export default async function ProgressPage(){
             <div className="risk-score-block"><span className={"risk-badge risk-" + course.risk_band}>{course.risk_band.replace("_"," ")}</span><strong>{Math.round(Number(course.risk_score))}/100</strong></div>
           </div>
 
-          <div className="diagnostic-grid">
+          <div className="diagnostic-grid progress-headline-metrics">
             <div><strong>{course.tested_skills}</strong><span>tested skills</span></div>
             <div><strong>{course.due_or_at_risk_skills}</strong><span>due / at risk</span></div>
-            <div><strong>{course.overdue_7d_skills}</strong><span>7d+ overdue</span></div>
-            <div><strong>{course.relearning_skills}</strong><span>relearning</span></div>
-            <div><strong>{course.recent_lapse_skills}</strong><span>recent lapses</span></div>
             <div><strong>{Math.round(Number(course.exam_ready_percent))}%</strong><span>exam-ready</span></div>
           </div>
 
@@ -66,6 +63,11 @@ export default async function ProgressPage(){
           <details className="progress-evidence-drawer">
             <summary><span>Evidence and diagnostics</span><small>Calibration · drift · interventions · previous semesters</small></summary>
             <div className="progress-evidence-content">
+          <div className="diagnostic-grid evidence-secondary">
+            <div><strong>{course.overdue_7d_skills}</strong><span>7d+ overdue</span></div>
+            <div><strong>{course.relearning_skills}</strong><span>relearning</span></div>
+            <div><strong>{course.recent_lapse_skills}</strong><span>recent lapses</span></div>
+          </div>
           {calibrationProfile ? <div className="course-calibration-strip">
             <div><span>Calibration</span><strong>{calibrationProfile.status}</strong></div>
             <div><span>Independent sample</span><strong>{calibrationProfile.independentAttempts} · {calibrationProfile.distinctSkills} skills</strong></div>
