@@ -56,7 +56,7 @@ export async function createSemesterDriveTree(userId: string, accessToken: strin
     if(!existing)semesterChildren=[...semesterChildren,inbox as DriveFile];
   }
 
-  await admin.from("study_semesters").update({
+  const { error: semesterWriteError } = await admin.from("study_semesters").update({
     drive_root_folder_id:root.id,
     drive_root_folder_url:root.webViewLink??`https://drive.google.com/drive/folders/${root.id}`,
     drive_semester_folder_id:semesterFolder.id,
@@ -64,6 +64,7 @@ export async function createSemesterDriveTree(userId: string, accessToken: strin
     drive_inbox_folder_id:inbox.id,
     drive_inbox_folder_url:inbox.webViewLink??`https://drive.google.com/drive/folders/${inbox.id}`,
   }).eq("id",semester.id).eq("user_id",userId);
+  if(semesterWriteError)throw new Error("Could not store semester Drive folders");
 
   let createdCourseFolders=0,reusedCourseFolders=0;
   for(const course of courses??[]){
@@ -96,14 +97,15 @@ export async function createSemesterDriveTree(userId: string, accessToken: strin
       folderMap[key]=folder.id;
       if(!existing)courseChildren=[...courseChildren,folder];
     }
-    await admin.from("study_courses").update({
+    const { error: courseWriteError } = await admin.from("study_courses").update({
       drive_folder_id:courseFolder.id,
       drive_folder_url:courseFolder.webViewLink??`https://drive.google.com/drive/folders/${courseFolder.id}`,
       drive_folder_map:folderMap,
     }).eq("id",course.id).eq("user_id",userId);
+    if(courseWriteError)throw new Error("Could not store course Drive folders");
   }
 
-  await admin.from("study_drive_connections").update({
+  const { error: connectionWriteError } = await admin.from("study_drive_connections").update({
     root_folder_id:root.id,
     root_folder_url:root.webViewLink??`https://drive.google.com/drive/folders/${root.id}`,
     semester_folder_id:semesterFolder.id,
@@ -112,6 +114,7 @@ export async function createSemesterDriveTree(userId: string, accessToken: strin
     inbox_folder_url:inbox.webViewLink??`https://drive.google.com/drive/folders/${inbox.id}`,
     status:"connected",last_error:null,
   }).eq("user_id",userId);
+  if(connectionWriteError)throw new Error("Could not store Drive connection folders");
 
   return {
     root,semesterFolder,inbox,

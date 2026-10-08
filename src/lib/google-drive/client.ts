@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { decryptRefreshToken } from "./crypto";
 import { requireDriveServerEnv } from "@/lib/env";
+import { hasGrantedDriveFileScope } from "./scope-validation";
 
 export type DriveFile = {
   id: string;
@@ -15,6 +16,10 @@ export type DriveFile = {
 
 export async function refreshDriveAccessToken(userId: string) {
   const admin = createAdminClient();
+  const { data: connection, error: connectionError } = await admin.from("study_drive_connections")
+    .select("status,scopes").eq("user_id",userId).maybeSingle();
+  if(connectionError || connection?.status!=="connected" || !hasGrantedDriveFileScope(connection.scopes))
+    throw new Error("Drive access is not authorized. Reconnect and grant Drive file access.");
   const { data, error } = await admin.from("study_drive_credentials").select("encrypted_refresh_token").eq("user_id", userId).single();
   if (error || !data?.encrypted_refresh_token) throw new Error("Google Drive refresh token is unavailable");
   const { clientId, clientSecret } = requireDriveServerEnv();

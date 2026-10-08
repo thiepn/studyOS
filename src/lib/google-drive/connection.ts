@@ -68,32 +68,31 @@ export async function saveDriveConnection(input: {
   }
 }
 
+/** Clear DB folder mappings when disconnecting. Never delete actual Google Drive files. */
 export async function disconnectDrive(userId: string) {
   const admin = createAdminClient();
-  await admin.from("study_drive_credentials").delete().eq("user_id", userId);
+  const { error: credentialError } = await admin.from("study_drive_credentials").delete().eq("user_id",userId);
+  if (credentialError) throw new Error("Could not remove Drive credential");
   const { error } = await admin.from("study_drive_connections").update({
-    status: "disconnected",
-    google_account_sub: null,
-    google_account_email: null,
-    scopes: [],
-    last_error: null,
-  }).eq("user_id", userId);
-  if (error) throw new Error(`Could not disconnect Drive: ${error.message}`);
-
-  const { error: certificationError } = await admin.from("study_semesters")
-    .update({ bootstrap_certified_at: null, updated_at: new Date().toISOString() })
-    .eq("user_id", userId).eq("active", true);
-  if (certificationError) throw new Error(`Could not invalidate semester bootstrap after Drive disconnect: ${certificationError.message}`);
-}
-
-/** Keeps OAuth-success-but-folder-failure from appearing as a completed setup.
- * Credentials remain available for diagnosis; reconnect can obtain a fresh grant. */
-export async function markDriveSetupFailed(userId: string) {
-  const admin = createAdminClient();
-  const { error } = await admin.from("study_drive_connections").update({
-    status: "error",
-    last_error: "Google Drive folders could not be prepared. Reconnect and approve Drive file access.",
-    updated_at: new Date().toISOString(),
-  }).eq("user_id", userId);
-  if (error) throw new Error("Could not record Drive setup failure: " + error.message);
+    status:"disconnected",google_account_sub:null,google_account_email:null,scopes:[],
+    root_folder_id:null,root_folder_url:null,semester_folder_id:null,semester_folder_url:null,
+    inbox_folder_id:null,inbox_folder_url:null,last_scan_at:null,last_scan_status:null,last_error:null,
+    updated_at:new Date().toISOString(),
+  }).eq("user_id",userId);
+  if(error)throw new Error("Could not disconnect Drive");
+  const { data: semester, error: semesterError } = await admin.from("study_semesters")
+    .select("id").eq("user_id",userId).eq("active",true).maybeSingle();
+  if(semesterError)throw new Error("Could not inspect semester during Drive disconnect");
+  if(semester?.id) {
+    const { error: resetError } = await admin.from("study_semesters").update({
+      drive_root_folder_id:null,drive_root_folder_url:null,drive_semester_folder_id:null,drive_semester_folder_url:null,
+      drive_inbox_folder_id:null,drive_inbox_folder_url:null,drive_last_scan_at:null,drive_last_scan_status:null,
+      drive_last_scan_note:null,bootstrap_certified_at:null,updated_at:new Date().toISOString(),
+    }).eq("id",semester.id).eq("user_id",userId);
+    if(resetError)throw new Error("Could not reset semester Drive references");
+    const { error: courseError } = await admin.from("study_courses").update({
+      drive_folder_id:null,drive_folder_url:null,drive_folder_map:{},
+    }).eq("semester_id",semester.id).eq("user_id",userId);
+    if(courseError)throw new Error("Could not reset course Drive references");
+  }
 }
