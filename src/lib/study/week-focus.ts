@@ -18,3 +18,12 @@ export function featuredTeachingWeek<T extends WeekFocusCandidate>(weeks:readonl
     ?? ordered.at(-1)?.teaching_week_id
     ?? null;
 }
+
+/** Keep the featured week at the top; retain chronological order for the rest. */
+export function orderedTeachingWeeks<T extends WeekFocusCandidate>(weeks:readonly T[]):T[]{
+  const featuredId=featuredTeachingWeek(weeks);
+  return [...weeks].sort((a,b)=>
+    Number(b.teaching_week_id===featuredId)-Number(a.teaching_week_id===featuredId)
+    || a.week_no-b.week_no
+  );
+}
