@@ -57,3 +57,18 @@ test("checkpoint never exceeds its fixed budget", () => {
   assert.equal(queue.length,2);
   assert.ok(minutes<=60);
 });
+
+test("a course-week checkpoint chooses a fitting source-backed question instead of returning empty",()=>{
+  const dgl=skill({skill_id:"dgl",first_week_no:2});
+  const queue=buildCheckpointQueue([dgl],[
+    question("proof-45","dgl",45,"exam","proof_skeleton"),
+    question("derivation-14","dgl",14,"execution","derivation"),
+  ],2,35);
+  assert.equal(queue.length,1);
+  assert.equal(queue[0].question.id,"derivation-14");
+});
+test("checkpoint refuses only genuinely impossible question sets",()=>{
+  const ti=skill({skill_id:"theoretical-informatics",first_week_no:1});
+  const queue=buildCheckpointQueue([ti],[question("hard-proof","theoretical-informatics",90,"exam")],2,35);
+  assert.equal(queue.length,0);
+});
