@@ -20,39 +20,12 @@ export default async function ProgressPage(){
     <header className="header"><div><p className="eyebrow">Longitudinal diagnostics</p><h1>Progress</h1></div><Nav /></header>
 
     <section className="panel progress-summary">
-      <div className="section-heading"><div><p className="eyebrow">Semester health</p><h2>Where retention is failing</h2></div><span>{pulse.risks.filter((c)=>c.risk_band==="at_risk"||c.risk_band==="critical").length}</span></div>
-      <p className="muted">Risk is deterministic: retention pressure + overdue reviews + recent lapses + actionable coursework backlog + unresolved errors + exam-readiness gap. StudyOS separately checks completed-week performance and workload drift; {sustainedDrift} course{sustainedDrift===1?" is":"s are"} currently in sustained drift.</p>
+      <div className="section-heading"><div><p className="eyebrow">Current semester</p><h2>At a glance</h2></div><span>{pulse.risks.filter((c)=>c.risk_band==="at_risk"||c.risk_band==="critical").length} high-risk</span></div>
+      <p className="muted">{pulse.risks.length} active course{pulse.risks.length===1?"":"s"} · {sustainedDrift} showing sustained drift. Course summaries below show the most important next evidence; detailed diagnostics remain available when needed.</p>
       <div className="button-row"><Link className="secondary-button" href="/outlook">Open semester outlook</Link></div>
     </section>
 
-    <section className="panel intervention-summary">
-      <div className="section-heading"><div><p className="eyebrow">Intervention validation</p><h2>Are corrections actually working?</h2></div><span>{learning.summary.effectivenessRate==null?"—":learning.summary.effectivenessRate+"%"}</span></div>
-      <div className="intervention-summary-grid">
-        <div><strong>{learning.summary.totalInterventions}</strong><span>completed targeted repairs</span></div>
-        <div><strong>{learning.summary.evaluatedInterventions}</strong><span>with enough follow-up</span></div>
-        <div><strong>{learning.summary.effectiveInterventions}</strong><span>effective</span></div>
-        <div><strong>{learning.summary.pendingInterventions}</strong><span>pending / insufficient evidence</span></div>
-        <div><strong>{learning.summary.persistentCourses}</strong><span>persistent difficulty</span></div>
-        <div><strong>{learning.summary.structuralCourses}</strong><span>structural signal</span></div>
-      </div>
-      <p className="muted">Repairs are judged only from later independent attempts. Performance inside the repair session itself is excluded, so the metric measures transfer rather than practice-set success.</p>
-    </section>
-
-    <section className="panel intervention-summary">
-      <div className="section-heading"><div><p className="eyebrow">Cross-semester transfer</p><h2>Did historical evidence actually transfer?</h2></div><span>{transfer.summary.usable}/{transfer.summary.activePriors}</span></div>
-      <div className="intervention-summary-grid">
-        <div><strong>{transfer.summary.activePriors}</strong><span>active priors</span></div>
-        <div><strong>{transfer.summary.usable}</strong><span>validated / mixed</span></div>
-        <div><strong>{transfer.summary.confirmed}</strong><span>confirmed</span></div>
-        <div><strong>{transfer.summary.partial}</strong><span>partial / mixed</span></div>
-        <div><strong>{transfer.summary.contradicted}</strong><span>contradicted</span></div>
-        <div><strong>{transfer.summary.insufficient}</strong><span>need evidence</span></div>
-      </div>
-      <div className="course-learning-metrics">
-        {transfer.reliability.filter((item)=>item.total>0).map((item)=><span key={item.relation}><strong>{item.reliabilityPercent==null?"—":item.reliabilityPercent+"%"}</strong> {item.relation.replace("_"," ")} reliability · {item.usable}/{item.total} usable</span>)}
-      </div>
-      <p className="muted">Cross-semester validation compares immutable historical-prior signals with fresh baseline classifications and independent attempts from the first 21 days. It only calibrates how much diagnostic attention a prior deserves; it never restores mastery, schedules reviews, or overrides current-semester evidence.</p>
-    </section>
+    <div className="progress-section-label"><span className="section-kicker">Course evidence</span><h2>What needs attention</h2></div>
 
     <section className="risk-course-list">
       {pulse.risks.map((course)=>{
@@ -63,6 +36,15 @@ export default async function ProgressPage(){
         const driftProfile=learningProfile?.latestDrift;
         const transferProfiles=transferByCourse.get(course.course_id)??[];
         const longitudinalProfile=longitudinalByKey.get(course.stable_key);
+        const leadingAdvice = (learningProfile&&(learningProfile.difficultySignal==="persistent"||learningProfile.difficultySignal==="structural"))
+          ? learningProfile.recommendation
+          : driftProfile&&(driftProfile.band==="drifting"||driftProfile.band==="critical")
+            ? driftProfile.recommendation
+            : course.tested_skills===0
+              ? "Record an independent practice attempt to establish a reliable baseline."
+              : drivers.length
+                ? "Main pressure: "+drivers[0].label+". Review this course's outstanding work."
+                : "Keep up normal retrieval and independent coursework.";
         return <article className={`panel risk-course progress-ledger ${courseToneClass(course.stable_key)}`} id={"course-"+course.course_id} key={course.course_id}>
           <div className="progress-course-spine" aria-hidden="true"><span>{courseInitials(course.short_name,course.display_name)}</span></div>
           <div className="progress-course-body">
@@ -71,15 +53,21 @@ export default async function ProgressPage(){
             <div className="risk-score-block"><span className={"risk-badge risk-" + course.risk_band}>{course.risk_band.replace("_"," ")}</span><strong>{Math.round(Number(course.risk_score))}/100</strong></div>
           </div>
 
-          <div className="diagnostic-grid">
+          <div className="diagnostic-grid progress-headline-metrics">
             <div><strong>{course.tested_skills}</strong><span>tested skills</span></div>
             <div><strong>{course.due_or_at_risk_skills}</strong><span>due / at risk</span></div>
-            <div><strong>{course.overdue_7d_skills}</strong><span>7d+ overdue</span></div>
-            <div><strong>{course.relearning_skills}</strong><span>relearning</span></div>
-            <div><strong>{course.recent_lapse_skills}</strong><span>recent lapses</span></div>
             <div><strong>{Math.round(Number(course.exam_ready_percent))}%</strong><span>exam-ready</span></div>
           </div>
 
+          <p className="progress-leading-advice">{leadingAdvice}</p>
+          <details className="progress-evidence-drawer">
+            <summary><span>Evidence and diagnostics</span><small>Calibration · drift · interventions · previous semesters</small></summary>
+            <div className="progress-evidence-content">
+          <div className="diagnostic-grid evidence-secondary">
+            <div><strong>{course.overdue_7d_skills}</strong><span>7d+ overdue</span></div>
+            <div><strong>{course.relearning_skills}</strong><span>relearning</span></div>
+            <div><strong>{course.recent_lapse_skills}</strong><span>recent lapses</span></div>
+          </div>
           {calibrationProfile ? <div className="course-calibration-strip">
             <div><span>Calibration</span><strong>{calibrationProfile.status}</strong></div>
             <div><span>Independent sample</span><strong>{calibrationProfile.independentAttempts} · {calibrationProfile.distinctSkills} skills</strong></div>
@@ -146,11 +134,48 @@ export default async function ProgressPage(){
           </div>
 
           {calibrationProfile ? <p className="calibration-recommendation"><strong>Calibration:</strong> {calibrationProfile.recommendation}</p> : null}
+            </div>
+          </details>
           <p className="muted">{course.days_to_exam==null?"Exam date not configured.":course.days_to_exam>=0?String(course.days_to_exam)+" days to exam.":"Exam date has passed."} {course.actionable_backlog} actionable weekly item{course.actionable_backlog===1?"":"s"} · {course.unresolved_errors} unresolved error{course.unresolved_errors===1?"":"s"}.</p>
           <div className="button-row"><Link className="secondary-button" href={"/courses/" + course.course_id}>Open course</Link>{calibrationProfile?<Link className="secondary-button" href={"/practice?mode=calibration&course="+course.course_id}>Calibration set</Link>:null}{learningProfile&&(learningProfile.difficultySignal==="persistent"||learningProfile.difficultySignal==="structural")?<Link className="primary-button" href={"/strategy?course="+course.course_id}>Open strategy lab</Link>:null}</div>
           </div>
         </article>;
       })}
     </section>
+
+    <details className="progress-global-drawer">
+      <summary><span><strong>Methods and longitudinal evidence</strong><small>Study-method effectiveness and evidence transferred between semesters</small></span><b>Open</b></summary>
+      <div className="progress-global-content">
+    <section className="panel intervention-summary">
+      <div className="section-heading"><div><p className="eyebrow">Intervention validation</p><h2>Are corrections actually working?</h2></div><span>{learning.summary.effectivenessRate==null?"—":learning.summary.effectivenessRate+"%"}</span></div>
+      <div className="intervention-summary-grid">
+        <div><strong>{learning.summary.totalInterventions}</strong><span>completed targeted repairs</span></div>
+        <div><strong>{learning.summary.evaluatedInterventions}</strong><span>with enough follow-up</span></div>
+        <div><strong>{learning.summary.effectiveInterventions}</strong><span>effective</span></div>
+        <div><strong>{learning.summary.pendingInterventions}</strong><span>pending / insufficient evidence</span></div>
+        <div><strong>{learning.summary.persistentCourses}</strong><span>persistent difficulty</span></div>
+        <div><strong>{learning.summary.structuralCourses}</strong><span>structural signal</span></div>
+      </div>
+      <p className="muted">Repairs are judged only from later independent attempts. Performance inside the repair session itself is excluded, so the metric measures transfer rather than practice-set success.</p>
+    </section>
+
+    <section className="panel intervention-summary">
+      <div className="section-heading"><div><p className="eyebrow">Cross-semester transfer</p><h2>Did historical evidence actually transfer?</h2></div><span>{transfer.summary.usable}/{transfer.summary.activePriors}</span></div>
+      <div className="intervention-summary-grid">
+        <div><strong>{transfer.summary.activePriors}</strong><span>active priors</span></div>
+        <div><strong>{transfer.summary.usable}</strong><span>validated / mixed</span></div>
+        <div><strong>{transfer.summary.confirmed}</strong><span>confirmed</span></div>
+        <div><strong>{transfer.summary.partial}</strong><span>partial / mixed</span></div>
+        <div><strong>{transfer.summary.contradicted}</strong><span>contradicted</span></div>
+        <div><strong>{transfer.summary.insufficient}</strong><span>need evidence</span></div>
+      </div>
+      <div className="course-learning-metrics">
+        {transfer.reliability.filter((item)=>item.total>0).map((item)=><span key={item.relation}><strong>{item.reliabilityPercent==null?"—":item.reliabilityPercent+"%"}</strong> {item.relation.replace("_"," ")} reliability · {item.usable}/{item.total} usable</span>)}
+      </div>
+      <p className="muted">Cross-semester validation compares immutable historical-prior signals with fresh baseline classifications and independent attempts from the first 21 days. It only calibrates how much diagnostic attention a prior deserves; it never restores mastery, schedules reviews, or overrides current-semester evidence.</p>
+    </section>
+
+      </div>
+    </details>
   </main>;
 }

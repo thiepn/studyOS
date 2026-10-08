@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, type FormEvent } from "react";
 import type { ReconciliationFinding, SkillOption, WeekActionRow, WeekResource } from "@/lib/study/workflow";
 import { actionDescription, actionLabel, milestoneForAction } from "@/lib/study/workflow-state";
+import { featuredTeachingWeek, orderedTeachingWeeks } from "@/lib/study/week-focus";
 
 const ERROR_OPTIONS = [
   ["concept","Concept"],["recall","Recall"],["recognition","Recognition"],["method_selection","Method choice"],
@@ -30,6 +31,10 @@ export function WeekWorkflowPanel({
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [collapsedFeatured,setCollapsedFeatured]=useState<string[]>([]);
+  const [expandedOther,setExpandedOther]=useState<string[]>([]);
+  const featuredId=featuredTeachingWeek(weeks);
+  const orderedWeeks=orderedTeachingWeeks(weeks);
   const findingsByWeek = useMemo(() => {
     const map = new Map<string, ReconciliationFinding[]>();
     for (const finding of findings) {
@@ -83,12 +88,25 @@ export function WeekWorkflowPanel({
 
   return (
     <div className="week-stack">
-      {weeks.map((week) => {
+      {orderedWeeks.map((week) => {
         const milestone = milestoneForAction(week.next_action);
         const weekFindings = findingsByWeek.get(week.teaching_week_id) ?? [];
         const weekResources = resourcesByWeek.get(week.teaching_week_id) ?? [];
+        const isFeatured=week.teaching_week_id===featuredId;
+        const isExpanded=isFeatured?!collapsedFeatured.includes(week.teaching_week_id):expandedOther.includes(week.teaching_week_id);
         return (
-          <section className="panel week-card" key={week.teaching_week_id}>
+          <div className={"week-work-item "+(isFeatured?"week-work-featured":"")} key={week.teaching_week_id}>
+            <button type="button" className="week-work-toggle" aria-expanded={isExpanded}
+              onClick={()=>{
+                if(isFeatured)setCollapsedFeatured(current=>current.includes(week.teaching_week_id)?current.filter(id=>id!==week.teaching_week_id):[...current,week.teaching_week_id]);
+                else setExpandedOther(current=>current.includes(week.teaching_week_id)?current.filter(id=>id!==week.teaching_week_id):[...current,week.teaching_week_id]);
+              }}>
+              <span className="week-work-number">W{String(week.week_no).padStart(2,"0")}</span>
+              <span className="week-work-title"><strong>{actionLabel(week.next_action)}</strong><small>{week.health_status.replaceAll("_"," ")} · {week.due_skills} due · {week.open_findings} findings</small></span>
+              {isFeatured?<span className="week-work-now">Next</span>:null}
+              <span aria-hidden="true" className="week-work-chevron">{isExpanded?"−":"+"}</span>
+            </button>
+            {isExpanded?<section id={"week-panel-"+week.teaching_week_id} className="panel week-card">
             <div className="week-card-head">
               <div><p className="eyebrow">Teaching week {week.week_no}</p><h2>{actionLabel(week.next_action)}</h2></div>
               <span className={`health-badge health-${week.health_status}`}>{week.health_status.replaceAll("_", " ")}</span>
@@ -162,7 +180,8 @@ export function WeekWorkflowPanel({
                 </form>
               </div>
             ) : null}
-          </section>
+            </section>:null}
+          </div>
         );
       })}
       {message ? <p className="form-message" role="status">{message}</p> : null}

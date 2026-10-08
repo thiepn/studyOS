@@ -36,6 +36,23 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
         {c.course_kind === "retake" ? <Link className="secondary-button" href={"/diagnostics/" + c.course_id}>Baseline diagnostic</Link> : null}
       </div>
 
+      <section className="workflow-heading">
+        <div><p className="eyebrow">Current coursework</p><h2>Teaching weeks</h2></div>
+        <p>Work through materials, independent exercises, solution checks, and repairs week by week.</p>
+      </section>
+
+      <WeekWorkflowPanel
+        courseId={c.course_id}
+        weeks={data.weeks}
+        findings={data.findings}
+        skills={data.skills}
+        resources={data.resources}
+      />
+
+      <CourseMasterMap topics={data.masterMap} />
+
+      <ExamIntelligence papers={exam.papers} blueprint={exam.blueprint} strategy={exam.strategy} />
+
       <details className="course-settings-drawer">
         <summary>
           <span><strong>Course settings</strong><small>Identity, exam information, weekly release pattern</small></span>
@@ -46,23 +63,6 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
           <CourseConfigForm configuration={c} />
         </div>
       </details>
-
-      <CourseMasterMap topics={data.masterMap} />
-
-      <ExamIntelligence papers={exam.papers} blueprint={exam.blueprint} strategy={exam.strategy} />
-
-      <section className="workflow-heading">
-        <div><p className="eyebrow">Weekly operating loop</p><h2>What needs to happen next</h2></div>
-        <p>Material → retrieval → independent sheet attempt → official-solution reconciliation → repair → maintenance. The cumulative checkpoint rotates across the active major-course roster from Today.</p>
-      </section>
-
-      <WeekWorkflowPanel
-        courseId={c.course_id}
-        weeks={data.weeks}
-        findings={data.findings}
-        skills={data.skills}
-        resources={data.resources}
-      />
     </main>
   );
 }

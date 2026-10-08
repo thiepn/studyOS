@@ -27,6 +27,8 @@ function formatSeconds(seconds: number) {
 
 export function ReviewSession({ queue, plannedMinutes, sessionType = "review", courseId, eyebrow = "Daily retrieval", intro, completionNote }: { queue: QueueItem[]; plannedMinutes: number; sessionType?: "review"|"checkpoint"|"exam_simulation"|"relearning"|"coursework"; courseId?: string; eyebrow?: string; intro?: string; completionNote?: string }) {
   const [phase, setPhase] = useState<Phase>("ready");
+  const [focusMode, setFocusMode] = useState(true);
+  const [answerSurface, setAnswerSurface] = useState<"typed"|"paper">("typed");
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionStartedAt, setSessionStartedAt] = useState<string | null>(null);
   const [index, setIndex] = useState(0);
@@ -69,7 +71,7 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
 
   function resetQuestion(nextIndex: number) {
     setIndex(nextIndex); setQuestionStartedAt(new Date().toISOString()); setElapsed(0); setLockedDuration(0);
-    setResponseText(""); setIndependence("independent"); setHint1Visible(false); setHint2Visible(false);
+    setResponseText(""); setAnswerSurface("typed"); setIndependence("independent"); setHint1Visible(false); setHint2Visible(false);
     setResult(null); setConfidence(null); setErrorTypes([]); setNotice(null); setError(null); setPhase("answering");
   }
 
@@ -158,25 +160,41 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
   const canSubmit = assessmentReady(result, confidence, errorTypes) && phase !== "submitting";
 
   return (
-    <section className="review-workspace">
-      <div className="review-topline"><span>Question {index + 1} / {queue.length}</span><span>{formatSeconds(phase === "answering" ? elapsed : lockedDuration)} · target {expected} min</span></div>
+    <section className={"review-workspace "+(focusMode?"is-focused":"")}>
+      <div className="review-session-tools">
+        <Link href="/practice" className="review-back-link">← Study</Link>
+        <button className="review-focus-toggle" type="button" aria-pressed={focusMode} onClick={()=>setFocusMode(value=>!value)}>{focusMode?"Show navigation":"Focus on question"}</button>
+      </div>
+      <div className="review-topline" aria-live="polite">
+        <span>Question {index + 1} of {queue.length}</span>
+        <span>{formatSeconds(phase === "answering" ? elapsed : lockedDuration)} · target {expected} min</span>
+      </div>
+      <progress className="review-session-progress" value={index} max={queue.length} aria-label="Questions completed" />
       <article className="panel review-question">
         <div className="question-meta"><span>{current.skillTitle}</span><span>{current.targetDimension} · difficulty {current.question.difficulty}/5</span></div>
         <h2>{current.question.prompt}</h2>
         {phase === "answering" ? <>
-          <label className="field-label" htmlFor="review-response">Your answer or short work summary <span>optional if you solve on paper</span></label>
-          <textarea id="review-response" className="answer-box" value={responseText} onChange={(event) => setResponseText(event.target.value)} placeholder="Write a final answer, proof outline, algorithm, or leave blank if your full work is on paper." rows={7} />
+          <div className="answer-surface-choice" role="group" aria-label="How are you solving?">
+            <button type="button" aria-pressed={answerSurface==="typed"} className={answerSurface==="typed"?"selected":""} onClick={()=>setAnswerSurface("typed")}>Type here</button>
+            <button type="button" aria-pressed={answerSurface==="paper"} className={answerSurface==="paper"?"selected":""} onClick={()=>setAnswerSurface("paper")}>Work on paper</button>
+          </div>
+          {answerSurface==="typed" ? <>
+            <label className="field-label" htmlFor="review-response">Your answer or short work summary <span>Ctrl/⌘ + Enter to lock</span></label>
+            <textarea id="review-response" className="answer-box" value={responseText} onChange={(event) => setResponseText(event.target.value)}
+              onKeyDown={(event)=>{if((event.ctrlKey||event.metaKey)&&event.key==="Enter"){event.preventDefault();revealForGrading(false);}}}
+              placeholder="Final answer, proof outline, or algorithm…" rows={7} />
+          </> : <p className="paper-work-note">Solve independently on paper. When finished, lock your work before revealing the rubric. You can still type a short summary by switching back.</p>}
           <div className="hint-stack">{current.question.hint_1 ? <button className="hint-button" type="button" onClick={() => showHint(1)} disabled={hint1Visible}>Hint 1</button> : null}{current.question.hint_2 ? <button className="hint-button" type="button" onClick={() => showHint(2)} disabled={hint2Visible}>Hint 2</button> : null}</div>
           {hint1Visible && current.question.hint_1 ? <div className="support-box"><strong>Hint 1</strong><p>{current.question.hint_1}</p></div> : null}
           {hint2Visible && current.question.hint_2 ? <div className="support-box"><strong>Hint 2</strong><p>{current.question.hint_2}</p></div> : null}
           <div className="button-row review-actions"><button className="primary-button button-reset" type="button" onClick={() => revealForGrading(false)}>Lock answer & compare</button><button className="danger-link" type="button" onClick={() => revealForGrading(true)}>I give up — show solution</button><button className="secondary-button button-reset" type="button" onClick={() => void skip()}>Skip</button></div>
         </> : <>
-          <div className="locked-answer"><span>Your locked answer</span><p>{responseText.trim() || "Solved on paper / no typed answer."}</p></div>
+          <div className="locked-answer"><span>Your locked answer</span><p>{responseText.trim() || (answerSurface==="paper"?"Worked on paper.":"No typed answer.")}</p></div>
           <div className="solution-box"><span>Answer key / rubric</span><p>{current.question.answer_key_or_rubric || "No answer key is attached yet. Grade only if you can verify the result from the official material."}</p></div>
           <p className={`evidence-note ${creditable ? "" : "evidence-zero"}`}>{creditable ? `Evidence mode: ${independence.replace("_", " ")}. Revealing the rubric after locking does not reduce this.` : "Solution was exposed before answer lock: this attempt records the failure but gives zero mastery credit."}</p>
-          <fieldset className="grade-group" disabled={phase === "submitting"}><legend>How correct was your locked attempt?</legend><div className="choice-row">{(["correct","partial","incorrect"] as StudyAttemptResult[]).map((value)=><button type="button" key={value} className={`choice-button ${result===value?"selected":""}`} onClick={()=>{setResult(value);if(value==="correct")setErrorTypes([])}}>{resultLabel(value)}</button>)}</div></fieldset>
-          <fieldset className="grade-group" disabled={phase === "submitting"}><legend>Confidence before seeing the rubric</legend><div className="choice-row confidence-row">{[1,2,3,4,5].map((value)=><button type="button" key={value} className={`choice-button ${confidence===value?"selected":""}`} onClick={()=>setConfidence(value)}>{value}</button>)}</div></fieldset>
-          {result && result !== "correct" ? <fieldset className="grade-group" disabled={phase === "submitting"}><legend>What failed? <span>Choose at least one</span></legend><div className="error-grid">{ERROR_OPTIONS.map((option)=><button type="button" key={option.value} className={`error-chip ${errorTypes.includes(option.value)?"selected":""}`} onClick={()=>toggleError(option.value)}>{option.label}</button>)}</div></fieldset> : null}
+          <fieldset className="grade-group" disabled={phase === "submitting"}><legend>How correct was your locked attempt?</legend><div className="choice-row">{(["correct","partial","incorrect"] as StudyAttemptResult[]).map((value)=><button type="button" key={value} aria-pressed={result===value} className={`choice-button ${result===value?"selected":""}`} onClick={()=>{setResult(value);if(value==="correct")setErrorTypes([])}}>{resultLabel(value)}</button>)}</div></fieldset>
+          <fieldset className="grade-group" disabled={phase === "submitting"}><legend>Confidence before seeing the rubric</legend><div className="choice-row confidence-row">{[1,2,3,4,5].map((value)=><button type="button" key={value} aria-pressed={confidence===value} className={`choice-button ${confidence===value?"selected":""}`} onClick={()=>setConfidence(value)}>{value}</button>)}</div></fieldset>
+          {result && result !== "correct" ? <fieldset className="grade-group" disabled={phase === "submitting"}><legend>What failed? <span>Choose at least one</span></legend><div className="error-grid">{ERROR_OPTIONS.map((option)=><button type="button" key={option.value} aria-pressed={errorTypes.includes(option.value)} className={`error-chip ${errorTypes.includes(option.value)?"selected":""}`} onClick={()=>toggleError(option.value)}>{option.label}</button>)}</div></fieldset> : null}
           {error ? <p className="error" role="alert">{error}</p> : null}
           <div className="button-row review-actions"><button className="primary-button button-reset" type="button" disabled={!canSubmit} onClick={() => void submitAssessment()}>{phase === "submitting" ? "Saving…" : "Save & next"}</button><button className="secondary-button button-reset" type="button" disabled={phase === "submitting"} onClick={() => void skip()}>Skip instead</button></div>
         </>}
