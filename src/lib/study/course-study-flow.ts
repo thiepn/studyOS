@@ -29,3 +29,10 @@ export function parseTeachingWeek(value: unknown): number | null {
   const parsed = Number(value);
   return Number.isSafeInteger(parsed) && parsed <= 40 ? parsed : null;
 }
+
+/** Contextual views must not mutate the caller's all-semester source collection. */
+export function scopeCourseRecords<T extends {course_id:string}>(
+  records:readonly T[], courseId:string|null,
+):T[]{
+  return courseId?records.filter(record=>record.course_id===courseId):[...records];
+}
