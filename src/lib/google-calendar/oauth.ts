@@ -1,9 +1,8 @@
 import { createHash, randomBytes } from "node:crypto";
 import { requireCalendarServerEnv } from "@/lib/env";
 
-export const CALENDAR_LIST_SCOPE="https://www.googleapis.com/auth/calendar.calendarlist.readonly";
-export const CALENDAR_READ_SCOPE="https://www.googleapis.com/auth/calendar.events.readonly";
-export const CALENDAR_OWNED_SCOPE="https://www.googleapis.com/auth/calendar.events.owned";
+import { CALENDAR_LIST_SCOPE, CALENDAR_READ_SCOPE, CALENDAR_OWNED_SCOPE } from "./scope-validation";
+export { CALENDAR_LIST_SCOPE, CALENDAR_READ_SCOPE, CALENDAR_OWNED_SCOPE } from "./scope-validation";
 const IDENTITY_SCOPES=["openid","email","profile"];
 
 export function calendarScopes(){return [...IDENTITY_SCOPES,CALENDAR_LIST_SCOPE,CALENDAR_READ_SCOPE,CALENDAR_OWNED_SCOPE];}
