@@ -6,7 +6,7 @@
 export type MathNode =
   | { kind: "row"; children: MathNode[] }
   | { kind: "mi" | "mn" | "mo" | "mtext"; value: string }
-  | { kind: "frac"; numerator: MathNode; denominator: MathNode }
+  | { kind: "frac"; numerator: MathNode; denominator: MathNode; binomial?: boolean }
   | { kind: "sqrt"; radicand: MathNode; index?: MathNode }
   | { kind: "script"; base: MathNode; sub?: MathNode; sup?: MathNode }
   | { kind: "table"; rows: MathNode[][]; opening: string; closing: string };
@@ -66,7 +66,8 @@ function splitAtTopLevel(body:string, separator:"row"|"cell"):string[] {
 class Reader {
   private i=0;
   private count=0;
-  constructor(private readonly src:string){}
+  private readonly src:string;
+  constructor(src:string){this.src=src;}
   private fail():never{throw Error("Unsupported math syntax");}
   private peek(){return this.src[this.i]??"";}
   private skip(){while(/\s/.test(this.peek())&&this.i<this.src.length)this.i++;}
@@ -90,7 +91,7 @@ class Reader {
       if(command==="frac"||command==="dfrac"||command==="tfrac"||command==="binom"){
         const numerator=this.atom(depth+1);
         const denominator=this.atom(depth+1);
-        return {kind:"frac",numerator,denominator};
+        return {kind:"frac",numerator,denominator,binomial:command==="binom"};
       }
       if(command==="sqrt"){
         this.skip();
