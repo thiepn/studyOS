@@ -29,6 +29,7 @@ export default async function SemesterBootstrapPage(){
       </section> : <section className="panel bootstrap-hero">
         <div className="section-heading"><div><p className="eyebrow">First workspace</p><h2>Start with the real semester</h2></div><span>1 step</span></div>
         <p>Create only the semester identity here. No example courses or old mastery will be inserted. After creation, add the real course roster and curriculum below.</p>
+        <p className="muted">Need to check hosting or OAuth before adding a semester? <Link href="/setup/platform">Inspect platform setup</Link>.</p>
         <InitialSemesterForm/>
       </section>}
     </main>;
@@ -57,6 +58,7 @@ export default async function SemesterBootstrapPage(){
       </div>
       {evaluation.blockers.length?<ul className="bootstrap-blockers">{evaluation.blockers.map(item=><li key={item}>{item}</li>)}</ul>:null}
       <BootstrapActionButtons ready={evaluation.ready} certified={evaluation.certified} driveConnected={evaluation.driveConnected}/>
+      <p className="muted">Deployment, callback and integration settings: <Link href="/setup/platform">Platform setup checklist</Link>.</p>
     </section>
 
     <section className="panel bootstrap-intake">

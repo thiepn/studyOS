@@ -715,3 +715,12 @@ See `docs/P30.md` for the visual-system contract and invariants.
 - The `/setup` page exposes per-course source/question/attempt proof, with direct next-action links.
 - First-semester setup offers **opt-in**, editable DGL, Stochastik, TI and AMP templates; no academic records are generated without explicit submission.
 - Version `0.37.0`. See `docs/P38.md` for exact infrastructure status and remaining authenticated/device acceptance.
+
+### P39 — OAuth callback integrity and deployment admission
+
+- Google sign-in callbacks use the configured canonical APP_ORIGIN, never an incoming Host header; local return paths reject external and backslash redirects.
+- Removed the forced Google account chooser for routine StudyOS sign-in. Cross-app SSO still needs real browser verification.
+- Authenticated `/setup/platform` reports configuration readiness before a semester exists, without exposing secret values.
+- CI adds built-server OAuth-origin denial and protected platform-route checks.
+- Vercel project has no verified deployment due to a team-level rate limit, and real semester records remain absent.
+- Version `0.38.0`. Full details: `docs/P39.md`.

@@ -27,7 +27,7 @@ assert.equal(health.version,expectedVersion,"Health endpoint must report release
 assert.ok(Number.isFinite(Date.parse(health.timestamp)));
 console.log("PASS: health endpoint and real release version");
 
-for(const path of ["/courses","/setup","/practice?mode=week&week=1"]){
+for(const path of ["/courses","/setup","/setup/platform","/practice?mode=week&week=1"]){
   response=await request(path);
   assert.ok([302,303,307,308].includes(response.status),path+" must redirect unauthenticated users");
   const location=new URL(response.headers.get("location")??"",expectedOrigin);
@@ -52,4 +52,13 @@ for(const path of ["/api/study/attempt","/api/study/session/start","/api/study/s
   assert.equal(payload.error,"Authentication required");
   console.log("PASS: unauthenticated API boundary "+path);
 }
-console.log("P37 anonymous production-server smoke passed");
+// With intentionally mismatched local APP_ORIGIN, OAuth must refuse the
+// request rather than creating a Google callback using untrusted Host data.
+response=await request("/auth/google?next=%2F%5Cattacker.example");
+assert.ok([302,303,307,308].includes(response.status));
+const rejectedOAuth=new URL(response.headers.get("location")??"",expectedOrigin);
+assert.equal(rejectedOAuth.pathname,"/login");
+assert.equal(rejectedOAuth.searchParams.get("error"),"oauth_origin");
+console.log("PASS: invalid/cross-host OAuth callback origins blocked");
+
+console.log("P39 anonymous built-server acceptance smoke passed");
