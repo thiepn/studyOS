@@ -1,12 +1,18 @@
 import { isQualifiedAppOrigin } from "@/lib/study/origin-qualification";
-function requiredPublic(name: "NEXT_PUBLIC_SUPABASE_URL" | "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY") {
-  const value = process.env[name];
+// Next.js inlines NEXT_PUBLIC_* values only when accessed by their literal
+// property names. process.env[name] is not replaced in browser bundles.
+function requiredPublic(
+  name: "NEXT_PUBLIC_SUPABASE_URL" | "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+  value: string | undefined,
+) {
   if (!value) throw new Error(`Missing required environment variable: ${name}`);
   return value;
 }
 
 function optional(name: string) {
-  const value = process.env[name];
+  // This shared module is imported by both server code and browser code.
+  // Optional server-only settings must not require a Node process in browsers.
+  const value = typeof process === "undefined" ? undefined : process.env[name];
   return value && value.trim() ? value.trim() : undefined;
 }
 
@@ -21,8 +27,8 @@ function originFromEnvironment() {
 const supabaseSecretKey = optional("SUPABASE_SECRET_KEY") ?? optional("SUPABASE_SERVICE_ROLE_KEY");
 
 export const env = {
-  supabaseUrl: requiredPublic("NEXT_PUBLIC_SUPABASE_URL"),
-  supabasePublishableKey: requiredPublic("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"),
+  supabaseUrl: requiredPublic("NEXT_PUBLIC_SUPABASE_URL", process.env.NEXT_PUBLIC_SUPABASE_URL),
+  supabasePublishableKey: requiredPublic("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY),
   supabaseSecretKey,
   // Kept as an alias while older deployments still use the legacy name.
   supabaseServiceRoleKey: supabaseSecretKey,
