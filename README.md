@@ -682,3 +682,10 @@ See `docs/P30.md` for the visual-system contract and invariants.
 - Optional proof/cases/derivation/ODE snippets and a readable plain-text work preview support longer mathematics responses.
 - The course binder has an authoritative four-stage academic progress rail and a week-specific independent practice set, distinct from cumulative checkpoints. Week return links open the correct panel.
 - Version 0.33.0. See `docs/P34.md`.
+
+### P35 — Native MathML & a proof-friendly study interface
+
+- Study question prompts, hints, locked work and source rubrics now render an explicit, safe subset of LaTeX using native browser MathML. Unknown commands remain visible as source.
+- Work editor adds reusable rendered-math snippets and a derived proof-section outline, without replacing the original text or duplicating saved evidence.
+- Touch-first input buttons, scrolling equations, and narrower layouts improve the phone/tablet workflow.
+- No new runtime dependencies, remote math rendering or data migrations. Version 0.34.0. See `docs/P35.md`.
