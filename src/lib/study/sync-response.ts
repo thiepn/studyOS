@@ -1,8 +1,11 @@
 /** Positive HTTP status alone does not mean an attempt was recorded.
  * A redirected login page or another 200 HTML response is NEVER evidence. */
 export class StudySyncError extends Error {
-  constructor(message: string, public readonly permanent: boolean, public readonly authRequired=false) {
+  readonly permanent: boolean;
+  readonly authRequired: boolean;
+  constructor(message: string, permanent: boolean, authRequired=false) {
     super(message); this.name="StudySyncError";
+    this.permanent=permanent; this.authRequired=authRequired;
   }
 }
 export async function readStudyMutationResponse(response: Response): Promise<unknown> {
