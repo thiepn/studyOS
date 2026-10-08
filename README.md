@@ -2,9 +2,9 @@
 
 StudyOS is the university-study operating system for the THIEPN ecosystem. It keeps source material in a dedicated Google Drive connection, structured academic state in Supabase, and daily study, retention, planning, and exam workflows in a Next.js frontend.
 
-## Current status: P30 visual identity complete
+## Current status: P31 core workflows implemented
 
-The study engine is implemented through P28, P29 consolidates the product architecture, and P30 establishes the finished StudyOS visual language: an academic workspace built around paper, ink, course spines, restrained color, reading hierarchy, and focus-first study surfaces rather than generic dashboard cards.
+The study engine is implemented through P28. P29 consolidates architecture, P30 establishes the academic visual system, and P31 turns the five primary destinations into a task-first workflow: an actionable Today, focused Study, active-week-first Courses, evidence-first Progress, and an actual More page.
 
 Fresh accounts now create their real first semester explicitly in **Semester Setup**. StudyOS no longer seeds a fixed WS26/27 semester or a six-course example roster; existing historical data and legacy Drive roots remain compatible.
 
@@ -635,3 +635,13 @@ P30 establishes one visual system across StudyOS without changing study authorit
 - version 0.28.0.
 
 See `docs/P30.md` for the visual-system contract and invariants.
+
+
+## P31 core experience
+
+- Today places the bounded study sequence before routine operational information and only surfaces plan-changing exceptions.
+- Active Study sessions offer distraction-reduced focus mode, typed or paper work, and an answer-lock shortcut.
+- Course binders lead with the next actionable teaching week; other weeks open on demand without losing their tools.
+- Progress exposes recommendations and three headline evidence metrics before deep diagnostics.
+- More is a genuine navigable page rather than a popup overlay.
+- Version 0.29.0; see `docs/P31.md`.
