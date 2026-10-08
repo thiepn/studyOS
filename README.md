@@ -2,7 +2,7 @@
 
 StudyOS is the university-study operating system for the THIEPN ecosystem. It keeps source material in a dedicated Google Drive connection, structured academic state in Supabase, and daily study, retention, planning, and exam workflows in a Next.js frontend.
 
-## Current status: P31 core workflows implemented
+## Current status: P32 contextual workflow and review integrity implemented (first slice)
 
 The study engine is implemented through P28. P29 consolidates architecture, P30 establishes the academic visual system, and P31 turns the five primary destinations into a task-first workflow: an actionable Today, focused Study, active-week-first Courses, evidence-first Progress, and an actual More page.
 
