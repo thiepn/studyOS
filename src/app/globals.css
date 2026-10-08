@@ -1066,3 +1066,16 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 @media(prefers-reduced-motion:reduce){
   .week-work-toggle,.more-entry,.review-focus-toggle{scroll-behavior:auto;transition:none}
 }
+
+/* P32: evidence quality is built into the solving sheet, not a post-hoc survey. */
+.confidence-before-reveal{border-top:1px solid var(--line-strong);padding-top:16px;margin-top:22px}
+.confidence-before-reveal .confidence-row{margin:8px 0}
+.confidence-before-reveal small{display:block;font-size:.72rem;line-height:1.45;margin-top:9px}
+.review-gate-note{font-size:.77rem;color:var(--muted);line-height:1.55;margin:10px 0 0}
+.locked-confidence{border-block:1px solid var(--line);padding:10px 0;font-size:.81rem;color:var(--ink-soft)}
+.review-save-note{font-size:.76rem;color:var(--muted);align-self:center}
+.danger-link:disabled{opacity:.45;cursor:not-allowed;text-decoration:none}
+.course-review-context{display:flex;align-items:center;justify-content:space-between;gap:12px;border-block:1px solid var(--line);margin:0 0 24px;padding:8px 2px;font-size:.79rem}
+.course-review-context p{margin:0;color:var(--muted)}
+.course-review-context a{font-weight:700;white-space:nowrap;text-underline-offset:3px}
+@media(max-width:760px){.course-review-context{align-items:flex-start;flex-direction:column}.course-review-context a{white-space:normal}}
