@@ -674,3 +674,11 @@ See `docs/P30.md` for the visual-system contract and invariants.
 - Exercise and solution references on findings are verified against the corresponding teaching week and course.
 - Resolution is withheld until a later **correct, fully independent, synced attempt** exists for the exact skill; a user may instead dismiss a mistaken or duplicate finding with a reason.
 - Version 0.32.0. Full contracts and non-goals in `docs/P33.md`.
+
+### P34 — Recoverable math work and teaching-week practice
+
+- In-progress proof/answer work now autosaves **within the current browser tab**, restoring the locked/graded state and stable attempt request identity after reload or accidental in-tab navigation. No server or cross-device draft backup is implied.
+- Solve time excludes hidden-tab time; it resumes from the active-time counter rather than wall-clock absence.
+- Optional proof/cases/derivation/ODE snippets and a readable plain-text work preview support longer mathematics responses.
+- The course binder has an authoritative four-stage academic progress rail and a week-specific independent practice set, distinct from cumulative checkpoints. Week return links open the correct panel.
+- Version 0.33.0. See `docs/P34.md`.
