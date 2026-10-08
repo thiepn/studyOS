@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { Nav } from "@/components/nav";
+import { parseTeachingWeek } from "@/lib/study/course-study-flow";
 import { ResourceRegisterForm } from "@/components/resource-register-form";
 import { IngestionDecisionButtons } from "@/components/ingestion-decision-buttons";
 import { DriveControls } from "@/components/drive-controls";
@@ -24,25 +26,36 @@ function candidateCounts(payload: Json | null) {
   return { topics: topics.length, skills, questions };
 }
 
-export default async function ResourcesPage() {
+export default async function ResourcesPage({searchParams}:{searchParams:Promise<{course?:string;week?:string}>}) {
+  const query=await searchParams;
   const data = await getResourcesData();
+  const selectedCourse=data.courses.find(item=>item.id===query.course)??null;
+  const selectedWeek=selectedCourse?parseTeachingWeek(query.week):null;
+  const resources=selectedCourse?data.resources.filter(item=>item.course_id===selectedCourse.id):data.resources;
+  const ingestionRuns=selectedCourse?data.ingestionRuns.filter(item=>item.course_id===selectedCourse.id):data.ingestionRuns;
+  const intakeItems=selectedCourse?data.intakeItems.filter(item=>item.course_id===selectedCourse.id):data.intakeItems;
   const courseById = new Map(data.courses.map((course) => [course.id, course.display_name]));
-  const resourceById = new Map(data.resources.map((resource) => [resource.id, resource]));
-  const queued = data.ingestionRuns.filter((run) => run.status === "queued");
-  const candidates = data.ingestionRuns.filter((run) => run.status === "candidate");
+  const resourceById = new Map(resources.map((resource) => [resource.id, resource]));
+  const queued = ingestionRuns.filter((run) => run.status === "queued");
+  const candidates = ingestionRuns.filter((run) => run.status === "candidate");
   const drive = data.driveConnection;
-  const unresolvedIntake = data.intakeItems.filter((item) => item.status !== "registered" && item.status !== "ignored");
+  const unresolvedIntake = intakeItems.filter((item) => item.status !== "registered" && item.status !== "ignored");
 
   return (
     <main className="shell">
-      <header className="header"><div><p className="eyebrow">Source pipeline</p><h1>Resources</h1></div><Nav /></header>
+      <header className="header"><div><p className="eyebrow">{selectedCourse?"Course source desk":"Source pipeline"}</p><h1>{selectedCourse?selectedCourse.display_name+" · Materials":"Resources"}</h1></div><Nav /></header>
+      {selectedCourse?<div className="resource-context-nav">
+        <p>{selectedWeek?`Preparing week ${selectedWeek} · `:""}Materials, processing and approval remain within this course.</p>
+        <Link href={"/courses/"+selectedCourse.id}>← Course binder</Link>
+        <Link href="/resources">All materials</Link>
+      </div>:query.course?<p className="error" role="status">The requested course is not active in this semester. Showing the current semester's materials.</p>:null}
 
       <section className="panel drive-panel">
         <div className="section-heading"><div><p className="eyebrow">Separate integration</p><h2>Study Drive</h2></div><span>{drive?.status === "connected" ? "On" : "Off"}</span></div>
         <DriveControls connected={drive?.status === "connected"} email={drive?.google_account_email} inboxUrl={drive?.inbox_folder_url} lastScanAt={drive?.last_scan_at} lastScanStatus={drive?.last_scan_status} />
       </section>
 
-      <section className="panel processing-queue-panel">
+      <section id="processing-queue" className="panel processing-queue-panel">
         <div className="section-heading"><div><p className="eyebrow">Source-grounded processing</p><h2>Processing queue</h2></div><span>{queued.length}</span></div>
         <p className="muted">Queued academic sources are not allowed into the study map until they have a source-anchored topic/skill/question candidate and you explicitly accept it.</p>
         {queued.length ? <div className="processing-list">{queued.map((run) => {
@@ -51,11 +64,11 @@ export default async function ResourcesPage() {
         })}</div> : <p className="muted">No source is waiting for semantic processing.</p>}
       </section>
 
-      <section className="grid resource-grid">
+      <section id="manual-registration" className="grid resource-grid">
         <div className="panel">
           <h2>Manual registration</h2>
           <p className="muted">Normally, Drive scanning discovers material automatically. Use this only when you need to register one file manually.</p>
-          <ResourceRegisterForm courses={data.courses} />
+          <ResourceRegisterForm courses={data.courses} defaultCourseId={selectedCourse?.id} defaultWeekNo={selectedWeek} />
         </div>
         <div className="panel">
           <h2>Extraction review</h2>
@@ -75,8 +88,8 @@ export default async function ResourcesPage() {
       </section>
 
       <section className="panel resource-library">
-        <div className="section-heading"><div><p className="eyebrow">Archive index</p><h2>Registered resources</h2></div><span>{data.resources.length}</span></div>
-        {data.resources.length ? <div className="resource-list">{data.resources.map((resource) => <article key={resource.id}><div><strong>{resource.title}</strong><span className={`status-pill status-${resource.processing_status}`}>{resource.processing_status.replace("_", " ")}</span></div><p>{courseById.get(resource.course_id) ?? "Course"} · {resource.resource_type.replace("_", " ")} · {resource.source_authority.replace("_", " ")}</p>{resource.drive_url ? <a href={resource.drive_url} target="_blank" rel="noreferrer">Open source file</a> : null}</article>)}</div> : <p className="muted">No course material registered yet.</p>}
+        <div className="section-heading"><div><p className="eyebrow">Source index</p><h2>Registered resources</h2></div><span>{resources.length}</span></div>
+        {resources.length ? <div className="resource-list">{resources.map((resource) => <article key={resource.id}><div><strong>{resource.title}</strong><span className={`status-pill status-${resource.processing_status}`}>{resource.processing_status.replace("_", " ")}</span></div><p>{courseById.get(resource.course_id) ?? "Course"} · {resource.resource_type.replace("_", " ")} · {resource.source_authority.replace("_", " ")}</p>{resource.drive_url ? <a href={resource.drive_url} target="_blank" rel="noreferrer">Open source file</a> : null}</article>)}</div> : <p className="muted">No course material registered yet.</p>}
       </section>
     </main>
   );
