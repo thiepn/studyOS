@@ -27,6 +27,16 @@ export function assessmentReady(result: StudyAttemptResult | null, confidence: n
   return errorTypes.length > 0;
 }
 
+/** No positive self-grade without a rubric or explicit external verification.
+ * A give-up is already zero-credit and needs no solution verification. */
+export function assessmentSourceVerified(
+  hasRubric: boolean,
+  verifiedExternally: boolean,
+  independence: StudyIndependence,
+): boolean {
+  return hasRubric || verifiedExternally || independence === "solution_exposed";
+}
+
 export function resultLabel(result: StudyAttemptResult) {
   if (result === "correct") return "Correct";
   if (result === "partial") return "Partly correct";
