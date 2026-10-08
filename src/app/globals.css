@@ -1234,3 +1234,24 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 @media(prefers-reduced-motion:reduce){
   .math-symbol-row,.math-latex-actions,.study-math-display{scroll-behavior:auto}
 }
+
+/* P36 — Evidence at the precise moment it changes the study decision. */
+.week-practice-qualification{
+  border-left:2px solid var(--line-strong);
+  padding:10px 14px;
+  margin:11px 0 15px;
+  max-width:85ch;
+  color:var(--muted);
+  font-size:.79rem;
+  line-height:1.65;
+  background:var(--sheet-muted);
+}
+.week-practice-qualification a{
+  color:var(--ink);
+  text-decoration:underline;
+  text-underline-offset:3px;
+  font-weight:650;
+}
+@media(max-width:760px){
+  .week-practice-qualification{padding:9px 12px;font-size:.78rem}
+}

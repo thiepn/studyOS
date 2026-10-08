@@ -7,6 +7,7 @@ import type { ReconciliationFinding, SkillOption, WeekActionRow, WeekResource } 
 import { actionDescription, actionLabel, milestoneForAction } from "@/lib/study/workflow-state";
 import { featuredTeachingWeek, orderedTeachingWeeks } from "@/lib/study/week-focus";
 import { canOpenWeekSolutions } from "@/lib/study/course-study-flow";
+import { weekPracticeNextStep, type WeekPracticeAvailability } from "@/lib/study/week-qualification";
 
 const ERROR_OPTIONS = [
   ["concept","Concept"],["recall","Recall"],["recognition","Recognition"],["method_selection","Method choice"],
@@ -22,13 +23,14 @@ function resourceLabel(type: string) {
 }
 
 export function WeekWorkflowPanel({
-  courseId, weeks, findings, skills, resources,
+  courseId, weeks, findings, skills, resources, weekPractice,
 }: {
   courseId: string;
   weeks: WeekActionRow[];
   findings: ReconciliationFinding[];
   skills: SkillOption[];
   resources: WeekResource[];
+  weekPractice: Record<number,WeekPracticeAvailability>;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState<string | null>(null);
@@ -119,6 +121,8 @@ export function WeekWorkflowPanel({
         const milestone = milestoneForAction(week.next_action);
         const weekFindings = findingsByWeek.get(week.teaching_week_id) ?? [];
         const weekResources = resourcesByWeek.get(week.teaching_week_id) ?? [];
+        const practice=weekPractice[week.week_no];
+        const practiceStep=weekPracticeNextStep(practice,week.skill_count);
         const solutionsVisible=canOpenWeekSolutions(week);
         const hiddenSolutions=weekResources.filter(item=>["solution","exam_solution"].includes(item.resource_type) && !solutionsVisible);
         const visibleResources=weekResources.filter(item=>!hiddenSolutions.includes(item));
@@ -162,6 +166,7 @@ export function WeekWorkflowPanel({
               <span>{week.exercise_count} exercises</span>
               <span>{week.solution_count} solutions</span>
               <span>{week.skill_count} skills</span>
+              <span>{practice?.availableQuestions??0} practice questions ready</span>
               <span>{week.due_skills} due</span>
               <span>{week.open_findings} findings</span>
             </div>
@@ -173,10 +178,18 @@ export function WeekWorkflowPanel({
                   : <span key={resource.id}>{resourceLabel(resource.resource_type)} · {resource.title}</span>)}
               </div>
             ) : null}
+            {practiceStep==="prepare-questions" ? <p className="week-practice-qualification" role="note">
+              This week has skills but no active, approved questions that fit a 35-minute practice session.
+              {practice?.excludedLongQuestions? ` ${practice.excludedLongQuestions} question(s) exceed that window.` : ""}
+              {" "}Review the <Link href={`/resources?course=${courseId}#processing-queue`}>material processing queue</Link> before starting practice.
+            </p> : null}
+            {practiceStep==="practice"&&practice?.withoutRubric ? <p className="week-practice-qualification" role="note">
+              {practice.withoutRubric} question{practice.withoutRubric===1?" has":"s have"} no attached rubric. Use an official or independently verified source before assigning a positive grade.
+            </p> : null}
             {hiddenSolutions.length ? <p className="solution-access-note" role="note">{hiddenSolutions.length} solution file{hiddenSolutions.length===1?" is":"s are"} intentionally hidden. Record your independent exercise attempt first; opening a solution early undermines the evidence. This hides links in StudyOS, not permissions in Drive.</p> : null}
 
             <div className="button-row">
-              {week.skill_count>0 ? <Link className="secondary-button" href={`/practice?mode=week&course=${courseId}&week=${week.week_no}`}>Practice week {week.week_no} skills</Link> : null}
+              {practiceStep==="practice" ? <Link className="secondary-button" href={`/practice?mode=week&course=${courseId}&week=${week.week_no}`}>Practice {practice?.assessedSkills??0} skill{practice?.assessedSkills===1?"":"s"}</Link> : null}
               {week.next_action === "process_material" ? <Link className="primary-button" href={"/resources?course="+courseId+"#processing-queue"}>Process this course’s material</Link> : null}
               {["await_material","await_exercise","await_solution"].includes(week.next_action) ?
                 <Link className="secondary-button" href={`/resources?course=${courseId}&week=${week.week_no}#manual-registration`}>Open week {week.week_no} materials</Link> : null}

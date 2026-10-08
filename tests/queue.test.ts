@@ -40,3 +40,21 @@ test("course selection is applied before the fixed review budget", () => {
   assert.equal(scopeDueSkills(dueSkills).length,2);
   assert.equal(scopeDueSkills(dueSkills,"missing").length,0);
 });
+
+test("a shorter supported DGL derivation is used when the preferred proof exceeds the remaining budget",()=>{
+  const queue=buildReviewQueue([due({skill_id:"dgl",priority_score:10})],[
+    q("long-proof","dgl","execution",45),
+    q("short-derivation","dgl","recognition",12),
+  ],15);
+  assert.equal(queue.length,1);
+  assert.equal(queue[0].question.id,"short-derivation");
+  assert.equal(queueMinutes(queue),12);
+});
+test("retired questions and impossible durations cannot displace an approved answerable problem",()=>{
+  const inactive={...q("inactive","s1","execution",4),active:false};
+  const malformed=q("malformed","s1","execution",NaN);
+  const queue=buildReviewQueue([due()],[
+    inactive,malformed,q("approved","s1","recognition",10),
+  ],15);
+  assert.equal(queue[0]?.question.id,"approved");
+});

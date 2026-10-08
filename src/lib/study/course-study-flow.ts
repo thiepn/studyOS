@@ -36,3 +36,12 @@ export function scopeCourseRecords<T extends {course_id:string | null}>(
 ):T[]{
   return courseId?records.filter(record=>record.course_id===courseId):[...records];
 }
+
+/** An attempted independent checkpoint is evidence of completion, not mastery.
+ * Incorrect and partial attempts still count; hinted/solution-exposed work
+ * does not satisfy a closed-book checkpoint's independent-work requirement. */
+export function hasIndependentCheckpointAttempt(
+  attempts: readonly { independence: string }[],
+): boolean {
+  return attempts.some(attempt=>attempt.independence==="independent");
+}

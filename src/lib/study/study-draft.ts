@@ -41,8 +41,12 @@ export type StudyDraft = {
 export function studyQueueFingerprint(
   sessionType: string, courseId: string | undefined,
   questions: readonly { id: string; prompt: string; answer_key_or_rubric: string | null }[],
+  context="",
 ): string {
-  const source=JSON.stringify([sessionType,courseId??"",questions.map(q=>[q.id,q.prompt,q.answer_key_or_rubric])]);
+  // A course can have the identical selected questions in two teaching weeks
+  // or repairs. Context keeps their in-progress sessions and milestone notes
+  // from being restored into the wrong workflow.
+  const source=JSON.stringify([sessionType,courseId??"",context,questions.map(q=>[q.id,q.prompt,q.answer_key_or_rubric])]);
   let hash=2166136261;
   for(let i=0;i<source.length;i++){
     hash^=source.charCodeAt(i);

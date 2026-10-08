@@ -42,3 +42,14 @@ test("rejected drafts cannot change the queue or manufacture a pre-reveal state"
   assert.equal(parseStudyDraft("{invalid",fingerprint,["q1","q2"],now),null);
   assert.equal(parseStudyDraft(null,fingerprint,["q1","q2"],now),null);
 });
+
+test("identical problems in different course weeks or findings never share a saved session",()=>{
+  const week2=studyQueueFingerprint("checkpoint","course",questions,"/courses/course#week-2|[studyos-weekly-checkpoint:course:2]");
+  const week3=studyQueueFingerprint("checkpoint","course",questions,"/courses/course#week-3|[studyos-weekly-checkpoint:course:3]");
+  const repair=studyQueueFingerprint("relearning","course",questions,"/courses/course|Targeted repair for finding 101");
+  const anotherRepair=studyQueueFingerprint("relearning","course",questions,"/courses/course|Targeted repair for finding 102");
+  assert.notEqual(week2,week3);
+  assert.notEqual(repair,anotherRepair);
+  const raw=JSON.stringify({...draft(),fingerprint:week2});
+  assert.equal(parseStudyDraft(raw,week3,["q1","q2"],now),null);
+});

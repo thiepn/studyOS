@@ -689,3 +689,12 @@ See `docs/P30.md` for the visual-system contract and invariants.
 - Work editor adds reusable rendered-math snippets and a derived proof-section outline, without replacing the original text or duplicating saved evidence.
 - Touch-first input buttons, scrolling equations, and narrower layouts improve the phone/tablet workflow.
 - No new runtime dependencies, remote math rendering or data migrations. Version 0.34.0. See `docs/P35.md`.
+
+### P36 — Qualified academic study flow and evidence integrity
+
+- The course binder reports usable approved questions for each teaching week, distinguishes source-backed rubrics from unanswered keys, and avoids links to empty practice sets.
+- Due review and cumulative checkpoints choose the best question that **fits** the study window instead of allowing an oversized problem to suppress a valid shorter option.
+- Weekly checkpoint milestone verification requires fully independent recorded work, not hint-assisted completion.
+- Browser-tab draft identities include the exact teaching week / finding to prevent restoring an unfinished session against a different checkpoint.
+- Tests cover realistic Differentialgleichungen, Stochastik, TI and AMP workflows; live device/browser and production Supabase qualification are still outstanding.
+- Version 0.35.0. See `docs/P36.md`.

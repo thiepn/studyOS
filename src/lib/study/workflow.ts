@@ -5,6 +5,7 @@ import { StudyServiceError } from "./errors";
 import type { WeekMilestone } from "./workflow-state";
 import { isCompletedWeeklyCheckpointSession } from "./course-study-flow";
 import { isIndependentRepairEvidence, validFindingSource } from "./repair-policy";
+import { summarizeWeekPractice, type WeekSkillAnchor, type WeekPracticeQuestion } from "./week-qualification";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const ERROR_TYPES = new Set<StudyErrorType>([
@@ -112,15 +113,19 @@ export async function getCourseWorkflow(courseId: string) {
   const { semesterId } = await ensureStudyWorkspace(supabase);
   const db = supabase as any;
 
-  const [configuration, weeks, findings, skills, resources, masterMap] = await Promise.all([
+  const [configuration, weeks, findings, skills, resources, masterMap, weekAnchors, practiceQuestions] = await Promise.all([
     db.from("study_course_configuration").select("*").eq("semester_id", semesterId).eq("course_id", courseId).single(),
     db.from("study_week_actions").select("*").eq("semester_id", semesterId).eq("course_id", courseId).order("week_no", { ascending: false }),
     db.from("study_reconciliation_findings").select("id,teaching_week_id,course_id,skill_id,error_type,title,detail,severity,status,repair_scheduled_at,created_at,exercise_resource_id,solution_resource_id").eq("course_id", courseId).in("status", ["open","repair_scheduled"]).order("created_at", { ascending: false }),
     db.from("study_skills").select("id,title,stable_key").eq("course_id", courseId).eq("active", true).order("title"),
     db.from("study_resources").select("id,teaching_week_id,resource_type,title,drive_url,processing_status").eq("course_id", courseId).eq("active", true).order("created_at", { ascending: false }),
     db.from("study_course_master_map").select("*").eq("semester_id", semesterId).eq("course_id", courseId).order("first_week_no", { ascending: true, nullsFirst: false }).order("topic_title"),
+    db.from("study_skill_retention_diagnostics").select("skill_id,first_week_no")
+      .eq("semester_id",semesterId).eq("course_id",courseId),
+    db.from("study_questions").select("id,primary_skill_id,expected_minutes,active,answer_key_or_rubric")
+      .eq("course_id",courseId).eq("active",true),
   ]);
-  const error = configuration.error || weeks.error || findings.error || skills.error || resources.error || masterMap.error;
+  const error = configuration.error || weeks.error || findings.error || skills.error || resources.error || masterMap.error || weekAnchors.error || practiceQuestions.error;
   if (error) throw new StudyServiceError("Could not load course workflow", error.code || "course_workflow_read_failed", error);
 
   return {
@@ -130,6 +135,10 @@ export async function getCourseWorkflow(courseId: string) {
     skills: (skills.data ?? []) as SkillOption[],
     resources: (resources.data ?? []) as WeekResource[],
     masterMap: (masterMap.data ?? []) as CourseMasterMapRow[],
+    weekPractice: summarizeWeekPractice(
+      (weekAnchors.data??[]) as WeekSkillAnchor[],
+      (practiceQuestions.data??[]) as WeekPracticeQuestion[],
+    ),
   };
 }
 
@@ -222,10 +231,10 @@ export async function markWeekMilestone(courseId: string, input: ReturnType<type
     }
     const attemptsResult=await db.from("study_attempts").select("id")
       .in("session_id",matching.map((session:{id:string})=>session.id))
-      .neq("independence","solution_exposed").limit(1);
+      .eq("independence","independent").limit(1);
     if(attemptsResult.error)throw new StudyServiceError("Could not verify checkpoint attempts",attemptsResult.error.code||"checkpoint_evidence_failed",attemptsResult.error);
     if(!attemptsResult.data?.length) {
-      throw new StudyServiceError("The checkpoint needs at least one saved, non-solution-exposed attempt. Finish syncing any offline attempts first.","checkpoint_session_required");
+      throw new StudyServiceError("The checkpoint needs at least one saved, fully independent attempt. Hint-assisted and offline-pending attempts cannot certify this checkpoint.","checkpoint_session_required");
     }
   }
   const { data, error } = await (supabase.rpc as any)("study_mark_week_milestone", {
