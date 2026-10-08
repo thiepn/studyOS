@@ -231,10 +231,10 @@ export async function markWeekMilestone(courseId: string, input: ReturnType<type
     }
     const attemptsResult=await db.from("study_attempts").select("id")
       .in("session_id",matching.map((session:{id:string})=>session.id))
-      .neq("independence","solution_exposed").limit(1);
+      .eq("independence","independent").limit(1);
     if(attemptsResult.error)throw new StudyServiceError("Could not verify checkpoint attempts",attemptsResult.error.code||"checkpoint_evidence_failed",attemptsResult.error);
     if(!attemptsResult.data?.length) {
-      throw new StudyServiceError("The checkpoint needs at least one saved, non-solution-exposed attempt. Finish syncing any offline attempts first.","checkpoint_session_required");
+      throw new StudyServiceError("The checkpoint needs at least one saved, fully independent attempt. Hint-assisted and offline-pending attempts cannot certify this checkpoint.","checkpoint_session_required");
     }
   }
   const { data, error } = await (supabase.rpc as any)("study_mark_week_milestone", {
