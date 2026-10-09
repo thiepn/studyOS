@@ -3,7 +3,7 @@ import { createFolder, listChildren, type DriveFile } from "./client";
 
 import {
   LEGACY_STUDY_DRIVE_ROOT_NAME, STUDY_COURSE_FOLDER_KEYS,
-  STUDY_COURSE_STUDY_COURSE_SUBFOLDERS, STUDY_DRIVE_ROOT_NAME,
+  STUDY_COURSE_SUBFOLDERS, STUDY_DRIVE_ROOT_NAME,
   safeStudyDriveFolderName, studyCourseFolderName,
 } from "./folder-layout";
 
