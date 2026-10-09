@@ -1,6 +1,10 @@
 export class StudyServiceError extends Error {
-  constructor(message: string, readonly code: string, readonly cause?: unknown) {
+  readonly code: string;
+  readonly cause?: unknown;
+  constructor(message: string, code: string, cause?: unknown) {
     super(message);
+    this.code = code;
+    this.cause = cause;
     this.name = "StudyServiceError";
   }
 }
