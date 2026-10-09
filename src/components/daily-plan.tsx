@@ -3,8 +3,8 @@ import type { DailyPlan as DailyPlanType, PlannedItem } from "@/lib/study/planne
 
 function ActionLink({item,label,primary=false}:{item:PlannedItem;label:string;primary?:boolean}){
   const className=primary?"primary-button":"secondary-button";
-  if(item.href.startsWith("http")) return <a className={className} href={item.href} target="_blank" rel="noreferrer">{label}</a>;
-  return <Link className={className} href={item.href}>{label}</Link>;
+  if(item.href.startsWith("http")) return <a className={className} href={item.href} target="_blank" rel="noreferrer" aria-label={`${label}: ${item.title}, ${item.scheduledMinutes} minutes`}>{label}</a>;
+  return <Link className={className} href={item.href} aria-label={`${label}: ${item.title}, ${item.scheduledMinutes} minutes`}>{label}</Link>;
 }
 
 export function DailyPlan({plan}:{plan:DailyPlanType}){
@@ -18,18 +18,18 @@ export function DailyPlan({plan}:{plan:DailyPlanType}){
       <span className="study-budget">{plan.usedMinutes}<small> / {plan.budgetMinutes} min</small></span>
     </div>
 
-    {current ? <article className="now-task">
+    {current ? <article className="now-task" aria-label="First recommended task">
       <div className="now-rail"><span>Now</span><i/></div>
       <div className="now-copy">
         <span className="task-context">{current.courseName??(current.kind==="review"?"All courses":"Semester")}</span>
         <h3>{current.title}</h3>
         <p>{current.reason}</p>
-        <div className="task-meta"><span>{current.scheduledMinutes} min</span>{current.partial?<span>partial block</span>:null}{current.urgent?<span className="urgent-tag">urgent</span>:null}</div>
+        <div className="task-meta"><span>{current.scheduledMinutes} min</span>{current.partial?<span>partial block</span>:null}{current.urgent?<span className="urgent-tag">Urgent priority</span>:null}</div>
       </div>
       <ActionLink item={current} label="Start" primary/>
     </article> : <div className="sequence-empty"><strong>Nothing scheduled.</strong><span>No tasks were selected for this plan. Check your weekly commitment and course materials if you expected work.</span></div>}
 
-    {next.length ? <ol className="next-task-list">{next.map((item,index)=><li key={item.id}>
+    {next.length ? <ol className="next-task-list" aria-label="Upcoming study tasks">{next.map((item,index)=><li key={item.id}>
       <div className="sequence-marker"><span>{index+2}</span><i/></div>
       <div className="next-task-copy">
         <span className="task-context">{item.courseName??(item.kind==="review"?"All courses":"Semester")}</span>

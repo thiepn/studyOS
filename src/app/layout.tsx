@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "./academic-system.css";
 import "./shell.css";
+import "./today-workspace.css";
 
 export const metadata: Metadata = {
   title: "StudyOS",
