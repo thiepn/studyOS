@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Nav } from "@/components/nav";
+import { AcademicPageHeading, AcademicEmptyState } from "@/components/academic-ui";
 import { getTodayData, getWeeklyHealth } from "@/lib/study/queries";
 import { courseInitials, courseToneClass } from "@/lib/study/course-visual";
 
@@ -16,7 +16,8 @@ export default async function CoursesPage() {
 
   return (
     <main className="shell">
-      <header className="header"><div><p className="eyebrow">Active semester</p><h1>Courses</h1></div><Nav /></header>
+      <AcademicPageHeading eyebrow="Active semester" title="Courses" detail="Your course binders, teaching weeks, and evidence of learning." />
+      {!data.courses.length?<AcademicEmptyState title="No courses in this semester" detail="Add your first course from semester setup. StudyOS will keep its work, resources and practice together." action={<Link href="/semester/bootstrap" className="primary-button">Set up courses</Link>}/>:null}
       <section className="course-stack">
         {data.courses.map((c) => {
           const weeks = (c.course_id ? byCourse.get(c.course_id) : undefined) ?? [];

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Nav } from "@/components/nav";
+import { AcademicPageHeading } from "@/components/academic-ui";
 import { getSemesterPulse, topRiskDrivers } from "@/lib/study/pulse";
 import { getSemesterCalibration } from "@/lib/study/calibration-data";
 import { getSemesterLearningAnalytics } from "@/lib/study/analytics-data";
@@ -17,7 +17,7 @@ export default async function ProgressPage(){
   for(const item of transfer.activeEvaluations)transferByCourse.set(item.courseId,[...(transferByCourse.get(item.courseId)??[]),item]);
   const longitudinalByKey=new Map(transfer.activeProfiles.map((item)=>[item.stableKey,item]));
   return <main className="shell">
-    <header className="header"><div><p className="eyebrow">Longitudinal diagnostics</p><h1>Progress</h1></div><Nav /></header>
+    <AcademicPageHeading eyebrow="Longitudinal diagnostics" title="Progress" detail="Evidence of learning across this semester, not just activity counts." />
 
     <section className="panel progress-summary">
       <div className="section-heading"><div><p className="eyebrow">Current semester</p><h2>At a glance</h2></div><span>{pulse.risks.filter((c)=>c.risk_band==="at_risk"||c.risk_band==="critical").length} high-risk</span></div>

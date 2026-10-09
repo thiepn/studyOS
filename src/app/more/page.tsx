@@ -1,13 +1,10 @@
 import Link from "next/link";
-import { Nav } from "@/components/nav";
+import { AcademicPageHeading } from "@/components/academic-ui";
 import { MORE_SECTIONS } from "@/lib/study/more-navigation";
 
 export default function MorePage(){
   return <main className="shell more-shell">
-    <header className="header">
-      <div><p className="eyebrow">StudyOS / Index</p><h1>More</h1></div>
-      <Nav/>
-    </header>
+    <AcademicPageHeading eyebrow="StudyOS / Index" title="More" detail="All tools beyond the everyday study sequence, organized by purpose." />
     <p className="more-intro">Planning, materials, exam operations, and semester tools. These do not need a permanent place in your daily study view. <Link href="/account">View account and sign-out options →</Link></p>
     <div className="more-directory">
       {MORE_SECTIONS.map(section=><section key={section.title} className="more-section" aria-label={section.title}>
