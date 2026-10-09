@@ -47,7 +47,7 @@ export function DriveControls({ connected, email, inboxUrl, lastScanAt, lastScan
         <button className="primary-button button-reset" type="button" disabled={Boolean(busy)} onClick={() => post("/api/integrations/google-drive/scan")}>{busy?.includes("scan") ? "Scanning…" : "Scan Drive now"}</button>
         {inboxUrl ? <a className="secondary-button" href={inboxUrl} target="_blank" rel="noreferrer">Open Drive inbox</a> : null}
         <button className="secondary-button button-reset" type="button" disabled={Boolean(busy)} onClick={() => post("/api/integrations/google-drive/disconnect")}>{busy?.includes("disconnect") ? "Disconnecting…" : "Disconnect"}</button>
-        <a className="secondary-button" href="/api/integrations/google-drive/start">Switch account</a>
+        <a className="secondary-button" href="/account">Switch account safely</a>
       </div>
       {message ? <p className="form-message" role="status">{message}</p> : null}
     </div>

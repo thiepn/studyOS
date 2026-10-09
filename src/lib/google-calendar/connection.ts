@@ -36,6 +36,12 @@ export async function saveCalendarConnection(input:{userId:string;googleSub:stri
   },{onConflict:"user_id"});
   if(credError)throw new Error("Could not store Calendar credential");
   if(switched){
+    // Preserve the historical commitment row, but prevent deadlines imported
+    // from the previous Google identity from continuing to drive today's plan.
+    const {error:staleCommitments}=await admin.from("study_commitments").update({
+      status:"cancelled",updated_at:now,
+    }).eq("user_id",input.userId).eq("calendar_synced",true).eq("status","open");
+    if(staleCommitments)throw new Error("Could not retire previous Calendar-derived deadlines");
     const {error:e}=await admin.from("study_calendar_events").delete().eq("user_id",input.userId);
     if(e)throw new Error("Could not clear previous Calendar events");
     const {error:s}=await admin.from("study_calendar_sources").delete().eq("user_id",input.userId);

@@ -27,6 +27,7 @@ export function ConnectionActions({service,connected}:{service:Service;connected
   </div>;
   return <div className="study-connection-actions">
     {!confirm?<div className="button-row">
+      <a className="secondary-button" href={endpoint+"/start"}>Reconnect same {label} account</a>
       <button type="button" className="secondary-button button-reset" onClick={()=>setConfirm("switch")}>Switch {label} account</button>
       <button type="button" className="secondary-button button-reset" onClick={()=>setConfirm("disconnect")}>Disconnect {label}</button>
     </div>:<div className="study-connection-confirm">

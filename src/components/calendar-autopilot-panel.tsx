@@ -51,6 +51,7 @@ export function CalendarAutopilotPanel({data}:Props){
   if(!data.connection||data.connection.status!=="connected")return <section className="panel calendar-panel">
     <div className="section-heading"><div><p className="eyebrow">Schedule</p><h2>Study Calendar</h2></div><span>Off</span></div>
     <p>Connect the Google Calendar account you want StudyOS to use. It is a separate OAuth connection from Study Drive and from any Google account connected to ChatGPT.</p>
+    {data.connection?.last_error?<p role="status" className="warning-text">Calendar needs reconnection or recovery. Existing study records are preserved.</p>:null}
     <a className="primary-button" href="/api/integrations/google-calendar/start">Connect Study Calendar</a>
     <p className="muted tiny">Only the primary calendar is selected initially. Other visible calendars remain excluded until you select them here.</p>
   </section>;
@@ -61,7 +62,7 @@ export function CalendarAutopilotPanel({data}:Props){
       <div><strong>{data.connection.google_account_email??"Connected Google account"}</strong><span>{data.connection.last_sync_at?"Last sync "+new Date(data.connection.last_sync_at).toLocaleString():"Not synced yet"}{data.connection.last_sync_status?" · "+data.connection.last_sync_status:""}</span></div>
       <div className="button-row">
         <button className="secondary-button button-reset" disabled={Boolean(busy)} onClick={()=>void post("/api/integrations/google-calendar/sync")}>{busy?.includes("/sync")?"Syncing…":"Sync now"}</button>
-        <a className="secondary-button" href="/api/integrations/google-calendar/start">Switch account</a>
+        <a className="secondary-button" href="/account">Switch account safely</a>
         <button className="secondary-button button-reset" disabled={Boolean(busy)} onClick={()=>void post("/api/integrations/google-calendar/disconnect")}>Disconnect</button>
       </div>
     </div>

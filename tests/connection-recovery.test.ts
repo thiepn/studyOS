@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {connectionView, switchCheck, switchErrorMessage, connectionNotice} from "../src/lib/study/connection-recovery.ts";
+import {connectionView, switchCheck, switchErrorMessage, connectionNotice, assertSwitchAllowed, ConnectionSwitchError} from "../src/lib/study/connection-recovery.ts";
 
 test("Study Drive and Calendar states never assume connector sign-in",()=>{
   assert.equal(connectionView("drive",null).state,"missing");
@@ -28,4 +28,12 @@ test("recovery notices are fixed user-safe messages",()=>{
   assert.match(connectionNotice("drive_confirmation_required")??"",/unchanged/);
   assert.equal(connectionNotice("raw-provider-error"),null);
   assert.equal(connectionNotice(undefined),null);
+});
+
+test("switch guards reject unapproved and unreconciled authorizations before persistence",()=>{
+  assert.throws(()=>assertSwitchAllowed({previousGoogleSub:"one",nextGoogleSub:"two",approved:false}),
+    (e:unknown)=>e instanceof ConnectionSwitchError&&e.reason==="confirmation_required");
+  assert.throws(()=>assertSwitchAllowed({previousGoogleSub:"one",nextGoogleSub:"two",approved:true,pendingCalendarBlocks:1}),
+    (e:unknown)=>e instanceof ConnectionSwitchError&&e.reason==="calendar_blocks_pending");
+  assert.doesNotThrow(()=>assertSwitchAllowed({previousGoogleSub:"one",nextGoogleSub:"one",approved:false,pendingCalendarBlocks:1}));
 });
