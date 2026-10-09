@@ -15,10 +15,11 @@ const PRIMARY=[
 export function Nav() {
   const path=usePathname();
   return (
-    <nav className="nav" aria-label="Primary">
+    <nav className="nav academic-nav" aria-label="Primary navigation">
       <div className="nav-primary">
         {PRIMARY.map(item=><Link key={item.href} href={item.href} aria-current={item.match(path)?"page":undefined} className={item.match(path)?"active":undefined}>{item.label}</Link>)}
         <Link href="/more" aria-current={isMorePath(path)?"page":undefined} className={isMorePath(path)?"active":undefined}>More</Link>
+        <Link href="/account" aria-current={path==="/account"?"page":undefined} className="academic-nav__account">Account</Link>
       </div>
       <StudySyncBridge />
     </nav>
