@@ -1,4 +1,4 @@
-import { StudyServiceError } from "./errors";
+import { StudyServiceError } from "./errors.ts";
 
 /** Only validation and authentication errors are safe to disclose to clients. */
 export function studyAttemptFailure(error: unknown): { status: number; message: string } {
