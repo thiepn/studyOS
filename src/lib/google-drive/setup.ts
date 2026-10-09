@@ -1,13 +1,13 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createFolder, listChildren, type DriveFile } from "./client";
 
-const FOLDER_MIME = "application/vnd.google-apps.folder";
-const SUBFOLDERS = ["00_COURSE", "01_WEEKS", "90_ALTKLAUSUREN", "91_SCRIPT", "92_REFERENCE", "99_SYSTEM"] as const;
-const MAP_KEYS = ["course", "weeks", "exams", "script", "reference", "system"] as const;
+import {
+  LEGACY_STUDY_DRIVE_ROOT_NAME, STUDY_COURSE_FOLDER_KEYS,
+  STUDY_COURSE_STUDY_COURSE_SUBFOLDERS, STUDY_DRIVE_ROOT_NAME,
+  safeStudyDriveFolderName, studyCourseFolderName,
+} from "./folder-layout";
 
-function safeFolderName(value:string){
-  return value.replaceAll("/","-").replaceAll("\\","-").trim().slice(0,120)||"Semester";
-}
+const FOLDER_MIME = "application/vnd.google-apps.folder";
 function folderNamed(files:DriveFile[],name:string){
   return files.find(file=>file.mimeType===FOLDER_MIME&&file.name===name)??null;
 }
@@ -34,10 +34,10 @@ export async function createSemesterDriveTree(userId: string, accessToken: strin
     root={id:connection.root_folder_id,webViewLink:connection.root_folder_url??undefined};
   }else{
     const topLevel=await listChildren(accessToken,"root");
-    root=folderNamed(topLevel,"StudyOS")??folderNamed(topLevel,"Semester OS")??await createFolder(accessToken,"StudyOS");
+    root=folderNamed(topLevel,STUDY_DRIVE_ROOT_NAME)??folderNamed(topLevel,LEGACY_STUDY_DRIVE_ROOT_NAME)??await createFolder(accessToken,STUDY_DRIVE_ROOT_NAME);
   }
 
-  const semesterName=safeFolderName(semester.display_name);
+  const semesterName=safeStudyDriveFolderName(semester.display_name);
   let semesterFolder:{id:string;webViewLink?:string};
   if(semester.drive_semester_folder_id){
     semesterFolder={id:semester.drive_semester_folder_id,webViewLink:semester.drive_semester_folder_url??undefined};
@@ -71,7 +71,7 @@ export async function createSemesterDriveTree(userId: string, accessToken: strin
     const existingMap=course.drive_folder_map&&typeof course.drive_folder_map==="object"&&!Array.isArray(course.drive_folder_map)
       ?course.drive_folder_map as Record<string,string>
       :{};
-    const courseName=`${String(course.sort_order).padStart(2,"0")}_${safeFolderName(course.display_name)}`;
+    const courseName=studyCourseFolderName(course.sort_order,course.display_name);
     let courseFolder:{id:string;webViewLink?:string};
     if(course.drive_folder_id){
       courseFolder={id:course.drive_folder_id,webViewLink:course.drive_folder_url??undefined};
@@ -88,10 +88,10 @@ export async function createSemesterDriveTree(userId: string, accessToken: strin
 
     const folderMap:Record<string,string>={...existingMap};
     let courseChildren=await listChildren(accessToken,courseFolder.id);
-    for(let i=0;i<SUBFOLDERS.length;i++){
-      const key=MAP_KEYS[i];
+    for(let i=0;i<STUDY_COURSE_SUBFOLDERS.length;i++){
+      const key=STUDY_COURSE_FOLDER_KEYS[i];
       if(folderMap[key])continue;
-      const name=SUBFOLDERS[i];
+      const name=STUDY_COURSE_SUBFOLDERS[i];
       const existing=folderNamed(courseChildren,name);
       const folder=existing??await createFolder(accessToken,name,courseFolder.id);
       folderMap[key]=folder.id;
