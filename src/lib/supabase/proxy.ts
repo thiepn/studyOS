@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { env } from "@/lib/env";
 import { isApiRoute,isPublicHealthRoute } from "@/lib/study/api-boundary";
 import { safeStudyReturnPath } from "@/lib/study/auth-return";
+import { authenticatedReturnUrl } from "@/lib/study/auth-flow";
 import type { Database } from "./database.types";
 
 const PUBLIC_PREFIXES = ["/login", "/auth/"];
@@ -39,10 +40,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
   if (claims && request.nextUrl.pathname === "/login") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/";
-    url.search = "";
-    return NextResponse.redirect(url);
+    return NextResponse.redirect(authenticatedReturnUrl(env.appOrigin, request.nextUrl.searchParams.get("next")));
   }
   return response;
 }

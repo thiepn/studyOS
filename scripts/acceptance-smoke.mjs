@@ -27,7 +27,7 @@ assert.equal(health.version,expectedVersion,"Health endpoint must report release
 assert.ok(Number.isFinite(Date.parse(health.timestamp)));
 console.log("PASS: health endpoint and real release version");
 
-for(const path of ["/courses","/setup","/setup/platform","/practice?mode=week&week=1"]){
+for(const path of ["/courses","/setup","/setup/platform","/account","/practice?mode=week&week=1"]){
   response=await request(path);
   assert.ok([302,303,307,308].includes(response.status),path+" must redirect unauthenticated users");
   const location=new URL(response.headers.get("location")??"",expectedOrigin);
@@ -37,8 +37,25 @@ for(const path of ["/courses","/setup","/setup/platform","/practice?mode=week&we
 }
 response=await request("/login");
 assert.equal(response.status,200);
-assert.ok((await response.text()).includes("StudyOS"));
-console.log("PASS: login page publicly renders");
+const loginHtml=await response.text();
+assert.ok(loginHtml.includes("StudyOS"));
+assert.ok(loginHtml.includes("Continue with Google"),"Sign-in action must be visible");
+assert.ok(loginHtml.includes("THIEPN ACCOUNT"),"Shared-account identity must be explained");
+console.log("PASS: responsive StudyOS sign-in view publicly renders");
+
+response=await request("/login?error=oauth_callback&next=%2Fpractice%3Fmode%3Dweek");
+assert.equal(response.status,200);
+const retryHtml=await response.text();
+assert.ok(retryHtml.includes("The sign-in link has expired"),"Callback failures must be recoverable");
+assert.ok(retryHtml.includes("name=\"next\""),"Retry must preserve safe navigation context");
+console.log("PASS: safe callback error and retry state");
+
+response=await request("/auth/signout",{
+  method:"POST",headers:{origin:"https://attacker.example"},
+});
+assert.equal(response.status,403,"Cross-origin sign-out must be refused");
+assert.ok((response.headers.get("cache-control")??"").includes("no-store"));
+console.log("PASS: cross-origin sign-out rejected");
 
 for(const path of ["/api/study/attempt","/api/study/session/start","/api/study/session/finish","/api/study/courses/550e8400-e29b-41d4-a716-446655440000/milestone"]){
   response=await request(path,{
