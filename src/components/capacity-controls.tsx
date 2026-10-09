@@ -46,7 +46,7 @@ export function CapacityControls({capacity,defaultMode}:{capacity:CurrentCapacit
     <div className="capacity-mode-grid">{MODES.map((item)=>{
       const selected=capacity.mode===item.mode;
       const minutes=item.mode==="normal"?capacity.normal_budget_minutes:item.mode==="light"?capacity.light_budget_minutes:item.mode==="recovery"?capacity.recovery_budget_minutes:capacity.intensive_budget_minutes;
-      return <button key={item.mode} type="button" className={selected?"capacity-mode selected":"capacity-mode"} disabled={busy} onClick={()=>void setMode(item.mode)}>
+      return <button key={item.mode} type="button" className={selected?"capacity-mode selected":"capacity-mode"} aria-pressed={selected} disabled={busy} onClick={()=>void setMode(item.mode)}>
         <strong>{item.label}</strong><span>{minutes} min</span><small>{item.description}</small>
       </button>;
     })}</div>
@@ -68,6 +68,6 @@ export function CapacityControls({capacity,defaultMode}:{capacity:CurrentCapacit
         <button className="secondary-button button-reset" type="submit" disabled={busy}>Save defaults</button>
       </form>
     </details>
-    {message?<p className="form-message" role="status">{message}</p>:null}
+    {message?<p className="form-message" role="status" aria-live="polite">{message}</p>:null}
   </section>;
 }

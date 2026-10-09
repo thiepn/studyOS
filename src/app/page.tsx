@@ -2,6 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Nav } from "@/components/nav";
 import { DailyPlan } from "@/components/daily-plan";
+import { TodayOverview } from "@/components/today-overview";
+import { buildTodayOverview } from "@/lib/study/today-overview";
 import { CapacityControls } from "@/components/capacity-controls";
 import { CommitmentsPanel } from "@/components/commitments-panel";
 import { CalendarAutopilotPanel } from "@/components/calendar-autopilot-panel";
@@ -36,6 +38,7 @@ export default async function TodayPage() {
   const orchestration=await getDailyOrchestration();
   const calendar=await getCalendarAutopilot(orchestration);
   const {today:data,pulse,capacity,plan,commitments,courses,settings}=orchestration;
+  const overview=buildTodayOverview(plan,data.queueMinutes,commitments,new Date());
 
   const topRisk=pulse.risks[0]??null;
   const checkpoint=pulse.checkpoint;
@@ -88,11 +91,7 @@ export default async function TodayPage() {
         <Nav semesterName={workspace.activeSemester.display_name} />
       </header>
 
-      <p className="today-briefline" aria-label="Today's study context">
-        <span><strong>{capacity.mode.replace("_"," ")} day</strong></span>
-        <span>{data.queueMinutes} min of reviews due</span>
-        <span>{weekRuntime?weekRuntime.progress.completionPercent+"% of weekly commitment complete":"Weekly plan not yet committed"}</span>
-      </p>
+      <TodayOverview data={overview} mode={capacity.mode} weekPercent={weekRuntime?.progress.completionPercent??null}/>
 
       {!orchestration.bootstrapCertified ? <section className="workflow-notice workflow-notice-required">
         <div><span className="notice-label">Setup required</span><strong>Finish the semester setup before StudyOS schedules normal course work.</strong><p>Your real deadlines remain visible; generated discretionary study work stays paused until the curriculum is anchored.</p></div>
@@ -122,8 +121,8 @@ export default async function TodayPage() {
 
       <DailyPlan plan={plan}/>
 
-      <section className="after-plan">
-        <div className="after-plan-heading"><span className="section-kicker">Changes & exceptions</span><h2>Only what needs a decision.</h2></div>
+      <section className="after-plan" id="today-decisions" aria-labelledby="today-decisions-heading">
+        <div className="after-plan-heading"><span className="section-kicker">Changes & exceptions</span><h2 id="today-decisions-heading">Only what needs a decision.</h2></div>
         <div className="signal-list">
           {weekRuntime ? (weekConcern&&(weekConcern.paceStatus==="behind"||weekConcern.paceStatus==="not_started") ? <Link href="/week" className={"signal-row signal-"+weekConcern.paceStatus}>
             <div><span>Weekly commitment</span><strong>{weekConcern.shortName??weekConcern.displayName} needs attention</strong></div>
@@ -148,12 +147,12 @@ export default async function TodayPage() {
       </section>
 
       <details className="today-drawer">
-        <summary><span><strong>Schedule & deadlines</strong><small>Calendar placement, commitments, and due dates</small></span><b>Open</b></summary>
+        <summary id="today-schedule"><span><strong>Schedule & deadlines</strong><small>Calendar placement, commitments, and due dates</small></span><b>Open</b></summary>
         <div className="today-drawer-body"><CalendarAutopilotPanel data={calendar}/><CommitmentsPanel commitments={commitments} courses={courses}/></div>
       </details>
 
       <details className="today-drawer">
-        <summary><span><strong>Adjust today</strong><small>Change capacity only when the day itself changed</small></span><b>Open</b></summary>
+        <summary id="today-adjust"><span><strong>Adjust today</strong><small>Change capacity only when the day itself changed</small></span><b>Open</b></summary>
         <div className="today-drawer-body"><CapacityControls capacity={capacity} defaultMode={defaultMode}/></div>
       </details>
     </main>
