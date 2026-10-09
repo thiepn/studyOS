@@ -34,7 +34,18 @@ export async function refreshDriveAccessToken(userId: string) {
     }),
     cache: "no-store",
   });
-  if (!response.ok) throw new Error(`Google token refresh failed (${response.status})`);
+  if(!response.ok){
+    const failure=await response.json().catch(()=>null) as {error?:string}|null;
+    if(failure?.error==="invalid_grant"){
+      const {error:stateError}=await admin.from("study_drive_connections").update({
+        status:"error",last_error:"Google Drive authorization has expired or was revoked. Reconnect Drive.",
+        updated_at:new Date().toISOString(),
+      }).eq("user_id",userId);
+      if(stateError)throw new Error("Could not record expired Google Drive authorization");
+      throw new Error("Google Drive authorization expired or was revoked. Reconnect Drive.");
+    }
+    throw new Error(`Google Drive token refresh failed (${response.status})`);
+  }
   const payload = await response.json() as { access_token: string };
   return payload.access_token;
 }

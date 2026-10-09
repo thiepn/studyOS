@@ -1,14 +1,12 @@
 import { createHash, randomBytes } from "node:crypto";
 import { requireDriveServerEnv } from "@/lib/env";
 
-import { DRIVE_FILE_SCOPE } from "./scope-validation";
-export { DRIVE_FILE_SCOPE } from "./scope-validation";
-export const DRIVE_READONLY_SCOPE = "https://www.googleapis.com/auth/drive.readonly";
-const IDENTITY_SCOPES = ["openid", "email", "profile"];
-
+import { requestedDriveScopes, parseDriveAboutIdentity } from "./scope-validation";
+export { DRIVE_FILE_SCOPE, DRIVE_READONLY_SCOPE } from "./scope-validation";
 export function driveScopes() {
   const { scopeMode } = requireDriveServerEnv();
-  return [...IDENTITY_SCOPES, DRIVE_FILE_SCOPE, ...(scopeMode === "readonly" ? [DRIVE_READONLY_SCOPE] : [])];
+  // No OIDC scopes required: Drive about.get provides account identity.
+  return requestedDriveScopes(scopeMode);
 }
 
 export function createOAuthState() {
@@ -26,7 +24,6 @@ export function authorizationUrl(state: string, challenge: string) {
     response_type: "code",
     scope: driveScopes().join(" "),
     access_type: "offline",
-    include_granted_scopes: "true",
     prompt: "consent select_account",
     state,
     code_challenge: challenge,
@@ -50,10 +47,16 @@ export async function exchangeCode(code: string, verifier: string) {
   return response.json() as Promise<{ access_token: string; refresh_token?: string; expires_in: number; scope?: string; token_type: string; id_token?: string }>;
 }
 
-export async function fetchGoogleIdentity(accessToken: string) {
-  const response = await fetch("https://openidconnect.googleapis.com/v1/userinfo", {
-    headers: { authorization: `Bearer ${accessToken}` }, cache: "no-store",
-  });
-  if (!response.ok) throw new Error(`Google userinfo failed (${response.status})`);
-  return response.json() as Promise<{ sub: string; email?: string; name?: string }>;
+/** Google Drive's about.get supports drive.file without OIDC scopes.
+ * permissionId is a stable Drive-account identifier, not a Google OIDC sub.
+ * The prefix prevents confusing different identifier namespaces.
+ */
+export async function fetchDriveAccountIdentity(accessToken: string) {
+  const response = await fetch(
+    "https://www.googleapis.com/drive/v3/about?fields=user(permissionId,emailAddress)",
+    { headers: { authorization: `Bearer ${accessToken}` }, cache: "no-store" },
+  );
+  if (!response.ok) throw new Error("Could not identify authorized Google Drive account ("+response.status+")");
+  const data = await response.json() as { user?: { permissionId?:string;emailAddress?:string } };
+  return parseDriveAboutIdentity(data);
 }

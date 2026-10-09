@@ -7,9 +7,10 @@ export async function saveCalendarConnection(input:{userId:string;googleSub:stri
   if(!hasRequiredCalendarScopes(input.scopes))throw new Error("Required Calendar scopes not granted.");
   // Fail before persisting any credentials on insufficient scopes or access.
   const calendars=await listGoogleCalendars(input.accessToken);
-  const writable=calendars.find(c=>c.primary&&["owner","writer"].includes(c.accessRole??""))
-    ??calendars.find(c=>["owner","writer"].includes(c.accessRole??""));
-  if(!writable)throw new Error("No writable Google Calendar was found.");
+  // calendar.events.owned allows edits only on calendars the user owns.
+  const writable=calendars.find(c=>c.primary&&c.accessRole==="owner")
+    ??calendars.find(c=>c.accessRole==="owner");
+  if(!writable)throw new Error("No owned Google Calendar is available for StudyOS event creation.");
   const admin=createAdminClient(),now=new Date().toISOString();
   const {data:previous,error:previousError}=await admin.from("study_calendar_connections")
     .select("google_account_sub").eq("user_id",input.userId).maybeSingle();
@@ -29,7 +30,7 @@ export async function saveCalendarConnection(input:{userId:string;googleSub:stri
   const rows=calendars.map(c=>({
     user_id:input.userId,calendar_id:c.id,summary:c.summary,access_role:c.accessRole??null,
     is_primary:Boolean(c.primary),selected:Boolean(c.primary),
-    writable:["owner","writer"].includes(c.accessRole??""),
+    writable:c.accessRole==="owner",
     timezone:c.timeZone??null,background_color:c.backgroundColor??null,
     last_seen_at:now,updated_at:now,
   }));

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
-import { exchangeCode, fetchGoogleIdentity } from "@/lib/google-drive/oauth";
+import { exchangeCode, fetchDriveAccountIdentity } from "@/lib/google-drive/oauth";
 import { hasGrantedDriveFileScope } from "@/lib/google-drive/scope-validation";
 import { markDriveSetupFailed, saveDriveConnection } from "@/lib/google-drive/connection";
 import { ensureStudyWorkspace } from "@/lib/study/bootstrap";
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     }
     if (!tokens.refresh_token) return finish("no_refresh_token");
 
-    const identity = await fetchGoogleIdentity(tokens.access_token);
+    const identity = await fetchDriveAccountIdentity(tokens.access_token);
     await saveDriveConnection({
       userId, googleSub: identity.sub, email: identity.email,
       scopes: (tokens.scope ?? "").split(/\s+/).filter(Boolean), refreshToken: tokens.refresh_token,

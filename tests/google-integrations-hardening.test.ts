@@ -38,3 +38,12 @@ test("Drive provisioning propagates all database write failures",()=>{
     assert.ok(setup.includes("if("+name+")throw new Error"),"must check "+name);
   }
 });
+
+test("revoked Drive and Calendar refresh tokens mark integration as recoverable error",()=>{
+  for(const provider of ["google-drive","google-calendar"]){
+    const client=read("../src/lib/"+provider+"/client.ts");
+    assert.match(client,/failure\?\.error==="invalid_grant"/);
+    assert.match(client,/status:"error"/);
+    assert.match(client,/Reconnect/);
+  }
+});
