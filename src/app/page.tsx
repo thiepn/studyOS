@@ -85,7 +85,7 @@ export default async function TodayPage() {
           <span className="product-mark">StudyOS</span>
           <div><h1>Today</h1><p>{dayLabel(capacity.local_today)} · Week {Math.max(0,orchestration.currentWeek)}</p></div>
         </div>
-        <Nav />
+        <Nav semesterName={workspace.activeSemester.display_name} />
       </header>
 
       <p className="today-briefline" aria-label="Today's study context">

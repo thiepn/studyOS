@@ -32,7 +32,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
             </p>
           </div>
         </div>
-        <Nav />
+        <Nav courseName={c.display_name} />
       </header>
 
       <div className="button-row course-back-row">
