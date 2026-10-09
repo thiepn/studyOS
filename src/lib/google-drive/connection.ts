@@ -13,10 +13,11 @@ export async function saveDriveConnection(input: {
     throw new Error("Google Drive file-access permission was not granted.");
   }
   const admin = createAdminClient();
-  const { data: existing } = await admin.from("study_drive_connections")
+  const { data: existing, error: existingError } = await admin.from("study_drive_connections")
     .select("google_account_sub")
     .eq("user_id", input.userId)
     .maybeSingle();
+  if (existingError) throw new Error(`Could not inspect existing Drive account: ${existingError.message}`);
   const switchedAccount = Boolean(existing?.google_account_sub && existing.google_account_sub !== input.googleSub);
   const encrypted = encryptRefreshToken(input.refreshToken);
   const now = new Date().toISOString();
