@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { encryptRefreshToken } from "./crypto";
 import { hasGrantedDriveFileScope } from "./scope-validation";
+import { assertSwitchAllowed } from "@/lib/study/connection-recovery";
 
 export async function saveDriveConnection(input: {
   userId: string;
@@ -8,6 +9,7 @@ export async function saveDriveConnection(input: {
   email?: string;
   scopes: string[];
   refreshToken: string;
+  approvedSwitch?: boolean;
 }) {
   if (!hasGrantedDriveFileScope(input.scopes)) {
     throw new Error("Google Drive file-access permission was not granted.");
@@ -18,6 +20,9 @@ export async function saveDriveConnection(input: {
     .eq("user_id", input.userId)
     .maybeSingle();
   if (existingError) throw new Error(`Could not inspect existing Drive account: ${existingError.message}`);
+  // Check BEFORE writing the new credential; direct callers cannot silently change identities.
+  assertSwitchAllowed({previousGoogleSub:existing?.google_account_sub,nextGoogleSub:input.googleSub,
+    approved:input.approvedSwitch === true});
   const switchedAccount = Boolean(existing?.google_account_sub && existing.google_account_sub !== input.googleSub);
   const encrypted = encryptRefreshToken(input.refreshToken);
   const now = new Date().toISOString();

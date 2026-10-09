@@ -69,6 +69,11 @@ for(const path of ["/api/study/attempt","/api/study/session/start","/api/study/s
   assert.equal(payload.error,"Authentication required");
   console.log("PASS: unauthenticated API boundary "+path);
 }
+for(const path of ["/api/study/account/prepare-switch","/api/integrations/google-drive/disconnect","/api/integrations/google-calendar/disconnect"]){
+  const protectedResponse=await request(path,{method:"POST",headers:{origin:"https://attacker.example"}});
+  assert.ok([401,403].includes(protectedResponse.status),path+" must refuse an anonymous or cross-origin mutation");
+  console.log("PASS: unauthorized account mutation denied "+path);
+}
 // With intentionally mismatched local APP_ORIGIN, OAuth must refuse the
 // request rather than creating a Google callback using untrusted Host data.
 response=await request("/auth/google?next=%2F%5Cattacker.example");
