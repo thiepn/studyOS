@@ -44,3 +44,12 @@ test("loading errors and not-found pages share a semantic state system",()=>{
     assert.match(content,/studyos-system-state/);
   }
 });
+
+test("browser artifacts use an exact checkout instead of a synthetic PR merge ref",()=>{
+  const workflow=read("../.github/workflows/ci.yml");
+  const browser=read("../scripts/browser-visual-acceptance.mjs");
+  assert.match(workflow,/ref: \$\{\{ github\.event\.pull_request\.head\.sha \|\| github\.sha \}\}/);
+  assert.match(workflow,/STUDYOS_EXPECTED_SHA:/);
+  assert.match(browser,/execFileSync\("git",\["rev-parse","HEAD"\]/);
+  assert.match(browser,/exactHead!==expected/);
+});

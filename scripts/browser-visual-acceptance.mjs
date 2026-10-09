@@ -6,12 +6,16 @@ import { chromium } from "playwright";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { resolve } from "node:path";
+import { execFileSync } from "node:child_process";
 
 const origin=process.env.ACCEPTANCE_BASE_URL??"http://127.0.0.1:3107";
 const output=resolve(process.env.VISUAL_EVIDENCE_DIR??"evidence/f05-browser");
 await mkdir(output,{recursive:true});
 const browser=await chromium.launch({headless:true,args:["--no-sandbox"]});
-const manifest={phase:"F05",kind:"real-browser-anonymous",origin:"local-built-server",commit:process.env.GITHUB_SHA??"unknown",
+const exactHead=execFileSync("git",["rev-parse","HEAD"],{encoding:"utf8"}).trim();
+const expected=process.env.STUDYOS_EXPECTED_SHA;
+if(expected&&exactHead!==expected)throw Error("Browser evidence checked out "+exactHead+" instead of PR exact head "+expected);
+const manifest={phase:"F05",kind:"real-browser-anonymous",origin:"local-built-server",commit:exactHead,
   browser:browser.version(),files:[],limitations:["Not an authenticated academic-route screenshot","No physical-device or Google OAuth acceptance"]};
 async function evidence(page,name){
   const dest=resolve(output,name+".png");
