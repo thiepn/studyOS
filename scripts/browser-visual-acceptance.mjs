@@ -1,0 +1,66 @@
+/** Real Chromium screenshots against the built server, not synthetic mockups.
+ * CI captures only anonymous login and auth-redirect surfaces. Any private
+ * desktop/mobile dashboard acceptance still requires real consent and review. */
+import assert from "node:assert/strict";
+import { chromium } from "playwright";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { resolve } from "node:path";
+
+const origin=process.env.ACCEPTANCE_BASE_URL??"http://127.0.0.1:3107";
+const output=resolve(process.env.VISUAL_EVIDENCE_DIR??"evidence/f05-browser");
+await mkdir(output,{recursive:true});
+const browser=await chromium.launch({headless:true,args:["--no-sandbox"]});
+const manifest={phase:"F05",kind:"real-browser-anonymous",origin:"local-built-server",commit:process.env.GITHUB_SHA??"unknown",
+  browser:browser.version(),files:[],limitations:["Not an authenticated academic-route screenshot","No physical-device or Google OAuth acceptance"]};
+async function evidence(page,name){
+  const dest=resolve(output,name+".png");
+  await page.screenshot({path:dest,fullPage:true,animations:"disabled"});
+  const bytes=await readFile(dest);
+  manifest.files.push({name:name+".png",width:page.viewportSize()?.width??null,
+    height:page.viewportSize()?.height??null,sha256:createHash("sha256").update(bytes).digest("hex")});
+}
+async function noOverflow(page,name){
+  const dims=await page.evaluate(()=>({viewport:document.documentElement.clientWidth,content:document.documentElement.scrollWidth}));
+  assert.ok(dims.content<=dims.viewport+2,`${name} overflow: ${JSON.stringify(dims)}`);
+}
+async function ready(path){
+  const target=new URL(path,origin).href;
+  for(let n=0;n<35;n++){
+    try{const r=await fetch(target,{redirect:"manual"});if(r.status===200||[302,303,307,308].includes(r.status))return;}
+    catch{}
+    await new Promise(r=>setTimeout(r,500));
+  }
+  throw new Error("Built server not ready for Chromium acceptance");
+}
+try{
+  await ready("/login");
+  const desktop=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1});
+  const response=await desktop.goto(new URL("/login",origin).href,{waitUntil:"networkidle"});
+  assert.equal(response?.status(),200);
+  assert.ok(await desktop.getByRole("heading",{name:"Your study space."}).count());
+  assert.ok(await desktop.getByRole("button",{name:/Continue with Google/}).count());
+  await noOverflow(desktop,"desktop sign-in");
+  await evidence(desktop,"desktop-login-1440");
+  await desktop.keyboard.press("Tab");
+  const focused=await desktop.evaluate(()=>document.activeElement?.tagName??"");
+  assert.notEqual(focused,"BODY","Keyboard Tab must focus a real control");
+  const denied=await desktop.goto(new URL("/login?error=oauth_callback",origin).href,{waitUntil:"networkidle"});
+  assert.equal(denied?.status(),200);
+  assert.ok(await desktop.getByRole("alert").count(),"Recoverable OAuth error must be announced");
+  await evidence(desktop,"desktop-login-recovery-1440");
+  const phone=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});
+  const mobile=await phone.goto(new URL("/login",origin).href,{waitUntil:"networkidle"});
+  assert.equal(mobile?.status(),200);
+  assert.ok(await phone.getByRole("button",{name:/Continue with Google/}).count());
+  await noOverflow(phone,"mobile sign-in");
+  await evidence(phone,"mobile-login-390-dpr2");
+  await phone.goto(new URL("/courses",origin).href,{waitUntil:"networkidle"});
+  assert.equal(new URL(phone.url()).pathname,"/login","Protected courses must redirect to sign-in");
+  assert.equal(new URL(phone.url()).searchParams.get("next"),"/courses");
+  await noOverflow(phone,"protected route mobile redirect");
+  await evidence(phone,"mobile-protected-redirect-390-dpr2");
+  await phone.close();await desktop.close();
+  await writeFile(resolve(output,"manifest.json"),JSON.stringify(manifest,null,2)+"\n");
+  console.log("F05 real Chromium anonymous screenshot acceptance passed:",manifest.files.map(f=>f.name).join(", "));
+}finally{await browser.close();}
