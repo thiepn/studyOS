@@ -8,7 +8,7 @@ export default function MorePage(){
       <div><p className="eyebrow">StudyOS / Index</p><h1>More</h1></div>
       <Nav/>
     </header>
-    <p className="more-intro">Planning, materials, exam operations, and semester tools. These do not need a permanent place in your daily study view.</p>
+    <p className="more-intro">Planning, materials, exam operations, and semester tools. These do not need a permanent place in your daily study view. <Link href="/account">View account and sign-out options →</Link></p>
     <div className="more-directory">
       {MORE_SECTIONS.map(section=><section key={section.title} className="more-section" aria-label={section.title}>
         <div className="more-section-head"><h2>{section.title}</h2><p>{section.description}</p></div>
