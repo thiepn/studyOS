@@ -43,8 +43,11 @@ export function switchCheck(input:{
   return {allowed:true, reason:null};
 }
 export class ConnectionSwitchError extends Error {
-  constructor(readonly reason: "confirmation_required" | "calendar_blocks_pending") {
-    super(switchErrorMessage(reason)); this.name = "ConnectionSwitchError";
+  readonly reason: "confirmation_required" | "calendar_blocks_pending";
+  constructor(reason: "confirmation_required" | "calendar_blocks_pending") {
+    super(switchErrorMessage(reason));
+    this.name = "ConnectionSwitchError";
+    this.reason = reason;
   }
 }
 export function assertSwitchAllowed(input: Parameters<typeof switchCheck>[0]): void {
