@@ -42,6 +42,15 @@ export function switchCheck(input:{
   if ((input.pendingCalendarBlocks ?? 0)>0) return {allowed:false, reason:"calendar_blocks_pending"};
   return {allowed:true, reason:null};
 }
+export class ConnectionSwitchError extends Error {
+  constructor(readonly reason: "confirmation_required" | "calendar_blocks_pending") {
+    super(switchErrorMessage(reason)); this.name = "ConnectionSwitchError";
+  }
+}
+export function assertSwitchAllowed(input: Parameters<typeof switchCheck>[0]): void {
+  const result = switchCheck(input);
+  if (!result.allowed && result.reason) throw new ConnectionSwitchError(result.reason);
+}
 export function switchErrorMessage(reason: "confirmation_required"|"calendar_blocks_pending"): string {
   return reason==="confirmation_required"
     ? "Switching Google accounts requires explicit confirmation in StudyOS Account."

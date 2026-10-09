@@ -7,6 +7,8 @@ import { markDriveSetupFailed, saveDriveConnection } from "@/lib/google-drive/co
 import { ensureStudyWorkspace } from "@/lib/study/bootstrap";
 import { createSemesterDriveTree } from "@/lib/google-drive/setup";
 import { env } from "@/lib/env";
+import { isQualifiedAppOrigin } from "@/lib/study/origin-qualification";
+import { ConnectionSwitchError } from "@/lib/study/connection-recovery";
 
 function finish(reason: string) {
   return NextResponse.redirect(env.appOrigin + "/resources?drive=" + reason);
@@ -16,12 +18,16 @@ function finish(reason: string) {
  * with a now-consumed single-use Google authorization code. */
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
+  if(!isQualifiedAppOrigin(env.appOrigin,env.deploymentEnv)||url.origin!==env.appOrigin)
+    return NextResponse.redirect(new URL("/login?error=oauth_origin",url.origin));
   const code = url.searchParams.get("code");
   const state = url.searchParams.get("state");
   const error = url.searchParams.get("error");
   const store = await cookies();
   const expectedState = store.get("study_drive_oauth_state")?.value;
   const verifier = store.get("study_drive_pkce")?.value;
+  const switchIntent = store.get("study_drive_switch_intent")?.value;
+  store.delete("study_drive_switch_intent");
   store.delete("study_drive_oauth_state");
   store.delete("study_drive_pkce");
 
@@ -51,6 +57,7 @@ export async function GET(request: NextRequest) {
     await saveDriveConnection({
       userId, googleSub: identity.sub, email: identity.email,
       scopes: (tokens.scope ?? "").split(/\s+/).filter(Boolean), refreshToken: tokens.refresh_token,
+      approvedSwitch: switchIntent === userId,
     });
 
     try {
@@ -63,6 +70,9 @@ export async function GET(request: NextRequest) {
     }
     return finish("connected");
   } catch (callbackError) {
+    if (callbackError instanceof ConnectionSwitchError) {
+      return NextResponse.redirect(new URL("/account?notice=drive_confirmation_required", env.appOrigin));
+    }
     console.error("[Study Drive OAuth] callback:", callbackError instanceof Error ? callbackError.message : "unknown");
     return finish("callback_failed");
   }

@@ -7,15 +7,21 @@ import { saveCalendarConnection } from "@/lib/google-calendar/connection";
 import { syncStudyCalendar } from "@/lib/google-calendar/sync";
 import { ensureStudyWorkspace } from "@/lib/study/bootstrap";
 import { env } from "@/lib/env";
+import { isQualifiedAppOrigin } from "@/lib/study/origin-qualification";
+import { ConnectionSwitchError } from "@/lib/study/connection-recovery";
 
 function finish(reason:string){return NextResponse.redirect(env.appOrigin+"/setup/platform?calendar="+reason);}
 
 export async function GET(request:NextRequest){
   const url=new URL(request.url);
+  if(!isQualifiedAppOrigin(env.appOrigin,env.deploymentEnv)||url.origin!==env.appOrigin)
+    return NextResponse.redirect(new URL("/login?error=oauth_origin",url.origin));
   const code=url.searchParams.get("code"),state=url.searchParams.get("state"),oauthError=url.searchParams.get("error");
   const store=await cookies();
   const expectedState=store.get("study_calendar_oauth_state")?.value;
   const verifier=store.get("study_calendar_pkce")?.value;
+  const switchIntent=store.get("study_calendar_switch_intent")?.value;
+  store.delete("study_calendar_switch_intent");
   store.delete("study_calendar_oauth_state");store.delete("study_calendar_pkce");
   if(oauthError)return finish(oauthError==="access_denied"?"permission_denied":"oauth_error");
   if(!code||!state||!expectedState||state!==expectedState||!verifier)return finish("oauth_error");
@@ -32,6 +38,7 @@ export async function GET(request:NextRequest){
       userId,googleSub:identity.sub,email:identity.email,
       scopes:(tokens.scope??"").split(/\s+/).filter(Boolean),
       refreshToken:tokens.refresh_token,accessToken:tokens.access_token,
+      approvedSwitch:switchIntent===userId,
     });
     try{await syncStudyCalendar(userId);}
     catch(e){
@@ -40,6 +47,10 @@ export async function GET(request:NextRequest){
     }
     return finish("connected");
   }catch(e){
+    if(e instanceof ConnectionSwitchError){
+      const notice=e.reason==="calendar_blocks_pending"?"calendar_blocks_pending":"calendar_confirmation_required";
+      return NextResponse.redirect(new URL("/account?notice="+notice,env.appOrigin));
+    }
     console.error("[Study Calendar] callback failed:",e instanceof Error?e.message:"unknown");
     return finish("setup_error");
   }
