@@ -7,6 +7,7 @@ const exact:Record<string,StudyRouteContext>={
   "/progress":{current:"Progress"},
   "/more":{current:"More"},
   "/account":{current:"Account"},
+  "/account/connections":{current:"Account connections",parent:{label:"Account",href:"/account"}},
   "/resources":{current:"Resources",parent:{label:"More",href:"/more"}},
   "/week":{current:"This week",parent:{label:"More",href:"/more"}},
   "/handoff":{current:"Weekly review",parent:{label:"More",href:"/more"}},
@@ -31,6 +32,8 @@ export function getStudyRouteContext(path:string,courseName?:string):StudyRouteC
     return {current:courseName?.trim()||"Course binder",parent:{label:"Courses",href:"/courses"}};
   if(/^\/diagnostics\/[^/]+$/.test(clean))
     return {current:"Course diagnostic",parent:{label:"Courses",href:"/courses"}};
+  if(clean.startsWith("/account/"))
+    return {current:"Account settings",parent:{label:"Account",href:"/account"}};
   if(clean.startsWith("/practice/"))
     return {current:"Study session",parent:{label:"Study",href:"/practice"}};
   if(clean.startsWith("/semester/archive/"))

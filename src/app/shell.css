@@ -77,3 +77,10 @@
 @media(prefers-reduced-motion:reduce) {
   .academic-mobile-chevron,.studyos-skip-link { transition:none; }
 }
+
+/* F12: navigation shortcuts are destinations, not claims about the current owner. */
+.academic-context-actions{display:flex;align-items:center;gap:9px 15px;flex-wrap:wrap;margin-left:12px}
+.academic-context-actions a{font-size:.71rem;display:inline-flex;align-items:center;min-height:44px;font-weight:750;color:var(--academic-accent);text-underline-offset:3px}
+.academic-context-actions a:focus-visible{outline:2px solid var(--academic-focus);outline-offset:2px}
+@media(max-width:650px){.academic-context-actions{width:100%;margin-left:0;border-top:1px solid var(--academic-rule);padding-top:4px;justify-content:flex-start}}
+@media(forced-colors:active){.academic-context-actions a:focus-visible{outline-color:Highlight}}

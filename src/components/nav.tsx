@@ -57,7 +57,11 @@ export function Nav({courseName,semesterName}:{courseName?:string;semesterName?:
       {context.parent?<><span aria-hidden="true">/</span><Link href={context.parent.href}>{context.parent.label}</Link></>:null}
       <span aria-hidden="true">/</span>
       <strong aria-current="location">{context.current}</strong>
-      {semesterName?<span className="academic-semester-context">{semesterName}</span>:null}
+      {semesterName?<span className="academic-semester-context" title="Active semester, verified by this page">{semesterName}</span>:null}
+      <div className="academic-context-actions">
+        <Link href="/semester/bootstrap" aria-label="Manage active semester setup">Semester setup</Link>
+        <Link href="/semesters" aria-label="Browse active and archived semesters">History</Link>
+      </div>
     </div>
   </div>;
 }

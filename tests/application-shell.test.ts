@@ -53,3 +53,13 @@ test("browser artifacts use an exact checkout instead of a synthetic PR merge re
   assert.match(browser,/execFileSync\("git",\["rev-parse","HEAD"\]/);
   assert.match(browser,/exactHead!==expected/);
 });
+
+test("account context and semester navigation destinations do not claim URL-derived ownership",()=>{
+  assert.equal(getStudyRouteContext("/account/unknown").parent?.href,"/account");
+  const nav=read("../src/components/nav.tsx");
+  assert.match(nav,/href="\/semester\/bootstrap" aria-label="Manage active semester setup"/);
+  assert.match(nav,/href="\/semesters" aria-label="Browse active and archived semesters"/);
+  const css=read("../src/app/shell.css");
+  assert.match(css,/\.academic-context-actions a:focus-visible/);
+  assert.match(css,/@media\(max-width:650px\)/);
+});
