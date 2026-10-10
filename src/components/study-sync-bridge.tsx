@@ -16,9 +16,13 @@ export function StudySyncBridge() {
   const sync = useCallback(async () => {
     if (typeof navigator !== "undefined" && !navigator.onLine) { await refreshCount(); return; }
     setSyncing(true);
+    const startingOwner=await currentPendingOwner();
     try {
+      if(!startingOwner)return;
       await flushPendingSessionStarts();
+      if(await currentPendingOwner()!==startingOwner)return;
       await flushPendingAttempts();
+      if(await currentPendingOwner()!==startingOwner)return;
       await flushPendingSessionFinishes();
     } finally {
       setSyncing(false);
@@ -33,9 +37,12 @@ export function StudySyncBridge() {
     const changed = () => {void refreshCount();};
     window.addEventListener("online", online);
     window.addEventListener(STUDY_SYNC_CHANGE_EVENT, changed);
+    const storageChanged=(event:StorageEvent)=>{if(event.key?.startsWith("semester-os:pending-"))changed();};
+    window.addEventListener("storage",storageChanged);
     return () => {
       window.removeEventListener("online", online);
       window.removeEventListener(STUDY_SYNC_CHANGE_EVENT, changed);
+      window.removeEventListener("storage",storageChanged);
     };
   }, [refreshCount, sync]);
 

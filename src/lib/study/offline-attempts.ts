@@ -29,9 +29,10 @@ export function enqueueAttempt(input: AttemptInput, ownerId: string): PendingAtt
   return pending;
 }
 
-export function removePendingAttempt(clientId: string) {
+export function removePendingAttempt(clientId: string,ownerId?:string) {
   if (!storageAvailable()) return;
-  localStorage.setItem(KEY, JSON.stringify(listPendingAttempts().filter((attempt) => attempt.clientId !== clientId)));
+  localStorage.setItem(KEY, JSON.stringify(listPendingAttempts().filter((attempt) =>
+    attempt.clientId !== clientId || (ownerId!=null&&attempt.ownerId!==ownerId))));
   changed();
 }
 
@@ -62,9 +63,14 @@ export async function flushPendingAttempts() {
   const results: { clientId: string; ok: boolean }[] = [];
   for (const attempt of queue) {
     try {
+      // Re-authentication in another tab or browser session must stop before each POST.
+      if(await currentPendingOwner()!==ownerId||!canReplayPending(attempt.ownerId,ownerId))break;
       const response = await postAttempt(attempt);
       await readStudyMutationResponse(response);
-      removePendingAttempt(attempt.clientId);
+      // A server acknowledgment obtained across an account change is ambiguous:
+      // keep the item for same-owner reconciliation rather than deleting evidence.
+      if(await currentPendingOwner()!==ownerId)break;
+      removePendingAttempt(attempt.clientId,ownerId);
       results.push({ clientId: attempt.clientId, ok: true });
     } catch(error) {
       results.push({clientId:attempt.clientId,ok:false});
