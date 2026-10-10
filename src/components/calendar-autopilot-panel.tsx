@@ -95,7 +95,7 @@ export function CalendarAutopilotPanel({data}:Props){
             <span>I reviewed today's proposed blocks and authorize creating these busy events in my connected Google Calendar.</span>
           </label>:<p className="calendar-evidence-notice" role="note">Calendar write preparation is paused. Sync successfully to review fresh free/busy evidence before committing events.</p>}
           <button className="primary-button button-reset" type="button" disabled={Boolean(busy)||!commitEligible||!commitConfirmed}
-            onClick={()=>void post("/api/study/calendar/commit")}>
+            onClick={()=>void post("/api/study/calendar/commit",{confirmed:true})}>
             {busy?.includes("/commit")?"Creating events…":"Create reviewed Calendar events"}
           </button>
           <small>This creates external events. A proposal and an acknowledgment are not a successful Google Calendar write; partial failures remain explicit.</small>

@@ -6,6 +6,7 @@ import { clipFreeWindowsAfter, computeFreeWindows, freeMinutes, schedulePlanInto
 import { refreshCalendarAccessToken, insertGoogleCalendarEvent, deleteGoogleCalendarEvent } from "@/lib/google-calendar/client";
 import { env } from "@/lib/env";
 import { StudyServiceError } from "./errors";
+import { calendarWriteAdmission } from "./calendar-write-guard";
 
 type Orchestration=Awaited<ReturnType<typeof getDailyOrchestration>>;
 export type CalendarSourceRow={calendar_id:string;summary:string;access_role:string|null;is_primary:boolean;selected:boolean;writable:boolean;timezone:string|null;background_color:string|null};
@@ -139,11 +140,20 @@ export async function getCalendarRunwayForRange(startDate:string,days:number,orc
 export async function updateCalendarSources(selectedIds:string[]){
   const supabase=await createClient(); const {data}=await supabase.auth.getClaims(); const userId=data?.claims?.sub?String(data.claims.sub):null;
   if(!userId)throw new StudyServiceError("Authentication required","auth_required");
-  const db=supabase as any; const {data:rows,error}=await db.from("study_calendar_sources").select("calendar_id").eq("user_id",userId);
+  const db=supabase as any; const {data:rows,error}=await db.from("study_calendar_sources").select("calendar_id,selected").eq("user_id",userId);
   if(error)throw new StudyServiceError("Could not read calendars",error.code||"calendar_sources_failed",error);
   const allowed=new Set((rows??[]).map((r:any)=>String(r.calendar_id))); if(selectedIds.some(id=>!allowed.has(id)))throw new StudyServiceError("Unknown calendar source","invalid_calendar_source");
+  const changed=(rows??[]).some((row:any)=>Boolean(row.selected)!==selectedIds.includes(String(row.calendar_id)));
+  if(changed){
+    // Revoke the previous success signal BEFORE changing which calendars are
+    // authoritative. A failed refresh must never authorize new event writes.
+    const invalidated=await createAdminClient().from("study_calendar_connections").update({
+      last_sync_at:null,last_sync_status:"pending",last_error:null,updated_at:new Date().toISOString(),
+    }).eq("user_id",userId);
+    if(invalidated.error)throw new StudyServiceError("Could not invalidate old Calendar evidence","calendar_sync_invalidation_failed",invalidated.error);
+  }
   for(const row of rows??[]){const result=await db.from("study_calendar_sources").update({selected:selectedIds.includes(String(row.calendar_id)),updated_at:new Date().toISOString()}).eq("user_id",userId).eq("calendar_id",row.calendar_id);if(result.error)throw new StudyServiceError("Could not update calendar source",result.error.code||"calendar_sources_failed",result.error);}
-  return {selected:selectedIds};
+  return {selected:selectedIds,requiresSync:changed};
 }
 
 export async function updateCalendarPlanningSettings(input:Record<string,unknown>){
@@ -157,18 +167,27 @@ export async function updateCalendarPlanningSettings(input:Record<string,unknown
   return {ok:true};
 }
 
-export async function commitTodaySchedule(){
+export async function commitTodaySchedule(confirmed=false){
   const orchestration=await getDailyOrchestration(); const autopilot=await getCalendarAutopilot(orchestration);
   const supabase=await createClient(); const {data}=await supabase.auth.getClaims(); const userId=data?.claims?.sub?String(data.claims.sub):null;
   if(!userId)throw new StudyServiceError("Authentication required","auth_required");
-  if(autopilot.connection?.status!=="connected"||!autopilot.connection.write_calendar_id)throw new StudyServiceError("Study Calendar is not connected to a writable calendar","calendar_not_writable");
+  const admission=calendarWriteAdmission({
+    confirmed,connection:autopilot.connection,
+    selectedWritableCalendar:autopilot.sources.some(source=>source.selected&&source.writable&&source.calendar_id===autopilot.connection?.write_calendar_id),
+    proposedBlocks:autopilot.proposal.blocks.length,
+  });
+  if(!admission.allowed)throw new StudyServiceError(admission.reason,"calendar_write_not_authorized");
+  // Admission already denied a missing destination; bind it explicitly so the
+  // subsequent awaited Google calls never rely on nullable connection state.
+  const writeCalendarId=autopilot.connection?.write_calendar_id;
+  if(!writeCalendarId)throw new StudyServiceError("No writable Calendar destination","calendar_write_not_authorized");
   const admin=createAdminClient(); const token=await refreshCalendarAccessToken(userId); const created:any[]=[],errors:any[]=[];
   for(const block of autopilot.proposal.blocks){
     try{
       const existing=await admin.from("study_scheduled_blocks" as any).select("id").eq("user_id",userId).eq("plan_date",autopilot.today).eq("candidate_id",block.candidateId).eq("start_at",block.startAt).eq("status","committed").maybeSingle();
       if(existing.data)continue;
-      const event=await insertGoogleCalendarEvent(token,autopilot.connection.write_calendar_id,{summary:"StudyOS · "+block.title,description:"Planned by StudyOS\n"+env.appOrigin+block.href,startAt:block.startAt,endAt:block.endAt,timezone:autopilot.timezone,reminderMinutes:Number(autopilot.settings.study_reminder_minutes),candidateId:block.candidateId});
-      const row={user_id:userId,semester_id:orchestration.semesterId,course_id:block.courseId,plan_date:autopilot.today,candidate_id:block.candidateId,title:block.title,candidate_kind:block.candidateKind,start_at:block.startAt,end_at:block.endAt,scheduled_minutes:block.minutes,status:"committed",calendar_id:autopilot.connection.write_calendar_id,event_id:event.id,event_url:event.htmlLink??null,reminder_minutes:Number(autopilot.settings.study_reminder_minutes)};
+      const event=await insertGoogleCalendarEvent(token,writeCalendarId,{summary:"StudyOS · "+block.title,description:"Planned by StudyOS\n"+env.appOrigin+block.href,startAt:block.startAt,endAt:block.endAt,timezone:autopilot.timezone,reminderMinutes:Number(autopilot.settings.study_reminder_minutes),candidateId:block.candidateId});
+      const row={user_id:userId,semester_id:orchestration.semesterId,course_id:block.courseId,plan_date:autopilot.today,candidate_id:block.candidateId,title:block.title,candidate_kind:block.candidateKind,start_at:block.startAt,end_at:block.endAt,scheduled_minutes:block.minutes,status:"committed",calendar_id:writeCalendarId,event_id:event.id,event_url:event.htmlLink??null,reminder_minutes:Number(autopilot.settings.study_reminder_minutes)};
       const saved=await admin.from("study_scheduled_blocks" as any).insert(row); if(saved.error)throw new Error(saved.error.message);
       created.push({candidateId:block.candidateId,eventId:event.id});
     }catch(error){errors.push({candidateId:block.candidateId,error:error instanceof Error?error.message:"Calendar write failed"});}
