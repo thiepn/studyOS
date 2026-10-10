@@ -68,7 +68,8 @@ test("replay preflights read-back, checks original owner and removes only after 
    assert.match(txt,/ownerMatchesBeforeOrAfterAck\(/);
    assert.match(txt,/withOfflineReplayGuard\("owner-"/);
  }
- assert.match(at,/removePendingAttempt\(attempt\.clientId,ownerId,attempt\.queuedAt\)/);
+ assert.match(at,/removePendingAttempt\\(attempt\\.clientId,ownerId\\)/);
+ assert.match(at,/JSON\\.stringify\\(matching\\[0\\]\\)!==JSON\\.stringify\\(expected\\)/);
  assert.match(sessions,/matches\[0\]\.queuedAt!==item\.queuedAt/);
  assert.match(source("../src/lib/study/offline-replay-guard.ts"),/navigator\.locks\?\.request/);
 });

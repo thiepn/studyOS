@@ -98,8 +98,14 @@ async function flushQueue<T extends {sessionId:string;ownerId?:string;queuedAt:s
         if(!await ownerMatchesBeforeOrAfterAck(ownerId,item.ownerId,currentPendingOwner))break;
         const latest=read<T>(key),matches=latest.filter(row=>
           row.sessionId===item.sessionId&&row.ownerId===ownerId);
-        if(matches.length!==1||matches[0].queuedAt!==item.queuedAt)break;
-        write(key,latest.filter(row=>row!==matches[0]));
+        if(matches.length!==1||matches[0].queuedAt!==item.queuedAt
+          ||JSON.stringify(matches[0])!==JSON.stringify(item))break;
+        // Re-read immediately before removal so foreign and newly replaced
+        // local evidence is not dropped by an obsolete replay snapshot.
+        write(key,read<T>(key).filter(row=>!(
+          row.sessionId===item.sessionId&&row.ownerId===ownerId&&
+          JSON.stringify(row)===JSON.stringify(item)
+        )));
       }catch{
         // Replayed session data never disappears on a network, auth, read
         // permission, stale-record or original-owner uncertainty.

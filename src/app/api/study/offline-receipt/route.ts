@@ -1,6 +1,7 @@
 import {NextResponse} from "next/server";
 import {createClient} from "@/lib/supabase/server";
 import {offlineReceiptMatches,parseOfflineReceiptRequest} from "@/lib/study/offline-receipt-contract";
+const HEADERS={"cache-control":"no-store"};
 // Correctly shaped UUIDs only; one valid path per client-generated record.
 /** Authenticated SELECT only; do not return user data or stored answers.
  * A missing read permission must NOT be interpreted as record confirmation. */

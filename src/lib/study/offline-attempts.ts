@@ -34,11 +34,17 @@ export function enqueueAttempt(input: AttemptInput, ownerId: string): PendingAtt
   return pending;
 }
 
-export function removePendingAttempt(clientId:string,ownerId?:string,expectedQueuedAt?:string):boolean{
-  if(!storageAvailable()||!ownerId||!expectedQueuedAt)return false;
+const replayExpectedRemoval=new Map<string,PendingAttempt>();
+/** Only the exact snapshot verified by the authenticated receipt can be removed.
+ * Keep the original two-argument interface for existing integration users. */
+export function removePendingAttempt(clientId:string,ownerId?:string):boolean{
+  if(!storageAvailable()||!ownerId) return false;
+  const lookup=ownerId+":"+clientId;
+  const expected=replayExpectedRemoval.get(lookup);
+  if(!expected)return false;
   const before=listPendingAttempts();
   const matching=before.filter(item=>item.ownerId===ownerId&&item.clientId===clientId);
-  if(matching.length!==1||matching[0].queuedAt!==expectedQueuedAt)return false;
+  if(matching.length!==1||JSON.stringify(matching[0])!==JSON.stringify(expected))return false;
   localStorage.setItem(KEY,JSON.stringify(before.filter(item=>item!==matching[0])));
   changed();
   return true;
@@ -95,8 +101,12 @@ export async function flushPendingAttempts() {
         if(!await ownerMatchesBeforeOrAfterAck(ownerId,attempt.ownerId,currentPendingOwner))break;
         // A queued item edited in another tab after the replay snapshot is
         // never removed as an acknowledgement of an older write.
-        if(!removePendingAttempt(attempt.clientId,ownerId,attempt.queuedAt))
-          throw new Error("Queued attempt changed since replay snapshot; retain for reconciliation.");
+        const removalKey=ownerId+":"+attempt.clientId;
+        replayExpectedRemoval.set(removalKey,attempt);
+        try{
+          if(!removePendingAttempt(attempt.clientId,ownerId))
+            throw new Error("Queued attempt changed since replay snapshot; retain for reconciliation.");
+        }finally{replayExpectedRemoval.delete(removalKey);}
         results.push({clientId:attempt.clientId,ok:true});
       }catch(error){
         results.push({clientId:attempt.clientId,ok:false});
