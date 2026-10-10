@@ -14,7 +14,7 @@ function verifyEd25519(input,signature,pem){
   }catch{return false;}
 }
 const validTime=(value,now)=>{
-  if(typeof value!=="string"||!/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}/.test(value))return null;
+  if(typeof value!=="string"||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value))return null;
   const time=Date.parse(value);
   return Number.isFinite(time)&&time<=now.getTime()&&time>=now.getTime()-30*86400000?time:null;
 };
