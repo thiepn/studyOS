@@ -17,7 +17,7 @@ export default async function AssistantPage({ searchParams }: { searchParams: Pr
     courses = (data ?? []).map((course) => ({ id: course.id, name: course.display_name }));
   }
   return <main className="shell study-assistant-page">
-    <header className="header"><div><p className="eyebrow">StudyOS / Study tools</p><h1>Study Assistant</h1><p className="muted">Ask questions, request hints, or work through a concept. AI replies are study guidance, not verified academic evidence.</p></div><Link className="secondary-button" href="/more">More tools</Link></header>
+    <header className="header"><div><p className="eyebrow">StudyOS / Study tools</p><h1>GPT-6 Luna</h1><p className="muted">Your course-aware AI tutor for explanations, guided proofs, hints and self-tests. Luna does not change course records or award mastery.</p></div><Link className="secondary-button" href="/more">More tools</Link></header>
     <StudyAssistant courses={courses} initialCourseId={query.course} enabled={env.studyOsAiEnabled} />
   </main>;
 }
