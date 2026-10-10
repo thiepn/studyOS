@@ -30,7 +30,7 @@ test("binder uses earliest actionable teaching week without rearranging source d
 test("only explicit verified status may be counted as source verified",()=>{
   for(const status of ["new","classified","extracted","mapped","needs_review","archived","unknown"]){
     assert.equal(isVerifiedCourseSource(source("a","w",status)),false,status);
-    assert.match(sourceProcessingLabel(status),/not verified|review/i,status);
+    assert.match(sourceProcessingLabel(status),/not(?: yet)? verified|review/i,status);
   }
   assert.equal(isVerifiedCourseSource(source("a","w","verified")),true);
   assert.equal(sourceProcessingLabel("verified"),"Source verified");
