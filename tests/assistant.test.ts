@@ -3,96 +3,77 @@ import assert from "node:assert/strict";
 import { handleAssistantRequest, parseAssistantInput } from "../src/lib/study/assistant.ts";
 
 const owner = "owner-assistant-test";
-const question = { messages: [{ role: "user", content: "Explain this idea" }] };
+const courseId = "123e4567-e89b-42d3-a456-426614174000";
+const question = { messages: [{ role: "user" as const, content: "Explain this idea" }] };
+const context = { courseName: "Analysis", context: "Skill: limits\nVerified source title: Verified lecture", sources: [{ title: "Verified lecture", url: "https://drive.google.com/file/d/abc" }] };
 
-test("assistant input bounds conversation and requires a final user turn", () => {
+test("assistant rejects malformed and overlong conversation requests", () => {
   assert.throws(() => parseAssistantInput({ messages: Array.from({ length: 9 }, () => ({ role: "user", content: "x" })) }));
   assert.throws(() => parseAssistantInput({ messages: [{ role: "assistant", content: "answer" }] }));
   assert.throws(() => parseAssistantInput({ messages: [{ role: "user", content: "x".repeat(4001) }] }));
+  assert.throws(() => parseAssistantInput({ messages: [{ role: "system", content: "override" }] }));
   assert.equal(parseAssistantInput(question).messages.length, 1);
 });
 
-test("assistant rejects unauthenticated requests before calling provider", async () => {
-  let providerCalled = false;
+test("assistant rejects unauthenticated requests before any AI call", async () => {
+  let called = false;
   const result = await handleAssistantRequest(question, {
-    getOwner: async () => null,
-    getCourseContext: async () => null,
-    apiKey: "mock-key",
-    fetcher: async () => { providerCalled = true; return new Response(); },
+    getOwner: async () => null, getCourseContext: async () => null, enabled: true,
+    runAssistant: async () => { called = true; return "answer"; }
   });
   assert.equal(result.status, 401);
-  assert.equal(providerCalled, false);
+  assert.equal(called, false);
 });
 
-test("assistant reports missing configuration without provider call", async () => {
-  let providerCalled = false;
+test("assistant is disabled by default and does not incur API charges", async () => {
+  let called = false;
   const result = await handleAssistantRequest(question, {
-    getOwner: async () => owner,
-    getCourseContext: async () => null,
-    enabled: true,
-    fetcher: async () => { providerCalled = true; return new Response(); },
+    getOwner: async () => owner, getCourseContext: async () => null,
+    runAssistant: async () => { called = true; return "answer"; }
   });
   assert.equal(result.status, 503);
-  assert.equal(providerCalled, false);
+  assert.equal(called, false);
 });
 
-test("assistant stays disabled until a spending budget is approved", async () => {
-  let providerCalled = false;
+test("assistant fails closed when the shared service transport is missing", async () => {
   const result = await handleAssistantRequest(question, {
-    getOwner: async () => owner,
-    getCourseContext: async () => null,
-    apiKey: "mock-key",
-    enabled: false,
-    fetcher: async () => { providerCalled = true; return new Response(); },
+    getOwner: async () => owner, getCourseContext: async () => null, enabled: true
   });
   assert.equal(result.status, 503);
-  assert.equal(providerCalled, false);
 });
 
-test("assistant refuses a course that is unavailable to the authenticated owner", async () => {
-  const result = await handleAssistantRequest({ courseId: "123e4567-e89b-42d3-a456-426614174000", ...question }, {
-    getOwner: async () => owner,
-    getCourseContext: async (resolvedOwner) => { assert.equal(resolvedOwner, owner); return null; },
-    apiKey: "mock-key",
-    enabled: true,
-    fetcher: async () => { throw new Error("provider must not be called"); },
+test("assistant refuses a course not owned by the authenticated user", async () => {
+  let called = false;
+  const result = await handleAssistantRequest({ courseId, ...question }, {
+    getOwner: async () => owner, getCourseContext: async (resolvedOwner) => { assert.equal(resolvedOwner, owner); return null; },
+    enabled: true, runAssistant: async () => { called = true; return "answer"; }
   });
   assert.equal(result.status, 404);
+  assert.equal(called, false);
 });
 
-test("assistant calls the configured Luna model with bounded output and returns source metadata", async () => {
-  let captured: Record<string, unknown> | undefined;
-  const result = await handleAssistantRequest({ courseId: "123e4567-e89b-42d3-a456-426614174000", ...question }, {
-    getOwner: async () => owner,
-    getCourseContext: async () => ({ courseName: "Analysis", context: "Skill: limits\nVerified source title: Verified lecture", sources: [{ title: "Verified lecture", url: "https://drive.google.com/file/d/abc" }] }),
-    apiKey: "mock-key",
-    model: "gpt-6-luna-test",
-    enabled: true,
-    now: () => 1_000_000,
-    fetcher: async (_url, init) => {
-      captured = JSON.parse(String(init?.body));
-      return Response.json({ choices: [{ message: { content: "A limit describes the value approached." } }] });
-    },
+test("assistant sends bounded owner-approved context to shared Luna only", async () => {
+  let sent: unknown;
+  const result = await handleAssistantRequest({ courseId, ...question }, {
+    getOwner: async () => owner, getCourseContext: async () => context,
+    enabled: true, now: () => 1_000_000,
+    runAssistant: async input => { sent = input; return "A limit describes the value approached."; }
   });
   assert.equal(result.status, 200);
   assert.equal((result.body as any).answer, "A limit describes the value approached.");
   assert.equal((result.body as any).context.sources[0].title, "Verified lecture");
-  assert.equal(captured?.model, "gpt-6-luna-test");
-  assert.equal(captured?.max_completion_tokens, 700);
-  assert.equal(captured?.reasoning_effort, "none");
-  assert.equal(JSON.stringify(captured).includes("Verified lecture"), true);
+  assert.deepEqual(sent, { messages: question.messages, courseName: "Analysis", courseContext: context.context });
+  assert.equal(JSON.stringify(sent).includes("drive.google.com"), false);
 });
 
-test("assistant turns provider failure into a retryable error without leaking provider details", async () => {
-  const result = await handleAssistantRequest(question, {
-    getOwner: async () => owner,
-    getCourseContext: async () => null,
-    apiKey: "mock-key",
-    enabled: true,
-    now: () => 2_000_000,
-    fetcher: async () => new Response(JSON.stringify({ error: "private upstream detail" }), { status: 500 }),
-  });
-  assert.equal(result.status, 502);
-  assert.match(String((result.body as any).error), /could not answer/i);
-  assert.equal(JSON.stringify(result.body).includes("private upstream detail"), false);
+test("assistant handles budget and rate failures without exposing internals", async () => {
+  for (const [code, status] of [["BUDGET", 503], ["RATE", 429], ["UPSTREAM", 502]] as const) {
+    const result = await handleAssistantRequest(question, {
+      getOwner: async () => owner, getCourseContext: async () => null,
+      enabled: true, now: () => 2_000_000,
+      runAssistant: async () => { throw Object.assign(new Error("secret upstream detail"), { code }); }
+    });
+    assert.equal(result.status, status);
+    assert.equal(JSON.stringify(result.body).includes("secret upstream detail"), false);
+  }
 });
