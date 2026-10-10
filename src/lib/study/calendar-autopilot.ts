@@ -177,13 +177,17 @@ export async function commitTodaySchedule(confirmed=false){
     proposedBlocks:autopilot.proposal.blocks.length,
   });
   if(!admission.allowed)throw new StudyServiceError(admission.reason,"calendar_write_not_authorized");
+  // Admission already denied a missing destination; bind it explicitly so the
+  // subsequent awaited Google calls never rely on nullable connection state.
+  const writeCalendarId=autopilot.connection?.write_calendar_id;
+  if(!writeCalendarId)throw new StudyServiceError("No writable Calendar destination","calendar_write_not_authorized");
   const admin=createAdminClient(); const token=await refreshCalendarAccessToken(userId); const created:any[]=[],errors:any[]=[];
   for(const block of autopilot.proposal.blocks){
     try{
       const existing=await admin.from("study_scheduled_blocks" as any).select("id").eq("user_id",userId).eq("plan_date",autopilot.today).eq("candidate_id",block.candidateId).eq("start_at",block.startAt).eq("status","committed").maybeSingle();
       if(existing.data)continue;
-      const event=await insertGoogleCalendarEvent(token,autopilot.connection.write_calendar_id,{summary:"StudyOS · "+block.title,description:"Planned by StudyOS\n"+env.appOrigin+block.href,startAt:block.startAt,endAt:block.endAt,timezone:autopilot.timezone,reminderMinutes:Number(autopilot.settings.study_reminder_minutes),candidateId:block.candidateId});
-      const row={user_id:userId,semester_id:orchestration.semesterId,course_id:block.courseId,plan_date:autopilot.today,candidate_id:block.candidateId,title:block.title,candidate_kind:block.candidateKind,start_at:block.startAt,end_at:block.endAt,scheduled_minutes:block.minutes,status:"committed",calendar_id:autopilot.connection.write_calendar_id,event_id:event.id,event_url:event.htmlLink??null,reminder_minutes:Number(autopilot.settings.study_reminder_minutes)};
+      const event=await insertGoogleCalendarEvent(token,writeCalendarId,{summary:"StudyOS · "+block.title,description:"Planned by StudyOS\n"+env.appOrigin+block.href,startAt:block.startAt,endAt:block.endAt,timezone:autopilot.timezone,reminderMinutes:Number(autopilot.settings.study_reminder_minutes),candidateId:block.candidateId});
+      const row={user_id:userId,semester_id:orchestration.semesterId,course_id:block.courseId,plan_date:autopilot.today,candidate_id:block.candidateId,title:block.title,candidate_kind:block.candidateKind,start_at:block.startAt,end_at:block.endAt,scheduled_minutes:block.minutes,status:"committed",calendar_id:writeCalendarId,event_id:event.id,event_url:event.htmlLink??null,reminder_minutes:Number(autopilot.settings.study_reminder_minutes)};
       const saved=await admin.from("study_scheduled_blocks" as any).insert(row); if(saved.error)throw new Error(saved.error.message);
       created.push({candidateId:block.candidateId,eventId:event.id});
     }catch(error){errors.push({candidateId:block.candidateId,error:error instanceof Error?error.message:"Calendar write failed"});}
