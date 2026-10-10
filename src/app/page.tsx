@@ -4,6 +4,7 @@ import { cache } from "react";
 import { FirstUseWelcome } from "@/components/first-use-welcome";
 import { Nav } from "@/components/nav";
 import { DailyPlan } from "@/components/daily-plan";
+import { ContextDetails } from "@/components/context-details";
 import { TodayOverview } from "@/components/today-overview";
 import { PlanningCommandOverview } from "@/components/planning-command-overview";
 import { buildTodayOverview } from "@/lib/study/today-overview";
@@ -124,9 +125,10 @@ export default async function TodayPage() {
         <Link className="secondary-button" href="/exam-day">Open exam view</Link>
       </section> : null}
 
-      <DailyPlan plan={plan}/>
+      <div className="today-workspace-grid"><div className="today-workspace-primary"><DailyPlan plan={plan}/></div><aside className="today-workspace-reference" aria-label="Courses and upcoming work">
       <section className="today-courses"><div className="section-heading"><h2>Your courses</h2><Link href="/courses">All courses →</Link></div><div className="today-course-links">{courses.map(course=><Link key={course.id} href={"/courses/"+course.id}><strong>{course.display_name}</strong><span>Weeks & materials →</span></Link>)}</div></section>
       <section className="today-upcoming"><div className="section-heading"><h2>Upcoming deadlines</h2><a href="#today-schedule">Manage schedule</a></div>{commitments.slice().sort((a,b)=>a.due_at.localeCompare(b.due_at)).slice(0,4).map(item=><div className="upcoming-row" key={item.id}><strong>{item.title}</strong><time dateTime={item.due_at}>{new Date(item.due_at).toLocaleDateString("en-GB",{day:"numeric",month:"short"})}</time></div>)}{!commitments.length?<p className="muted">No upcoming deadlines recorded. Add one in your schedule.</p>:null}</section>
+      </aside></div><ContextDetails id="today-planning" title="Planning & schedule">
       <details className="today-drawer"><summary>Study overview & planning details</summary><div className="today-drawer-body">      <TodayOverview data={overview} mode={capacity.mode} weekPercent={weekRuntime?.progress.completionPercent??null}/>
       <Suspense fallback={<p role="status">Loading calendar details…</p>}><CalendarDetails orchestration={orchestration} overview/></Suspense>
 
@@ -165,7 +167,7 @@ export default async function TodayPage() {
       <details className="today-drawer">
         <summary id="today-adjust"><span><strong>Adjust today</strong><small>Change capacity only when the day itself changed</small></span><b>Open</b></summary>
         <div className="today-drawer-body"><CapacityControls capacity={capacity} defaultMode={defaultMode}/></div>
-      </details>
+      </details></ContextDetails>
     </main>
   );
 }

@@ -4,7 +4,7 @@ import { getSemesterPulse, topRiskDrivers } from "@/lib/study/pulse";
 import { getSemesterCalibration } from "@/lib/study/calibration-data";
 import { getSemesterLearningAnalytics } from "@/lib/study/analytics-data";
 import { getCrossSemesterTransferData } from "@/lib/study/cross-semester-data";
-import { courseInitials, courseToneClass } from "@/lib/study/course-visual";
+import { courseToneClass } from "@/lib/study/course-visual";
 
 export const dynamic = "force-dynamic";
 
@@ -46,7 +46,6 @@ export default async function ProgressPage(){
                 ? "Main pressure: "+drivers[0].label+". Review this course's outstanding work."
                 : "Keep up normal retrieval and independent coursework.";
         return <article className={`panel risk-course progress-ledger ${courseToneClass(course.stable_key)}`} id={"course-"+course.course_id} key={course.course_id}>
-          <div className="progress-course-spine" aria-hidden="true"><span>{courseInitials(course.short_name,course.display_name)}</span></div>
           <div className="progress-course-body">
           <div className="risk-course-head">
             <div><p className="eyebrow">{course.operating_mode.replace("_"," ")} mode</p><h2>{course.display_name}</h2></div>

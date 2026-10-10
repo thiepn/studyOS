@@ -1,17 +1,17 @@
 /* Shared semantic tokens and components. Legacy names map to the same system. */
 :root {
-  --academic-paper:#f4f7fb;
-  --academic-paper-raised:#f8fafc;
+  --academic-paper:#ffffff;
+  --academic-paper-raised:#f7f7f5;
   --academic-sheet:#ffffff;
-  --academic-ink:#172033;
-  --academic-ink-secondary:#334155;
-  --academic-muted:#64748b;
-  --academic-faint:#64748b;
-  --academic-rule:#dce3ed;
-  --academic-rule-strong:#94a3b8;
-  --academic-accent:#2563eb;
-  --academic-accent-wash:#eff6ff;
-  --academic-focus:#2563eb;
+  --academic-ink:#37352f;
+  --academic-ink-secondary:#57564f;
+  --academic-muted:#787774;
+  --academic-faint:#787774;
+  --academic-rule:#e9e9e6;
+  --academic-rule-strong:#c9c8c3;
+  --academic-accent:#2f6f9f;
+  --academic-accent-wash:#f0f5f8;
+  --academic-focus:#2f6f9f;
   --academic-alert:#963e33;
   --academic-success:#225b3f;
   --academic-font-body:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;

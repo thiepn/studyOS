@@ -7,7 +7,8 @@ import { CourseMasterMap } from "@/components/course-master-map";
 import { getCourseWorkflow } from "@/lib/study/workflow";
 import { getCourseExamIntelligence } from "@/lib/study/exams";
 import { ExamIntelligence } from "@/components/exam-intelligence";
-import { courseInitials, courseToneClass } from "@/lib/study/course-visual";
+import { courseToneClass } from "@/lib/study/course-visual";
+import { WorkspaceIcon } from "@/components/workspace-icon";
 import { CourseTabs } from "@/components/course-tabs";
 import { CourseMaterialList } from "@/components/course-material-list";
 import { courseBinderOverview, sourceProcessingLabel } from "@/lib/study/course-binder-overview";
@@ -27,7 +28,7 @@ export default async function CourseDetailPage({ params, searchParams }: { param
     <main className={`shell course-shell ${courseToneClass(c.stable_key)}`}>
       <header className="header course-header">
         <div className="course-header-identity">
-          <span className="course-header-mark" aria-hidden="true">{courseInitials(c.short_name,c.display_name)}</span>
+          <span className="course-header-document" aria-hidden="true"><WorkspaceIcon name="book"/></span>
           <div>
             <p className="eyebrow">{c.course_kind} · active semester</p>
             <h1>{c.display_name}</h1>
@@ -40,7 +41,6 @@ export default async function CourseDetailPage({ params, searchParams }: { param
       </header>
 
       <CourseTabs courseId={c.course_id} selected={tab}/>
-      {tab==="overview"?<CourseBinderOverview courseId={c.course_id} weeks={data.weeks} resources={data.resources}/>:null}
 
       <div className="button-row course-back-row">
         <Link className="secondary-button" href="/courses">← All courses</Link>
@@ -51,7 +51,7 @@ export default async function CourseDetailPage({ params, searchParams }: { param
         {c.course_kind === "retake" ? <Link className="secondary-button" href={"/diagnostics/" + c.course_id}>Baseline diagnostic</Link> : null}
       </div>
 
-      {tab==="overview"&&currentFiles.length?<section className="course-overview-files"><h2>Current week files</h2><ul className="course-material-list">{currentFiles.map(file=><li key={file.id}><div><strong>{file.title}</strong><span>{file.resource_type.replaceAll("_"," ")} · {sourceProcessingLabel(file.processing_status)}</span></div>{file.drive_url?<a className="secondary-button" href={file.drive_url} target="_blank" rel="noreferrer">Open file ↗</a>:<span>No file link recorded</span>}</li>)}</ul></section>:null}
+      {tab==="overview"?<div className="course-overview-grid"><section className="course-overview-files"><h2>Current week files</h2>{currentFiles.length?<ul className="course-material-list">{currentFiles.map(file=><li key={file.id}><div><strong>{file.title}</strong><span>{file.resource_type.replaceAll("_"," ")} · {sourceProcessingLabel(file.processing_status)}</span></div>{file.drive_url?<a className="secondary-button" href={file.drive_url} target="_blank" rel="noreferrer">Open file ↗</a>:<span>No file link recorded</span>}</li>)}</ul>:<p className="muted">Add your lecture or exercise sheet to begin this week.</p>}<Link href={`/courses/${id}?tab=materials`}>View all materials →</Link></section><CourseBinderOverview courseId={c.course_id} weeks={data.weeks} resources={data.resources}/></div>:null}
 
       {tab==="weeks"?<><section id="course-weeks" className="workflow-heading">
         <div><p className="eyebrow">Current coursework</p><h2>Teaching weeks</h2></div>

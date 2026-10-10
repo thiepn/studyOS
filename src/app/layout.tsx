@@ -11,6 +11,7 @@ import "./semester-management.css";
 import "./account/recovery/recovery.css";
 import "./assistant.css";
 import "./ux-workspace.css";
+import "./daily-actions.css";
 import "./workspace-components.css";
 import { WorkspaceShell } from "@/components/workspace-shell";
 

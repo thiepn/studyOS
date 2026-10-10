@@ -2,15 +2,15 @@
 .study-assistant-page>.header{align-items:start;margin-bottom:24px}
 .study-assistant-page>.header h1{margin:4px 0 8px}
 .study-assistant-page>.header .muted{max-width:680px;line-height:1.6}
-.study-assistant{display:grid;gap:20px;padding:clamp(16px,3vw,28px)}
+.study-assistant.panel{display:grid;gap:20px;padding:0;border:0;background:transparent}
 .assistant-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:12px}
 .assistant-toolbar label,.assistant-form>label{font-size:14px;font-weight:600}
 .assistant-toolbar select{min-width:220px;flex:1;min-height:44px;padding:8px 12px;border:1px solid var(--academic-rule);background:var(--academic-sheet)}
-.assistant-empty{padding:24px;background:var(--academic-paper);border:1px solid var(--academic-rule);border-radius:8px}
+.assistant-empty{padding:20px 0;background:transparent;border:0;border-radius:0}
 .assistant-empty h2{margin:0 0 8px;font-size:20px}
 .assistant-empty p{max-width:650px;margin:0;color:var(--academic-muted);line-height:1.6}
 .assistant-messages{display:grid;gap:12px;max-height:min(55dvh,620px);overflow:auto;padding:4px;overscroll-behavior:contain}
-.assistant-message{padding:16px;border:1px solid var(--academic-rule);border-radius:8px;background:var(--academic-sheet);overflow-wrap:anywhere}
+.assistant-message{padding:16px 20px;border:0;border-radius:5px;background:var(--academic-sheet);overflow-wrap:anywhere}
 .assistant-message>strong{display:block;margin-bottom:8px;font-size:13px;color:var(--academic-muted)}
 .assistant-message p{margin:8px 0 0;line-height:1.6;white-space:pre-wrap}
 .assistant-message pre{overflow:auto;padding:16px;background:var(--academic-paper);border-radius:6px}

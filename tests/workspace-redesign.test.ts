@@ -47,3 +47,20 @@ test("isolated browser provider cannot be imported into application authenticati
  assert.match(journey,/Queued for signed-in account sync/);
  assert.match(journey,/mockedAiApp\?\.kill\(\)/);
 });
+
+test("document workspace replaces the daily timeline and keeps planning deep links",()=>{
+ const page=read("../src/app/page.tsx");
+ assert.match(page,/today-workspace-grid/);
+ assert.match(page,/<ContextDetails id="today-planning"/);
+ const daily=read("../src/components/daily-plan.tsx");
+ assert.doesNotMatch(daily,/now-rail|sequence-marker/);
+ assert.match(read("../src/app/daily-actions.css"),/\.study-budget small\{display:inline\}/);
+ assert.doesNotMatch(read("../src/app/globals.css"),/\.now-rail\s*\{/);
+});
+
+test("course overview keeps solution filtering while separating files and next action",()=>{
+ const page=read("../src/app/courses/[id]/page.tsx");
+ assert.match(page,/course-overview-grid/);
+ assert.match(page,/overview\.canOpenSolutions/);
+ assert.match(read("../src/app/ux-workspace.css"),/\.academic-route-context\{[^}]*width:auto/);
+});

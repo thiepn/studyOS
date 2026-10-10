@@ -78,7 +78,7 @@ export default async function ResourcesPage({searchParams}:{searchParams:Promise
       <div className="button-row"><MaterialDialog><ResourceRegisterForm courses={data.courses} defaultCourseId={selectedCourse?.id} defaultWeekNo={selectedWeek}/></MaterialDialog><a className="secondary-button" href="#source-drive">Google Drive</a><a className="secondary-button" href="#processing-queue">Review & processing ({summary.queued+summary.candidates})</a></div>
       <section id="source-library" className="panel resource-library">
         <div className="section-heading"><div><p className="eyebrow">Materials</p><h2>Your materials</h2></div><span>{resources.length}</span></div>
-        <p className="resource-stage-help">Search only sources in this active-semester view. Processing status is separate from declared source authority and is not a rights or rubric attestation.</p>
+        <p className="resource-stage-help">Find a lecture, exercise sheet, or notes for your current semester.</p><details className="material-authority-help"><summary>About source verification</summary><p>Processing status is separate from declared source authority and is not a rights or rubric attestation.</p></details>
         <SourceIndex resources={resources} key={(selectedCourse?.id??"all")+":"+(selectedWeek??"all")} courseNames={courseNames} weekNumbers={Object.fromEntries((data.weeks??[]).map(week=>[week.id,week.week_no]))} initialWeek={selectedWeek} />
       </section>
 

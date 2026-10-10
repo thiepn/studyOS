@@ -27,6 +27,8 @@ try{
   }
  }
  checks.push('Actual production route compositions render at six widths without horizontal overflow');
+ await page.setViewportSize({width:1280,height:900});await go('/#today-schedule','Today');await page.waitForFunction(()=>document.querySelector('#today-planning')?.open===true);await page.locator('#today-schedule').click();await page.getByRole('heading',{name:'Commitments',exact:true}).waitFor();checks.push('Today schedule deep link reveals planning and opens real deadline controls');
+ await go('/more','Settings & tools');const advanced=page.locator('.more-section').filter({has:page.locator('summary').getByText('Advanced study insights',{exact:true})});assert.equal(await advanced.evaluate(node=>node.open),false);await advanced.locator('summary').click();await advanced.getByRole('link',{name:/Study methods/}).waitFor();checks.push('Advanced tools are collapsed initially and remain keyboard-discoverable through native disclosure');
  await page.setViewportSize({width:1280,height:900});
  for(const [label,title] of [['Today','Today'],['Courses','Courses'],['Assistant','Study Assistant'],['Progress','Progress'],['Courses','Courses']]){
   await page.locator('.workspace-desktop-nav').getByRole('link',{name:label,exact:true}).hover();await page.waitForLoadState('networkidle');const start=performance.now();await page.locator('.workspace-desktop-nav').getByRole('link',{name:label,exact:true}).click();await page.getByRole('heading',{level:1,name:title,exact:true}).waitFor();timings.push({path:new URL(page.url()).pathname,kind:'warm-prefetched-navigation',ms:Math.round(performance.now()-start)});

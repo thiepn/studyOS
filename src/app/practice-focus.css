@@ -57,3 +57,5 @@
 .practice-outcome-ledger strong{font-size:.85rem;overflow-wrap:anywhere}
 .practice-outcome-ledger li>span:last-child{font-size:.77rem;color:var(--academic-muted);overflow-wrap:anywhere}
 @media(max-width:650px){.practice-outcome-ledger li{grid-template-columns:38px minmax(0,1fr)}.practice-outcome-ledger li>span:last-child{grid-column:2}}
+/* Focused study uses the same quiet document surface. */
+.practice-shell .practice-focus-guide{border-top:0;border-bottom:1px solid var(--academic-rule);padding:12px 0 16px;margin:12px 0 20px}.practice-shell .review-question{border:1px solid var(--academic-rule);border-radius:6px;box-shadow:none;background:white}.practice-shell .review-question:before{display:none}.practice-shell .review-question h2{font-size:clamp(24px,3vw,30px);line-height:1.5;font-weight:500}.practice-focus-stages li.active{font-weight:500;background:#f7f7f5}.practice-focus-stages{border-top:0}.review-focus-toggle{font-weight:500}.review-topline{border-color:var(--academic-rule)}

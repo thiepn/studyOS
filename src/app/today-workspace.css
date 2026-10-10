@@ -16,11 +16,6 @@
 .today-overview-bottom strong{color:var(--academic-ink-secondary)}
 .today-overview-links{display:flex;flex-wrap:wrap;gap:8px 15px}
 .today-overview-links a{display:inline-flex;align-items:center;min-height:38px;color:var(--academic-accent);font-size:.78rem;font-weight:750;text-underline-offset:4px}
-.today-shell .study-sequence{margin-top:25px}
-.today-shell .now-task{padding:28px 0}
-.today-shell .now-copy h3{font-family:var(--academic-font-display);line-height:1.2}
-.today-shell .now-task .primary-button{min-height:48px;min-width:100px}
-.today-shell .next-task-list .secondary-button{min-height:44px}
 .today-shell .after-plan{margin-top:45px;scroll-margin-top:24px}
 .today-shell .after-plan-heading{padding-top:19px;border-top:2px solid var(--academic-ink)}
 .today-shell .after-plan-heading h2{margin-top:5px}
@@ -38,11 +33,6 @@
   .today-overview-facts>div:last-child{border-bottom:0}
   .today-overview-facts dd strong{font-size:1.75rem}
   .today-overview-links a{min-height:44px}
-  .today-shell .now-task{gap:12px}
-  .today-shell .next-task-list>li{grid-template-columns:30px minmax(0,1fr);gap:10px}
-  .today-shell .next-task-copy{padding:14px 0 0}
-  .today-shell .next-task-end{grid-column:2;justify-self:stretch;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-  .today-shell .next-task-end .secondary-button{min-height:44px}
   .today-shell .after-plan{margin-top:30px}
 }
 @media(forced-colors:active){.today-shell .capacity-mode[aria-pressed="true"]{border-color:Highlight}}
