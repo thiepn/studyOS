@@ -33,3 +33,44 @@ test("deadline presentation is deterministic, time-qualified and non-mutating",(
   assert.equal(r.next?.id,"c");
   assert.deepEqual(rows,original);
 });
+
+import {readFileSync} from "node:fs";
+const read=(path:string)=>readFileSync(new URL(path,import.meta.url),"utf8");
+
+test("calendar workspace does not mislabel a never-synced connection or authorize an unreviewed external write",()=>{
+  const panel=read("../src/components/calendar-autopilot-panel.tsx");
+  assert.match(panel,/calendarEvidenceStatus\(data\.connection,data\.stale\)/);
+  assert.doesNotMatch(panel,/data\.stale\?"stale":"synced"/);
+  assert.match(panel,/data\.sources\.some\(source=>source\.selected\)/);
+  assert.match(panel,/checked=\{commitConfirmed\}/);
+  assert.match(panel,/!commitEligible\|\|!commitConfirmed/);
+  assert.match(panel,/role="note"/);
+  assert.match(panel,/json\.errors/);
+  assert.match(panel,/Review cancellation/);
+  assert.match(panel,/Confirm delete/);
+  assert.match(panel,/Keep event/);
+});
+test("week commitment changes require deliberate review and objective controls expose selection",()=>{
+  const control=read("../src/components/weekly-plan-controls.tsx");
+  assert.match(control,/checked=\{confirmRebalance\}/);
+  assert.match(control,/disabled=\{busy\|\|!confirmRebalance\}/);
+  assert.match(control,/checked=\{confirmCancel\}/);
+  assert.match(control,/disabled=\{busy\|\|!confirmCancel\}/);
+  assert.match(control,/aria-pressed=\{objective===key\}/);
+  assert.match(control,/!Number\.isFinite\(capacity\)/);
+});
+test("Today/Week planning navigation and summary are accessible and do not change planner API",()=>{
+  const today=read("../src/app/page.tsx"),week=read("../src/app/week/page.tsx");
+  const ui=read("../src/components/planning-command-overview.tsx"),styles=read("../src/app/planning-command.css");
+  assert.match(today,/<PlanningCommandOverview commitments=\{commitments\}/);
+  assert.match(week,/id="week-courses"/);
+  assert.match(week,/id="week-rebalance"/);
+  assert.match(ui,/aria-labelledby="planning-command-heading"/);
+  assert.match(ui,/aria-label="Planning actions"/);
+  assert.match(ui,/calendarEvidenceStatus\(calendar\.connection,calendar\.stale\)/);
+  assert.match(styles,/@media\(max-width:540px\)/);
+  assert.match(styles,/@media\(forced-colors:active\)/);
+  assert.doesNotMatch(styles,/gradient\(/);
+  const pure=read("../src/lib/study/planning-command.ts");
+  assert.doesNotMatch(pure,/\bfetch\(|\.rpc\(|\.insert\(|\.update\(|localStorage|document\./);
+});
