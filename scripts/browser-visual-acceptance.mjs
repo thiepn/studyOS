@@ -88,6 +88,14 @@ try{
     "Recovered destination should be readable without displaying account secrets");
   await noOverflow(phone,"account recovery protected redirect");
   await evidence(phone,"mobile-account-recovery-redirect-390-dpr2");
+  // F15: real Chromium verifies safe return-to-work and keyboard entry.
+  // No fabricated signed-in account or real physical-device evidence.
+  await phone.goto(new URL("/login?next=%2Faccount%2Frecovery&error=oauth_callback",origin).href,{waitUntil:"networkidle"});
+  assert.ok(await phone.getByRole("alert").count(),"Interrupted sign-in must expose an accessible recovery alert");
+  assert.ok(await phone.getByText("After sign-in, return to Account recovery.",{exact:false}).count(),
+    "A valid protected recovery destination must survive failed OAuth");
+  await noOverflow(phone,"mobile recovery return path");
+  await evidence(phone,"mobile-recovery-return-path-390-dpr2");
   manifest.limitations.push("Account recovery route checked anonymously only; no signed-in ownership evidence");
   await phone.close();await desktop.close();
   await writeFile(resolve(output,"manifest.json"),JSON.stringify(manifest,null,2)+"\n");

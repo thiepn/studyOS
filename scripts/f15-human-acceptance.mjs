@@ -1,0 +1,89 @@
+/** External human/device/source intake. Only digest/provenance assessment;
+ * never an approval or a replacement for physical review or owner authorization. */
+import {createHash,createPublicKey,verify as verifyEd} from "node:crypto";
+import {readFile,realpath,stat} from "node:fs/promises";
+import {isAbsolute,relative,resolve,sep} from "node:path";
+import {auditF14Review} from "./f14-evidence-review.mjs";
+
+export const F15_DOMAINS=Object.freeze(["device_accessibility","source_rights","privacy_two_owner"]);
+const SHA=/^[a-f0-9]{64}$/;
+const DENIED={releaseAllowed:false,preRelease:"NO_GO",postRelease:"NO_GO",canRestore:false,canPurge:false};
+const result=(integrity,reasons,details=[])=>({...DENIED,integrity,reasons,details});
+const unsigned=(record)=>{const o={...record};delete o.signature;return Buffer.from(JSON.stringify(o),"utf8");};
+const trusted=(root,kind,actor,keyId)=>
+  root&&root.status==="trusted"&&root.role===kind&&root.actorId===actor&&root.keyId===keyId
+  &&typeof root.publicKeyPem==="string"&&!(root.revokedKeyIds??[]).includes(keyId);
+function signed(record,root){
+  if(!record||typeof record.signature!=="string"||!/^[A-Za-z0-9+/]+={0,2}$/.test(record.signature))return false;
+  try{
+    const key=createPublicKey(root.publicKeyPem);
+    return key.asymmetricKeyType==="ed25519"&&verifyEd(null,unsigned(record),key,Buffer.from(record.signature,"base64"));
+  }catch{return false;}
+}
+function recent(date,now){
+  if(typeof date!=="string"||!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(date))return false;
+  const t=Date.parse(date);
+  return Number.isFinite(t)&&t<=now.getTime()&&t>=now.getTime()-30*86400000;
+}
+function safePath(path){
+  return typeof path==="string"&&path.length>0&&path.length<=180&&!isAbsolute(path)
+    &&!path.split(/[\\/]/).some(s=>s===""||s==="."||s==="..")
+    &&!path.includes("\\")&&[...path].every(ch=>ch.charCodeAt(0)>=32);
+}
+export async function auditF15HumanAcceptance({f14,originals,roots,artifactDirectory,expectedHead,now=new Date()}){
+  const previous=await auditF14Review({...f14,artifactDirectory,expectedHead,now});
+  if(previous.integrity!=="verified")return result("rejected",["f14_"+previous.reasons[0]]);
+  if(!originals||originals.version!=="studyos-f15-v1"||originals.head!==expectedHead
+    ||originals.packetSha256!==previous.packetSha256
+    ||!Array.isArray(originals.attestations)||originals.attestations.length!==F15_DOMAINS.length)
+    return result("rejected",["original_source_binding"]);
+  if(!roots||!Array.isArray(roots.attestations)||roots.attestations.length!==F15_DOMAINS.length)
+    return result("rejected",["external_role_roots_missing"]);
+  const occupied=new Set([f14.packet.operatorId,f14.packet.witnessId,f14.review.reviewerId,f14.custody.custodianId]);
+  const base=await realpath(artifactDirectory).catch(()=>null);
+  if(!base)return result("rejected",["source_directory_unavailable"]);
+  const domains=new Set(),details=[];
+  for(const a of originals.attestations){
+    if(!a||!F15_DOMAINS.includes(a.domain)||domains.has(a.domain)||a.head!==expectedHead
+      ||a.packetSha256!==previous.packetSha256||!["observed","blocked","unobserved"].includes(a.finding)
+      ||!["synthetic","external"].includes(a.sourceKind)||!safePath(a.path)||!SHA.test(a.sha256??"")
+      ||!recent(a.observedAt,now))return result("rejected",["attestation_shape"]);
+    domains.add(a.domain);
+    const root=roots.attestations.find(r=>r?.role===a.domain&&r?.actorId===a.actorId);
+    if(!root||occupied.has(a.actorId)||!trusted(root,a.domain,a.actorId,a.keyId)||!signed(a,root))
+      return result("rejected",["attestation_authority_invalid"]);
+    occupied.add(a.actorId);
+    let file;
+    try{
+      const resolved=resolve(base,a.path),rel=relative(base,resolved);
+      if(rel===".."||rel.startsWith(".."+sep)||isAbsolute(rel))throw Error("escape");
+      const real=await realpath(resolved),actual=relative(base,real);
+      if(actual===".."||actual.startsWith(".."+sep)||isAbsolute(actual))throw Error("symlink escape");
+      const metadata=await stat(real);
+      if(!metadata.isFile()||metadata.size>25_000_000)throw Error("size");
+      file=await readFile(real);
+    }catch{return result("rejected",["source_bytes_unavailable"]);}
+    if(createHash("sha256").update(file).digest("hex")!==a.sha256)
+      return result("rejected",["original_source_hash_mismatch"]);
+    details.push({domain:a.domain,sourceKind:a.sourceKind,finding:a.finding});
+  }
+  if(!originals.decisions||!Array.isArray(roots.decisions)||roots.decisions.length!==2)
+    return result("rejected",["release_separation_missing"]);
+  for(const role of ["prerelease","postrelease"]){
+    const d=originals.decisions[role],root=roots.decisions.find(r=>r?.role===role);
+    if(!d||d.role!==role||d.head!==expectedHead||d.packetSha256!==previous.packetSha256
+      ||!["hold","request_review"].includes(d.decision)||!recent(d.recordedAt,now)
+      ||!root||occupied.has(d.actorId)||!trusted(root,role,d.actorId,d.keyId)||!signed(d,root))
+      return result("rejected",["independent_release_custody_missing"]);
+    occupied.add(d.actorId);
+  }
+  const observed=details.every(x=>x.finding==="observed"&&x.sourceKind==="external");
+  return result("verified",[
+    observed&&previous.intake==="ready_for_owner_review"
+      ?"external_attestations_integrity_only":"independent_acceptance_incomplete",
+    "real_physical_device_and_two_owner_review_not_self_proven",
+    "original_encrypted_restore_bytes_not_qualified",
+    "prerelease_owner_authority_open",
+    "postrelease_owner_authority_open",
+  ],details);
+}

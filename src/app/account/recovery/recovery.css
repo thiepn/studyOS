@@ -14,3 +14,14 @@
 @media(max-width:620px){.account-recovery-links{display:grid;gap:0}.account-offline-recovery .button-row{display:grid}.account-offline-recovery button{width:100%}}
 @media(forced-colors:active){.account-offline-recovery{border-color:CanvasText}}
 @media(prefers-reduced-motion:reduce){.account-recovery-links{scroll-behavior:auto}}
+
+/* F15: owner-visible source inventory, never a restore/rollback executor. */
+.account-prior-state{margin:20px 0;padding:20px 0;border-top:2px solid var(--academic-ink);border-bottom:1px solid var(--academic-rule-strong)}
+.account-prior-state h2{font:500 clamp(1.2rem,2.7vw,1.6rem)/1.3 var(--academic-font-display);margin:8px 0 12px}
+.account-prior-state p{font-size:.85rem;line-height:1.65;max-width:76ch}
+.account-prior-state button{min-height:48px;white-space:normal;text-align:center}
+.account-prior-state-result{padding:12px 0;border-top:1px solid var(--academic-rule-strong);margin-top:15px}
+.account-prior-state-result strong{font-weight:800}
+.account-prior-state button:focus-visible{outline:3px solid var(--academic-focus);outline-offset:2px}
+@media(max-width:620px){.account-prior-state .button-row{display:grid}.account-prior-state button{width:100%}}
+@media(forced-colors:active){.account-prior-state{border-top-color:CanvasText}}
