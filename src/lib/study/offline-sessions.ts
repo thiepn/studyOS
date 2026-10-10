@@ -3,6 +3,7 @@
 import type { ReviewSessionFinishInput, ReviewSessionStartInput } from "./types";
 import { STUDY_SYNC_CHANGE_EVENT } from "./offline-attempts";
 import { currentPendingOwner,canReplayPending } from "./pending-owner";
+import {ownerMatchesBeforeOrAfterAck} from "./owner-replay-guard";
 import { readStudyMutationResponse,StudySyncError } from "./sync-response";
 
 const START_KEY = "semester-os:pending-session-starts:v1";
@@ -64,9 +65,9 @@ async function flushQueue<T extends {sessionId:string;ownerId?:string}>(key:stri
   const items=read<T>(key).filter(item=>canReplayPending(item.ownerId,ownerId));
   for(const item of items){
     try{
-      if(await currentPendingOwner()!==ownerId||!canReplayPending(item.ownerId,ownerId))break;
+      if(!await ownerMatchesBeforeOrAfterAck(ownerId,item.ownerId,currentPendingOwner))break;
       await post(path,item as unknown as ReviewSessionStartInput|ReviewSessionFinishInput);
-      if(await currentPendingOwner()!==ownerId)break;
+      if(!await ownerMatchesBeforeOrAfterAck(ownerId,item.ownerId,currentPendingOwner))break;
       write(key,read<T>(key).filter(row=>row.sessionId!==item.sessionId||row.ownerId!==ownerId));
     }catch(error){
       if((error instanceof StudySyncError && error.authRequired)

@@ -3,6 +3,7 @@
 import type { AttemptInput } from "./types";
 import { readStudyMutationResponse,StudySyncError } from "./sync-response";
 import { currentPendingOwner,canReplayPending } from "./pending-owner";
+import {ownerMatchesBeforeOrAfterAck} from "./owner-replay-guard";
 
 const KEY = "semester-os:pending-attempts:v2";
 const CHANGE_EVENT = "semester-os:sync-changed";
@@ -64,12 +65,12 @@ export async function flushPendingAttempts() {
   for (const attempt of queue) {
     try {
       // Re-authentication in another tab or browser session must stop before each POST.
-      if(await currentPendingOwner()!==ownerId||!canReplayPending(attempt.ownerId,ownerId))break;
+      if(!await ownerMatchesBeforeOrAfterAck(ownerId,attempt.ownerId,currentPendingOwner))break;
       const response = await postAttempt(attempt);
       await readStudyMutationResponse(response);
       // A server acknowledgment obtained across an account change is ambiguous:
       // keep the item for same-owner reconciliation rather than deleting evidence.
-      if(await currentPendingOwner()!==ownerId)break;
+      if(!await ownerMatchesBeforeOrAfterAck(ownerId,attempt.ownerId,currentPendingOwner))break;
       removePendingAttempt(attempt.clientId,ownerId);
       results.push({ clientId: attempt.clientId, ok: true });
     } catch(error) {
