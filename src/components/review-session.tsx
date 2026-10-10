@@ -292,6 +292,14 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
       <p className="eyebrow">{sessionType === "checkpoint" ? "Checkpoint complete" : "Session complete"}</p><h2>{summary.attempted} attempts completed</h2>
       <div className="summary-grid"><div><strong>{summary.correct}</strong><span>correct</span></div><div><strong>{summary.partial}</strong><span>partial</span></div><div><strong>{summary.incorrect}</strong><span>incorrect</span></div><div><strong>{summary.skipped}</strong><span>skipped</span></div></div>
       <p>{formatSeconds(summary.seconds)} active solving time{summary.queued ? ` · ${summary.queued} attempt(s) waiting for sync` : ""}.</p>
+      <ol className="practice-outcome-ledger" aria-label="Question-by-question evidence">
+        {outcomes.map((item,i)=><li key={item.questionId}>
+          <span className="practice-outcome-index">Q{String(i+1).padStart(2,"0")}</span>
+          <strong>{item.skipped?"Skipped · no attempt":item.result?resultLabel(item.result):"Not graded"}</strong>
+          <span>{item.skipped?"No outcome saved":item.queued?"Queued for signed-in account sync":"Recorded"}
+            {item.independence==="solution_exposed"?" · solution exposed, no mastery credit":item.independence&&item.independence!=="independent"?" · "+item.independence.replaceAll("_"," ")+" used":""}</span>
+        </li>)}
+      </ol>
       <div className="button-row"><Link className="primary-button" href={returnHref}>{returnLabel}</Link><Link className="secondary-button" href="/progress">View progress</Link></div>
     </section>
   );

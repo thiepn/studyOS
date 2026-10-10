@@ -48,3 +48,12 @@
   .practice-shell .exam-question-nav button[aria-current="step"]{outline-color:Highlight}
 }
 @media(prefers-reduced-motion:reduce){.practice-shell .practice-focus-guide{scroll-behavior:auto}}
+
+.practice-start-rules{counter-reset:none;list-style:decimal;padding:12px 0 12px 26px;border-top:1px solid var(--academic-rule);border-bottom:1px solid var(--academic-rule);margin:19px 0 24px}
+.practice-start-rules li{font-size:.86rem;line-height:1.55;padding:5px 0;color:var(--academic-ink-secondary)}
+.practice-outcome-ledger{list-style:none;padding:0;margin:18px 0;border-top:1px solid var(--academic-rule)}
+.practice-outcome-ledger li{display:grid;grid-template-columns:42px minmax(0,.9fr) minmax(0,1.5fr);align-items:baseline;gap:9px 12px;padding:13px 0;border-bottom:1px solid var(--academic-rule)}
+.practice-outcome-ledger .practice-outcome-index{font:500 1rem var(--academic-font-display);color:var(--academic-muted)}
+.practice-outcome-ledger strong{font-size:.85rem;overflow-wrap:anywhere}
+.practice-outcome-ledger li>span:last-child{font-size:.77rem;color:var(--academic-muted);overflow-wrap:anywhere}
+@media(max-width:650px){.practice-outcome-ledger li{grid-template-columns:38px minmax(0,1fr)}.practice-outcome-ledger li>span:last-child{grid-column:2}}

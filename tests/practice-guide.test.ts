@@ -30,9 +30,19 @@ test("workspace keeps existing locking, hint, offline recovery and keyboard cont
   assert.match(review,/escalateIndependence\(x, "solution_exposed"\)/);
   assert.match(review,/submitAttemptWithFallback/);
   assert.match(review,/parseStudyDraft/);
+  assert.match(review,/aria-label="Question-by-question evidence"/);
+  assert.match(review,/role="status">Unfinished work stored in this tab/);
   assert.match(review,/Ctrl\/⌘ \+ Enter to lock/);
   assert.match(ui,/aria-current=\{guide.step===key\?"step":undefined\}/);
   assert.match(css,/@media\(max-width:650px\)/);
   assert.match(css,/@media\(forced-colors:active\)/);
   assert.doesNotMatch(css,/(?:linear|radial|conic)-gradient\(/);
+});
+
+test("timed exam navigation marks the current question and readable per-question status",()=>{
+  const exam=read("../src/components/exam-simulation.tsx");
+  assert.match(exam,/aria-label="Timed paper questions"/);
+  assert.match(exam,/aria-label="Grading navigation"/);
+  assert.match(exam,/aria-current=\{i===index\?"step":undefined\}/);
+  assert.match(exam,/role="timer" aria-live="off"/);
 });
