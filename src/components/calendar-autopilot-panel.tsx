@@ -27,7 +27,7 @@ export function CalendarAutopilotPanel({data}:Props){
   const [cancellation,setCancellation]=useState<string|null>(null);
   const evidenceState=calendarEvidenceStatus(data.connection,data.stale);
   const evidence=CALENDAR_EVIDENCE[evidenceState];
-  const commitEligible=canProposeCalendarCommit(evidenceState,data.proposal.blocks.length);
+  const commitEligible=canProposeCalendarCommit(evidenceState,data.proposal.blocks.length)&&data.sources.some(source=>source.selected);
 
   async function post(path:string,body?:unknown){
     setBusy(path);setMessage(null);
