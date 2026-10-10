@@ -7,6 +7,7 @@ import type { ReconciliationFinding, SkillOption, WeekActionRow, WeekResource } 
 import { actionDescription, actionLabel, milestoneForAction } from "@/lib/study/workflow-state";
 import { featuredTeachingWeek, orderedTeachingWeeks } from "@/lib/study/week-focus";
 import { canOpenWeekSolutions } from "@/lib/study/course-study-flow";
+import {sourceProcessingLabel,isVerifiedCourseSource} from "@/lib/study/course-binder-overview";
 import { weekPracticeNextStep, type WeekPracticeAvailability } from "@/lib/study/week-qualification";
 
 const ERROR_OPTIONS = [
@@ -117,6 +118,13 @@ export function WeekWorkflowPanel({
 
   return (
     <div className="week-stack">
+      <nav className="binder-week-index" aria-label="Teaching week index">
+        <span>Jump to week</span>
+        {orderedWeeks.map(item=><a key={item.teaching_week_id} href={"#week-"+item.week_no}
+          aria-current={item.teaching_week_id===featuredId?"location":undefined}
+          aria-label={"Week "+item.week_no+": "+actionLabel(item.next_action)}>
+          W{String(item.week_no).padStart(2,"0")}</a>)}
+      </nav>
       {orderedWeeks.map((week) => {
         const milestone = milestoneForAction(week.next_action);
         const weekFindings = findingsByWeek.get(week.teaching_week_id) ?? [];
@@ -134,6 +142,8 @@ export function WeekWorkflowPanel({
         return (
           <div id={"week-"+week.week_no} className={"week-work-item "+(isFeatured?"week-work-featured":"")} key={week.teaching_week_id}>
             <button type="button" className="week-work-toggle" aria-expanded={isExpanded}
+              aria-controls={isExpanded?"week-panel-"+week.teaching_week_id:undefined}
+              aria-label={"Week "+week.week_no+": "+actionLabel(week.next_action)+(isExpanded?", collapse":", expand")}
               onClick={()=>{
                 if(isFeatured)setCollapsedFeatured(current=>current.includes(week.teaching_week_id)?current.filter(id=>id!==week.teaching_week_id):[...current,week.teaching_week_id]);
                 else setExpandedOther(current=>current.includes(week.teaching_week_id)?current.filter(id=>id!==week.teaching_week_id):[...current,week.teaching_week_id]);
@@ -157,7 +167,7 @@ export function WeekWorkflowPanel({
                 ["Cumulative check",week.checkpoint_completed_at],
               ] as const).map(([label,completed],step)=><li key={label} className={completed?"completed":""}>
                 <span aria-hidden="true">{completed?"✓":String(step+1).padStart(2,"0")}</span>
-                <span>{label}</span>
+                <span>{label}</span><span className={"binder-milestone-status "+(completed?"complete":"")}>{completed?"Recorded":"Not recorded"}</span>
               </li>)}
             </ol>
 
@@ -171,13 +181,23 @@ export function WeekWorkflowPanel({
               <span>{week.open_findings} findings</span>
             </div>
 
-            {visibleResources.length ? (
-              <div className="resource-links" aria-label="Available source material">
-                {visibleResources.map((resource) => resource.drive_url
-                  ? <a key={resource.id} href={resource.drive_url} target="_blank" rel="noreferrer">{resourceLabel(resource.resource_type)} · {resource.title}</a>
-                  : <span key={resource.id}>{resourceLabel(resource.resource_type)} · {resource.title}</span>)}
-              </div>
-            ) : null}
+            {visibleResources.length ? <div className="week-sources" aria-label="Available course source material">
+              <p className="eyebrow">Registered sources</p>
+              <ul className="week-source-ledger">
+                {visibleResources.map(resource=><li key={resource.id}>
+                  <div>
+                    <span className="week-source-type">{resourceLabel(resource.resource_type)}</span>
+                    {resource.drive_url
+                      ? <a href={resource.drive_url} target="_blank" rel="noreferrer">{resource.title} <span className="binder-screenreader-only">(opens source file in new tab)</span></a>
+                      : <strong>{resource.title}</strong>}
+                  </div>
+                  <span className="week-source-status" data-verified={isVerifiedCourseSource(resource)}>
+                    {sourceProcessingLabel(resource.processing_status)}
+                  </span>
+                </li>)}
+              </ul>
+              <p className="week-source-note">A verified source is not automatically an approved question, rubric, or mastery result. Check the source approval queue for processing decisions.</p>
+            </div>:null}
             {practiceStep==="prepare-questions" ? <p className="week-practice-qualification" role="note">
               This week has skills but no active, approved questions that fit a 35-minute practice session.
               {practice?.excludedLongQuestions? ` ${practice.excludedLongQuestions} question(s) exceed that window.` : ""}

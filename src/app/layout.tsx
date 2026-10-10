@@ -3,6 +3,7 @@ import "./globals.css";
 import "./academic-system.css";
 import "./shell.css";
 import "./today-workspace.css";
+import "./course-binder.css";
 
 export const metadata: Metadata = {
   title: "StudyOS",
