@@ -55,3 +55,27 @@ test("setup guide uses existing certification contract and accessible current st
   assert.match(css,/@media\(forced-colors:active\)/);
   assert.doesNotMatch(css,/gradient\(/);
 });
+
+test("exam schedule edits and archived calendar cleanup are guarded by user confirmation",()=>{
+  const course=read("../src/components/course-config-form.tsx");
+  const archive=read("../src/components/archive-calendar-cleanup.tsx");
+  assert.match(course,/examChanged&&\!reviewedExam/);
+  assert.match(course,/type="checkbox" checked=\{reviewedExam\}/);
+  assert.match(course,/Exam schedule changed/);
+  assert.match(archive,/if\(!confirmed\|\|busy\)return/);
+  assert.match(archive,/disabled=\{busy\|\|!confirmed\}/);
+  assert.match(archive,/actual Google Calendar events/);
+});
+test("active and archived semester navigation is explicitly separated",()=>{
+  const active=read("../src/app/courses/page.tsx");
+  const history=read("../src/app/semesters/page.tsx");
+  const archived=read("../src/app/semester/archive/[semesterId]/page.tsx");
+  assert.match(active,/href="\/semester\/bootstrap#semester-roster"/);
+  assert.match(history,/Archived semesters are historical, read-only/);
+  assert.match(archived,/Read-only historical record/);
+  assert.match(archived,/semesterLifecycle\.active\)return notFound\(\)/);
+  const nav=read("../src/app/semester/bootstrap/page.tsx");
+  assert.match(nav,/id="bootstrap-drive"/);
+  assert.match(nav,/id="semester-roster"/);
+  assert.match(nav,/id="semester-historical"/);
+});
