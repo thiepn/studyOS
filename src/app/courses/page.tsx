@@ -17,6 +17,11 @@ export default async function CoursesPage() {
   return (
     <main className="shell">
       <AcademicPageHeading eyebrow="Active semester" title="Courses" detail="Your course binders, teaching weeks, and evidence of learning." />
+      <nav className="semester-management-links" aria-label="Manage active course roster">
+        <Link href="/semester/bootstrap#semester-roster">Add or verify courses</Link>
+        <Link href="/semester">Semester outcome ledger</Link>
+        <Link href="/semesters">Archived semesters</Link>
+      </nav>
       {!data.courses.length?<AcademicEmptyState title="No courses in this semester" detail="Add your first course from semester setup. StudyOS will keep its work, resources and practice together." action={<Link href="/semester/bootstrap" className="primary-button">Set up courses</Link>}/>:null}
       <section className="course-stack">
         {data.courses.map((c) => {
