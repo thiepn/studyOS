@@ -585,7 +585,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 /* Course detail behaves like opening a binder. */
 .course-shell{--course-accent:var(--accent);--course-wash:var(--accent-soft)}
 .course-header{border-bottom:2px solid var(--course-accent)}
-.course-header-identity{display:flex;align-items:center;gap:16px;min-width:0}
+.course-header-identity{display:flex;align-items:center;gap:16px;min-width:0;max-width:100%}
+.course-header-identity>div{min-width:0}
 .course-header-mark{
   display:grid;
   place-items:center;
@@ -600,7 +601,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
   letter-spacing:.05em;
   text-transform:uppercase;
 }
-.course-header h1{max-width:720px}
+.course-header h1{max-width:720px;overflow-wrap:anywhere}
 .course-subline{margin:5px 0 0}
 .course-settings-drawer{
   margin:0 0 32px;

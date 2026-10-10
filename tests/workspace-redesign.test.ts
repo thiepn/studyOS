@@ -15,6 +15,12 @@ test("mobile Progress belongs to More and still displays its current location",(
  assert.match(shell,/aria-current=\{mobileCurrent===item.href/);
 });
 
+test("long course names wrap within narrow headers regardless of system font",()=>{
+ const css=read("../src/app/globals.css");
+ assert.match(css,/\.course-header-identity>div\{min-width:0\}/);
+ assert.match(css,/\.course-header h1\{[^}]*overflow-wrap:anywhere/);
+});
+
 test("advanced course reads are selected explicitly by URL-backed tabs",()=>{
  const page=read("../src/app/courses/[id]/page.tsx");
  assert.match(page,/tab===\"exams\"\?await getCourseExamIntelligence/);
