@@ -78,9 +78,10 @@ export async function handleAssistantRequest(value: unknown, dependencies: Assis
     } };
   } catch (error) {
     const code = error && typeof error === "object" && "code" in error ? String(error.code) : "";
-    return { status: code === "RATE" ? 429 : code === "BUDGET" ? 503 : 502,
+    return { status: code === "RATE" ? 429 : code === "BUDGET" || code === "CONFIG" ? 503 : 502,
       body: { ok: false,
-        error: code === "RATE" ? "The AI service is busy. Try again later." :
+        error: code === "CONFIG" ? "GPT-6 Luna is not configured for StudyOS." :
+          code === "RATE" ? "The AI service is busy. Try again later." :
           code === "BUDGET" ? "The AI spending limit has been reached." :
           "GPT-6 Luna could not answer. Please retry."
       } };
