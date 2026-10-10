@@ -9,6 +9,9 @@ function ActionLink({item,label,primary=false}:{item:PlannedItem;label:string;pr
   return <Link className={className} href={item.href} aria-label={`${label}: ${item.title}, ${item.scheduledMinutes} minutes`}>{content}</Link>;
 }
 
+function taskTitle(item:PlannedItem){return item.kind==="review"?"Review due questions":item.title;}
+function startLabel(item:PlannedItem){return item.kind==="review"?"Start review":item.kind==="workflow"?"Continue this week":"Start task";}
+
 export function DailyPlan({plan}:{plan:DailyPlanType}){
   const current=plan.selected[0]??null;
   const next=plan.selected.slice(1);
@@ -23,19 +26,19 @@ export function DailyPlan({plan}:{plan:DailyPlanType}){
     {current ? <article className="now-task" aria-label="First recommended task">
       <div className="now-copy">
         <span className="task-context"><span className="task-current-dot"/> Up next · {current.courseName??(current.kind==="review"?"All courses":"Semester")}</span>
-        <h3>{current.title}</h3>
-        <p>{current.reason}</p>
+        <h3>{taskTitle(current)}</h3>
+        <p>{current.kind==="review"?"Recall what you’ve learned, then revisit the questions that need another attempt.":current.reason}</p>
         <div className="task-meta"><span><WorkspaceIcon name="clock"/>{current.scheduledMinutes} min</span>{current.partial?<span>partial block</span>:null}{current.urgent?<span className="urgent-tag">Urgent priority</span>:null}</div>
       </div>
-      <ActionLink item={current} label="Start" primary/>
+      <div className="focus-action-row"><ActionLink item={current} label={startLabel(current)} primary/><details className="task-explanation"><summary>Why this next?</summary><p>{current.reason}</p></details></div>
     </article> : <div className="sequence-empty"><strong>Nothing scheduled.</strong><span>Open a course to find materials and practice, or adjust your available time below.</span><Link href="/courses">Open your courses →</Link></div>}
 
-    {next.length ? <><h3 className="next-task-heading">Then, when you’re ready</h3><ol className="next-task-list" aria-label="Upcoming study tasks">{next.slice(0,3).map((item)=><li key={item.id}>
+    {next.length ? <><h3 className="next-task-heading">Also on your plan</h3><ol className="next-task-list" aria-label="Upcoming study tasks">{next.slice(0,3).map((item)=><li key={item.id}>
       <span className="task-list-icon" aria-hidden="true"><WorkspaceIcon name={item.kind==="commitment"?"today":item.kind==="review"?"study":"book"}/></span>
       <div className="next-task-copy">
         <span className="task-context">{item.courseName??(item.kind==="review"?"All courses":"Semester")}</span>
-        <strong>{item.title}</strong>
-        <p>{item.reason}</p>
+        <strong>{taskTitle(item)}</strong>
+        <details className="task-explanation"><summary>Why this task?</summary><p>{item.reason}</p></details>
       </div>
       <div className="next-task-end"><span>{item.scheduledMinutes} min</span><ActionLink item={item} label="Open"/></div>
     </li>)}</ol></>:null}
@@ -43,7 +46,7 @@ export function DailyPlan({plan}:{plan:DailyPlanType}){
     {next.length>3?<details className="course-summary"><summary>{next.length-3} more planned tasks</summary>{next.slice(3).map(item=><p key={item.id}>{item.courseName} · {item.title} · {item.scheduledMinutes} min <ActionLink item={item} label="Open"/></p>)}</details>:null}
     <footer className="sequence-footer">
       <span>{focus.length} focus item{focus.length===1?"":"s"}</span>
-      <span>{plan.remainingMinutes} min intentionally free</span>
+      <span>{plan.remainingMinutes} min available</span>
       {plan.deferred.length?<details className="deferred-work"><summary>{plan.deferred.length} deferred</summary><div>{plan.deferred.slice(0,12).map(item=><p key={item.id}><strong>{item.title}</strong><span>{item.estimatedMinutes} min · {item.reason}</span></p>)}</div></details>:null}
     </footer>
   </section>;

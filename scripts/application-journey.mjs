@@ -6,7 +6,7 @@ import {pathToFileURL} from 'node:url';
 import {startProvider,sessionFor,courseId,owner} from './isolated-study-provider.mjs';
 const output=resolve(process.env.UX_EVIDENCE_DIR??'evidence/application-journey');await mkdir(output,{recursive:true});
 const env={...process.env,STUDYOS_TEST_DIST:'.next-ux-test',NEXT_PUBLIC_SUPABASE_URL:'http://127.0.0.1:3199',NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:'isolated-publishable-key',APP_ORIGIN:'http://127.0.0.1:3110',STUDYOS_AI_ENABLED:'false',OPENAI_API_KEY:'',SUPABASE_SECRET_KEY:'',SUPABASE_SERVICE_ROLE_KEY:''};
-const checks=[],screenshots=[],timings=[],errors=[];
+const checks=[],screenshots=[],timings=[],errors=[],fontRequests=[];
 const log=await open(resolve(output,'server.log'),'w');
 function child(args,overrides={}){return spawn(process.execPath,args,{env:{...env,...overrides},stdio:['ignore',log.fd,log.fd],windowsHide:true});}
 const provider=await startProvider();let app,mockedAiApp,browser,page;
@@ -16,17 +16,19 @@ try{
  for(let i=0;i<150;i++){try{if((await fetch('http://127.0.0.1:3110/login')).ok)break;}catch{}await new Promise(r=>setTimeout(r,200));}
  const module=process.env.PLAYWRIGHT_MODULE??'playwright';const {chromium}=await import(module.startsWith('C:')?pathToFileURL(module).href:module);browser=await chromium.launch({headless:true});
  const context=await browser.newContext({reducedMotion:'reduce'});const session=sessionFor();await context.addCookies([{name:'sb-127-auth-token',value:'base64-'+Buffer.from(JSON.stringify(session)).toString('base64url'),domain:'127.0.0.1',path:'/'}]);
- page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
+ page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));page.on('request',request=>{if(request.resourceType()==='font')fontRequests.push(request.url());});
  const go=async(path,heading)=>{const start=performance.now();await page.goto('http://127.0.0.1:3110'+path);await page.getByRole('heading',{level:1,name:heading,exact:true}).waitFor();timings.push({path,kind:'cold-document',ms:Math.round(performance.now()-start)});};
- const shot=async(name)=>{await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:resolve(output,name+'.png'),fullPage:true});screenshots.push(name+'.png');};
+ const shot=async(name)=>{await page.evaluate(()=>document.fonts.ready);await page.evaluate(()=>window.scrollTo(0,0));await page.screenshot({path:resolve(output,name+'.png'),fullPage:true});screenshots.push(name+'.png');};
  for(const width of [1280,320,375,390,430,768]){
   await page.setViewportSize({width,height:900});
   for(const [name,path,title] of [['today','/','Today'],['courses','/courses','Courses'],['course','/courses/'+courseId,'Differentialgleichungen'],['materials','/resources','Materials'],['assistant','/assistant','GPT-6 Luna'],['progress','/progress','Progress'],['settings','/more','Settings & tools']]){
    await go(path,title);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),`${name} overflow at ${width}`);
+   if(name==='course'&&width<=430){for(const link of await page.locator('.course-section-nav a').all()){const box=await link.boundingBox();assert.ok(box&&box.x>=0&&box.x+box.width<=width,`Course section clipped at ${width}`);}}
    if(width===1280||width===390)await shot(name+'-'+width);
   }
  }
  checks.push('Actual production route compositions render at six widths without horizontal overflow');
+ assert.ok(fontRequests.length>=2,'Custom local fonts must load');assert.ok(fontRequests.every(url=>new URL(url).hostname==='127.0.0.1'),'Fonts must be served locally');checks.push('Custom fonts load from the application; all five course sections fit on narrow mobile screens');
  await page.setViewportSize({width:1280,height:900});await go('/#today-schedule','Today');await page.waitForFunction(()=>document.querySelector('#today-planning')?.open===true);await page.locator('#today-schedule').click();await page.getByRole('heading',{name:'Commitments',exact:true}).waitFor();checks.push('Today schedule deep link reveals planning and opens real deadline controls');
  await go('/more','Settings & tools');const advanced=page.locator('.more-section').filter({has:page.locator('summary').getByText('Advanced study insights',{exact:true})});assert.equal(await advanced.evaluate(node=>node.open),false);await advanced.locator('summary').click();await advanced.getByRole('link',{name:/Study methods/}).waitFor();checks.push('Advanced tools are collapsed initially and remain keyboard-discoverable through native disclosure');
  await page.setViewportSize({width:1280,height:900});

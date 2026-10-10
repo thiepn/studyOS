@@ -14,8 +14,8 @@
   --academic-focus:#3d62a6;
   --academic-alert:#963e33;
   --academic-success:#225b3f;
-  --academic-font-body:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
-  --academic-font-display:ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --academic-font-body:var(--font-workspace-body),ui-sans-serif,system-ui,sans-serif;
+  --academic-font-display:var(--font-workspace-display),Georgia,serif;
   --academic-font-mono:ui-monospace,SFMono-Regular,Consolas,monospace;
   --academic-space-1:4px;
   --academic-space-2:8px;

@@ -12,15 +12,16 @@ export function CourseBinderOverview({courseId,weeks,resources}:{
     <div className="binder-overview-head">
       <div><p className="section-kicker">Current week</p>
         <h2 id="binder-overview-heading">{week?"Teaching week "+week.week_no:"Begin your course binder"}</h2></div>
-      <span className="binder-overview-stage">{week?view.completedStages+" / 4 study milestones recorded":"No registered week"}</span>
+      <span className="binder-overview-stage">{week?view.completedStages+" of 4 steps recorded":"No material added yet"}</span>
     </div>
+    {week?<progress className="binder-week-progress" value={view.completedStages} max={4} aria-label="Recorded study steps"/>:null}
     <div className="binder-overview-main">
       <div className="binder-overview-next">
-        <span>Recommended next action</span>
+        <span>Your next step</span>
         <strong>{view.action}</strong>
         <p>{week?actionDescription(week.next_action):"Register a real teaching-week source to begin the course workflow."}</p>
         <Link className="primary-button" href={week?`/courses/${courseId}?tab=weeks#week-${week.week_no}`:"/resources?course="+courseId+"&week=1#manual-registration"}>
-          {week?"Open week "+week.week_no+" work":"Add first source"}
+          {week?"Continue week "+week.week_no:"Add first material"}
         </Link>
       </div>
     </div>

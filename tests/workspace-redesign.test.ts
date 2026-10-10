@@ -64,3 +64,21 @@ test("course overview keeps solution filtering while separating files and next a
  assert.match(page,/overview\.canOpenSolutions/);
  assert.match(read("../src/app/ux-workspace.css"),/\.academic-route-context\{[^}]*width:auto/);
 });
+
+test("workspace typography is bundled locally with redistribution licenses",()=>{
+ const layout=read("../src/app/layout.tsx");
+ assert.match(layout,/next\/font\/local/);
+ assert.match(layout,/manrope-latin\.woff2/);
+ assert.match(layout,/newsreader-latin\.woff2/);
+ assert.doesNotMatch(layout,/next\/font\/google|fonts\.googleapis/);
+ for(const font of ["manrope","newsreader"])assert.match(read(`../src/app/fonts/${font}-OFL.txt`),/SIL OPEN FONT LICENSE/);
+});
+
+test("planner presentation offers explicit actions without changing its selected work",()=>{
+ const daily=read("../src/components/daily-plan.tsx");
+ assert.match(daily,/Review due questions/);
+ assert.match(daily,/Start review/);
+ assert.match(daily,/Why this next\?/);
+ assert.match(daily,/plan\.selected\[0\]/);
+ assert.match(daily,/item\.href/);
+});
