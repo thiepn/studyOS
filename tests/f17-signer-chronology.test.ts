@@ -10,7 +10,7 @@ function fixture(){
     const kp=generateKeyPairSync("ed25519");
     keys.set(keyId,kp.privateKey);
     return {role:"custodian",status:"trusted",actorId:"actor-"+i,keyId,
-      publicKeyPem:kp.publicKey.export({format:"pem",type:"spki"}).toString(),revokedKeyIds:[]};
+      publicKeyPem:kp.publicKey.export({format:"pem",type:"spki"}).toString(),revokedKeyIds:[] as string[]};
   });
   const events:any[]=[];
   function add(action:string,previousKeyId:string|null,nextKeyId:string|null,keyId:string,occurredAt=when){
