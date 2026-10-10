@@ -1,0 +1,1 @@
+export declare function auditF17SignerChronology(options:{events:any[];roots:any[];head:string;now?:Date}):{integrity:"verified"|"rejected";reasons:string[];releaseAllowed:false;currentKey:string|null;finalHash?:string};
