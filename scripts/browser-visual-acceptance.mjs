@@ -102,6 +102,13 @@ try{
     "A valid protected recovery destination must survive failed OAuth");
   await noOverflow(phone,"mobile recovery return path");
   await evidence(phone,"mobile-recovery-return-path-390-dpr2");
+  // F17: external return destinations cannot be selected by an untrusted query.
+  await phone.goto(new URL("/login?next=https%3A%2F%2Fexample.net%2Foauth-callback",origin).href,{waitUntil:"networkidle"});
+  assert.equal(new URL(phone.url()).pathname,"/login");
+  assert.equal(await phone.getByText(/After sign-in, return to/).count(),0,
+    "External redirect cannot become an authenticated recovery destination");
+  await noOverflow(phone,"external destination denied mobile");
+  await evidence(phone,"mobile-external-return-rejected-390-dpr2");
   manifest.limitations.push("Account recovery route checked anonymously only; no signed-in ownership evidence");
   await phone.close();await desktop.close();
   await writeFile(resolve(output,"manifest.json"),JSON.stringify(manifest,null,2)+"\n");
