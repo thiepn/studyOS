@@ -53,6 +53,21 @@ try{
   assert.equal(denied?.status(),200);
   assert.ok(await desktop.getByRole("alert").count(),"Recoverable OAuth error must be announced");
   await evidence(desktop,"desktop-login-recovery-1440");
+  // F14: reject unauthenticated recovery and internal API return paths using
+  // real browser/navigation behavior, without creating a false signed-in user.
+  await desktop.goto(new URL("/account/recovery",origin).href,{waitUntil:"networkidle"});
+  assert.equal(new URL(desktop.url()).pathname,"/login","Account recovery must require an authenticated owner");
+  assert.equal(new URL(desktop.url()).searchParams.get("next"),"/account/recovery");
+  assert.ok(await desktop.getByText("After sign-in, return to Account recovery.",{exact:false}).count());
+  await noOverflow(desktop,"desktop protected recovery redirect");
+  await evidence(desktop,"desktop-account-recovery-redirect-1440");
+  const privateApi=await desktop.request.get(new URL("/api/study/attempt",origin).href,{maxRedirects:0});
+  assert.equal(privateApi.status(),401,"Protected academic API must return 401 JSON instead of a login redirect");
+  assert.match(privateApi.headers()["content-type"]??"",/application\\/json/);
+  assert.equal((await privateApi.json()).ok,false);
+  await desktop.goto(new URL("/login?next=%2Fapi%2Fstudy%2Fattempt",origin).href,{waitUntil:"networkidle"});
+  assert.equal(await desktop.getByText(/After sign-in, return to/).count(),0,
+    "API endpoints cannot be selected as post-login UI destinations");
   const phone=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});
   const mobile=await phone.goto(new URL("/login",origin).href,{waitUntil:"networkidle"});
   assert.equal(mobile?.status(),200);

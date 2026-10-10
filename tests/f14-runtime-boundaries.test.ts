@@ -13,6 +13,13 @@ test("queued session replay protects individual post and deletion on owner rotat
   assert.match(s,/ownerMatchesBeforeOrAfterAck\(ownerId,item\.ownerId,currentPendingOwner\)/);
   assert.match(s,/write\(key,read<T>\(key\)\.filter/);
 });
+test("real browser regression explicitly checks protected recovery and unauthorized academic API",()=>{
+  const browser=read("../scripts/browser-visual-acceptance.mjs");
+  assert.match(browser,/desktop-account-recovery-redirect-1440/);
+  assert.match(browser,/privateApi\.status\(\),401/);
+  assert.match(browser,/After sign-in, return to/);
+  assert.match(browser,/real browser\/navigation behavior/);
+});
 test("account recovery and auto-sync observe cross-tab storage changes",()=>{
   for(const p of ["../src/components/account-offline-recovery.tsx","../src/components/study-sync-bridge.tsx"]){
     const s=read(p);assert.match(s,/addEventListener\("storage"/);assert.match(s,/removeEventListener\("storage"/);
