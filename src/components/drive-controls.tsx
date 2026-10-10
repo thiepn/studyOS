@@ -42,6 +42,8 @@ export function DriveControls({ connected, email, inboxUrl, lastScanAt, lastScan
     <div className="drive-card">
       <div className="status-line"><strong>Google Drive connected</strong><span>{lastScanStatus ?? "ready"}</span></div>
       <p>{email ?? "Connected Google account"}</p>
+      <p className="muted tiny">Drive permissions are separate from THIEPN Account. Scanning discovers source metadata; it never approves generated questions or rubrics.</p>
+      {lastError?<p role="alert" className="error">Previous Drive error: {lastError}</p>:null}
       {lastScanAt ? <p className="muted">Last scan: {new Date(lastScanAt).toLocaleString()}</p> : <p className="muted">Not scanned yet.</p>}
       <div className="button-row">
         <button className="primary-button button-reset" type="button" disabled={Boolean(busy)} onClick={() => post("/api/integrations/google-drive/scan")}>{busy?.includes("scan") ? "Scanning…" : "Scan Drive now"}</button>
@@ -49,7 +51,7 @@ export function DriveControls({ connected, email, inboxUrl, lastScanAt, lastScan
         <button className="secondary-button button-reset" type="button" disabled={Boolean(busy)} onClick={() => post("/api/integrations/google-drive/disconnect")}>{busy?.includes("disconnect") ? "Disconnecting…" : "Disconnect"}</button>
         <a className="secondary-button" href="/account">Switch account safely</a>
       </div>
-      {message ? <p className="form-message" role="status">{message}</p> : null}
+      {message ? <p className="form-message" role="status" aria-live="polite">{message}</p> : null}
     </div>
   );
 }
