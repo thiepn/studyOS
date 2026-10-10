@@ -10,9 +10,10 @@ export function WorkspaceShell({children}:{children:ReactNode}) {
  const path=usePathname()??"/";
  if(path.startsWith("/login")||path.startsWith("/auth"))return <>{children}</>;
  const current=destinations.find(item=>item.href==="/"?path==="/":path===item.href||path.startsWith(item.href+"/"));
+ const mobileCurrent=current?.href==="/progress"?"/more":current?.href??"/more";
  return <div className="workspace-frame"><aside className="workspace-sidebar">
    <Link href="/" className="workspace-brand">StudyOS<span>Your university workspace</span></Link>
    <nav aria-label="Primary navigation" className="workspace-destinations workspace-desktop-nav">{destinations.map(item=><Link key={item.href} href={item.href} prefetch={true} aria-current={current?.href===item.href?"page":undefined}>{item.label}<Pending/></Link>)}</nav>
    <div className="workspace-account"><Link href="/more">Settings & tools</Link><Link href="/account">Account</Link><StudySyncBridge/></div>
- </aside><div className="workspace-mobile-heading"><Link href="/">StudyOS</Link><span>{current?.label??"Workspace"}</span></div><div className="workspace-main">{children}</div><nav aria-label="Mobile navigation" className="workspace-destinations workspace-mobile-nav">{mobile.map(item=><Link key={item.href} href={item.href} prefetch={item.href==="/more"?false:true} aria-current={(current?.href??"/more")===item.href?"page":undefined}>{item.label}<Pending/></Link>)}</nav></div>;
+ </aside><div className="workspace-mobile-heading"><Link href="/">StudyOS</Link><span>{current?.label??"Workspace"}</span></div><div className="workspace-main">{children}</div><nav aria-label="Mobile navigation" className="workspace-destinations workspace-mobile-nav">{mobile.map(item=><Link key={item.href} href={item.href} prefetch={item.href==="/more"?false:true} aria-current={mobileCurrent===item.href?"page":undefined}>{item.label}<Pending/></Link>)}</nav></div>;
 }

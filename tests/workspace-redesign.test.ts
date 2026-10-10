@@ -9,6 +9,12 @@ test("course directory uses summaries without constructing a practice queue",()=
  assert.doesNotMatch(page,/getTodayData|study_questions|buildQueue/);
 });
 
+test("mobile Progress belongs to More and still displays its current location",()=>{
+ const shell=read("../src/components/workspace-shell.tsx");
+ assert.match(shell,/current\?\.href===\"\/progress\"\?\"\/more\"/);
+ assert.match(shell,/aria-current=\{mobileCurrent===item.href/);
+});
+
 test("advanced course reads are selected explicitly by URL-backed tabs",()=>{
  const page=read("../src/app/courses/[id]/page.tsx");
  assert.match(page,/tab===\"exams\"\?await getCourseExamIntelligence/);
