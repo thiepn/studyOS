@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 
 const css=readFileSync(new URL("../src/app/academic-system.css",import.meta.url),"utf8");
 const primitives=readFileSync(new URL("../src/components/academic-ui.tsx",import.meta.url),"utf8");
-const nav=readFileSync(new URL("../src/components/nav.tsx",import.meta.url),"utf8");
+const nav=readFileSync(new URL("../src/components/workspace-shell.tsx",import.meta.url),"utf8");
 const layout=readFileSync(new URL("../src/app/layout.tsx",import.meta.url),"utf8");
 
 test("semantic paper-and-ink tokens and legacy mappings stay present",()=>{

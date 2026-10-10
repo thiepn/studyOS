@@ -25,17 +25,16 @@ test("page shell has a visible keyboard-first skip route to focusable main conte
   assert.match(css,/\.studyos-skip-link:focus-visible/);
   assert.match(css,/\.studyos-content-target:focus/);
 });
-test("navigation exposes both desktop and native mobile keyboard paths without cookies",()=>{
-  const nav=read("../src/components/nav.tsx");
-  assert.match(nav,/aria-label="Primary navigation"/);
-  assert.match(nav,/aria-current=/);
-  assert.match(nav,/<details className="academic-mobile-nav"/);
-  assert.match(nav,/<summary ref=\{toggle\}/);
-  assert.match(nav,/event.key==="Escape"/);
-  assert.match(nav,/event.key==="ArrowDown"/);
-  assert.match(nav,/getStudyRouteContext\(path,courseName\)/);
-  assert.match(nav,/StudySyncBridge/);
-  assert.match(read("../src/app/shell.css"),/min-height:48px/);
+test("navigation exposes direct desktop and mobile destinations with account sync",()=>{
+  const shell=read("../src/components/workspace-shell.tsx");
+  assert.match(shell,/aria-label="Primary navigation"/);
+  assert.match(shell,/aria-current=/);
+  for(const href of ["/courses","/practice","/progress","/more","/assistant","/account"])assert.ok(shell.includes('"'+href+'"'),href);
+  assert.match(shell,/StudySyncBridge/);
+  assert.match(read("../src/components/nav.tsx"),/getStudyRouteContext/);
+  const css=read("../src/app/ux-workspace.css");
+  assert.match(css,/grid-template-columns:repeat\(5,minmax\(0,1fr\)\)/);
+  assert.match(css,/:focus-visible/);
 });
 test("loading errors and not-found pages share a semantic state system",()=>{
   for(const path of ["../src/app/error.tsx","../src/app/loading.tsx","../src/app/not-found.tsx"]){
@@ -56,9 +55,9 @@ test("browser artifacts use an exact checkout instead of a synthetic PR merge re
 
 test("account context and semester navigation destinations do not claim URL-derived ownership",()=>{
   assert.equal(getStudyRouteContext("/account/unknown").parent?.href,"/account");
-  const nav=read("../src/components/nav.tsx");
-  assert.match(nav,/href="\/semester\/bootstrap" aria-label="Manage active semester setup"/);
-  assert.match(nav,/href="\/semesters" aria-label="Browse active and archived semesters"/);
+  const directory=read("../src/lib/study/more-navigation.ts");
+  assert.match(directory,/href:"\/semester\/bootstrap"/);
+  assert.match(directory,/href:"\/semesters"/);
   const css=read("../src/app/shell.css");
   assert.match(css,/\.academic-context-actions a:focus-visible/);
   assert.match(css,/@media\(max-width:650px\)/);

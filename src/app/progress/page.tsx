@@ -17,10 +17,10 @@ export default async function ProgressPage(){
   for(const item of transfer.activeEvaluations)transferByCourse.set(item.courseId,[...(transferByCourse.get(item.courseId)??[]),item]);
   const longitudinalByKey=new Map(transfer.activeProfiles.map((item)=>[item.stableKey,item]));
   return <main className="shell">
-    <AcademicPageHeading eyebrow="Longitudinal diagnostics" title="Progress" detail="Evidence of learning across this semester, not just activity counts." />
+    <AcademicPageHeading eyebrow="Your learning" title="Progress" detail="Evidence of learning across this semester, not just activity counts." />
 
     <section className="panel progress-summary">
-      <div className="section-heading"><div><p className="eyebrow">Current semester</p><h2>At a glance</h2></div><span>{pulse.risks.filter((c)=>c.risk_band==="at_risk"||c.risk_band==="critical").length} high-risk</span></div>
+      <div className="section-heading"><div><p className="eyebrow">Current semester</p><h2>Learning this semester</h2></div><span>{pulse.risks.filter((c)=>c.risk_band==="at_risk"||c.risk_band==="critical").length} high-risk</span></div>
       <p className="muted">{pulse.risks.length} active course{pulse.risks.length===1?"":"s"} · {sustainedDrift} showing sustained drift. Course summaries below show the most important next evidence; detailed diagnostics remain available when needed.</p>
       <div className="button-row"><Link className="secondary-button" href="/outlook">Open semester outlook</Link></div>
     </section>
@@ -50,19 +50,19 @@ export default async function ProgressPage(){
           <div className="progress-course-body">
           <div className="risk-course-head">
             <div><p className="eyebrow">{course.operating_mode.replace("_"," ")} mode</p><h2>{course.display_name}</h2></div>
-            <div className="risk-score-block"><span className={"risk-badge risk-" + course.risk_band}>{course.risk_band.replace("_"," ")}</span><strong>{Math.round(Number(course.risk_score))}/100</strong></div>
+
           </div>
 
           <div className="diagnostic-grid progress-headline-metrics">
             <div><strong>{course.tested_skills}</strong><span>tested skills</span></div>
             <div><strong>{course.due_or_at_risk_skills}</strong><span>due / at risk</span></div>
-            <div><strong>{Math.round(Number(course.exam_ready_percent))}%</strong><span>exam-ready</span></div>
+            <div><strong>{course.tested_skills?Math.round(Number(course.exam_ready_percent))+"%":"Not assessed"}</strong><span>exam-ready</span></div>
           </div>
 
-          <p className="progress-leading-advice">{leadingAdvice}</p>
+          <p className="progress-leading-advice">{leadingAdvice}</p><Link className="primary-button" href={"/practice?course="+course.course_id}>{course.due_or_at_risk_skills?"Review due questions":"Start practice"}</Link>
           <details className="progress-evidence-drawer">
             <summary><span>Evidence and diagnostics</span><small>Calibration · drift · interventions · previous semesters</small></summary>
-            <div className="progress-evidence-content">
+            <div className="progress-evidence-content">            <div className="risk-score-block"><span className={"risk-badge risk-" + course.risk_band}>{course.risk_band.replace("_"," ")}</span><strong>{Math.round(Number(course.risk_score))}/100</strong></div>
           <div className="diagnostic-grid evidence-secondary">
             <div><strong>{course.overdue_7d_skills}</strong><span>7d+ overdue</span></div>
             <div><strong>{course.relearning_skills}</strong><span>relearning</span></div>

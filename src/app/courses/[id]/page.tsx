@@ -31,12 +31,14 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
         <Nav courseName={c.display_name} />
       </header>
 
-      <CourseBinderOverview courseId={c.course_id} weeks={data.weeks} resources={data.resources} />
+      <nav className="course-section-nav" aria-label="Course sections"><a href="#course-weeks">Weeks & materials</a><Link href={"/resources?course="+c.course_id}>All materials</Link><Link href={"/practice?course="+c.course_id}>Practice</Link><Link href={"/progress#course-"+c.course_id}>Progress</Link></nav>
+      <details className="course-summary"><summary>Course overview & weekly progress</summary><CourseBinderOverview courseId={c.course_id} weeks={data.weeks} resources={data.resources}/></details>
 
       <div className="button-row course-back-row">
         <Link className="secondary-button" href="/courses">← All courses</Link>
-        <Link className="secondary-button" href={"/practice?course="+c.course_id}>Review due skills</Link>
-        <Link className="secondary-button" href={"/resources?course="+c.course_id+"#processing-queue"}>Materials & approval</Link>
+        <Link className="primary-button" href={"/practice?course="+c.course_id}>Start practice</Link>
+        <Link className="secondary-button" href={"/assistant?course="+c.course_id}>Ask Study Assistant</Link>
+        <Link className="secondary-button" href={"/resources?course="+c.course_id+"#manual-registration"}>Add material</Link>
         {c.drive_folder_url ? <a className="secondary-button" href={c.drive_folder_url} target="_blank" rel="noreferrer">Open course Drive</a> : null}
         {c.course_kind === "retake" ? <Link className="secondary-button" href={"/diagnostics/" + c.course_id}>Baseline diagnostic</Link> : null}
       </div>
@@ -55,9 +57,9 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
         weekPractice={data.weekPractice}
       />
 
-      <div id="course-master-map"><CourseMasterMap topics={data.masterMap} /></div>
+      <details id="course-master-map" className="course-summary"><summary>Topics & learning evidence</summary><CourseMasterMap topics={data.masterMap}/></details>
 
-      <section id="course-exam-intelligence" aria-label="Exam preparation"><ExamIntelligence papers={exam.papers} blueprint={exam.blueprint} strategy={exam.strategy} /></section>
+      <details id="course-exam-intelligence" className="course-summary"><summary>Exam preparation & past papers</summary><ExamIntelligence papers={exam.papers} blueprint={exam.blueprint} strategy={exam.strategy}/></details>
 
       <details id="course-settings" className="course-settings-drawer">
         <summary>

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { FirstUseWelcome } from "@/components/first-use-welcome";
 import { Nav } from "@/components/nav";
 import { DailyPlan } from "@/components/daily-plan";
 import { TodayOverview } from "@/components/today-overview";
@@ -23,9 +23,8 @@ function dayLabel(date:string){
 
 export default async function TodayPage() {
   const workspace=await getStudyWorkspaceState();
-  if(!workspace.activeSemester)redirect("/semester/bootstrap");
-  // First-run users have no usable daily plan yet. Route them to the
-  // semester intake instead of invoking the full analytics/planning fan-out.
+  if(!workspace.activeSemester)return <FirstUseWelcome/>;
+  // First-run users see a short setup journey before the analytics/planning fan-out.
   const supabase=await createClient();
   const {count:activeCourseCount,error:activeCourseCountError}=await supabase
     .from("study_courses").select("id",{count:"exact",head:true})
@@ -35,7 +34,7 @@ export default async function TodayPage() {
     activeCourseCountError.code||"course_roster_read_failed",
     activeCourseCountError,
   );
-  if(!activeCourseCount)redirect("/semester/bootstrap");
+  if(!activeCourseCount)return <FirstUseWelcome hasSemester/>;
   const orchestration=await getDailyOrchestration();
   const calendar=await getCalendarAutopilot(orchestration);
   const {today:data,pulse,capacity,plan,commitments,courses,settings}=orchestration;
@@ -92,11 +91,8 @@ export default async function TodayPage() {
         <Nav semesterName={workspace.activeSemester.display_name} />
       </header>
 
-      <TodayOverview data={overview} mode={capacity.mode} weekPercent={weekRuntime?.progress.completionPercent??null}/>
-      <PlanningCommandOverview commitments={commitments} capacity={capacity} calendar={calendar} hasWeeklyCommitment={Boolean(weekRuntime)} now={new Date()}/>
-
       {!orchestration.bootstrapCertified ? <section className="workflow-notice workflow-notice-required">
-        <div><span className="notice-label">Setup required</span><strong>Finish the semester setup before StudyOS schedules normal course work.</strong><p>Your real deadlines remain visible; generated discretionary study work stays paused until the curriculum is anchored.</p></div>
+        <div><span className="notice-label">Course setup</span><strong>Connect your curriculum to receive study recommendations.</strong><p>Your real deadlines remain visible; generated discretionary study work stays paused until the curriculum is anchored.</p></div>
         <Link className="primary-button" href="/semester/bootstrap">Finish setup</Link>
       </section> : null}
 
@@ -122,9 +118,15 @@ export default async function TodayPage() {
       </section> : null}
 
       <DailyPlan plan={plan}/>
+      <section className="today-courses"><div className="section-heading"><h2>Your courses</h2><Link href="/courses">All courses →</Link></div><div className="today-course-links">{courses.map(course=><Link key={course.id} href={"/courses/"+course.id}><strong>{course.display_name}</strong><span>Weeks & materials →</span></Link>)}</div></section>
+      <section className="today-upcoming"><div className="section-heading"><h2>Upcoming deadlines</h2><a href="#today-schedule">Manage schedule</a></div>{commitments.slice().sort((a,b)=>a.due_at.localeCompare(b.due_at)).slice(0,4).map(item=><div className="upcoming-row" key={item.id}><strong>{item.title}</strong><time dateTime={item.due_at}>{new Date(item.due_at).toLocaleDateString("en-GB",{day:"numeric",month:"short"})}</time></div>)}{!commitments.length?<p className="muted">No upcoming deadlines recorded. Add one in your schedule.</p>:null}</section>
+      <details className="today-drawer"><summary>Study overview & planning details</summary><div className="today-drawer-body">      <TodayOverview data={overview} mode={capacity.mode} weekPercent={weekRuntime?.progress.completionPercent??null}/>
+      <PlanningCommandOverview commitments={commitments} capacity={capacity} calendar={calendar} hasWeeklyCommitment={Boolean(weekRuntime)} now={new Date()}/>
 
-      <section className="after-plan" id="today-decisions" aria-labelledby="today-decisions-heading">
-        <div className="after-plan-heading"><span className="section-kicker">Changes & exceptions</span><h2 id="today-decisions-heading">Only what needs a decision.</h2></div>
+</div></details>
+
+      <details className="after-plan" id="today-decisions" aria-labelledby="today-decisions-heading">
+        <summary id="today-decisions-heading">Advanced study insights & decisions</summary>
         <div className="signal-list">
           {weekRuntime ? (weekConcern&&(weekConcern.paceStatus==="behind"||weekConcern.paceStatus==="not_started") ? <Link href="/week" className={"signal-row signal-"+weekConcern.paceStatus}>
             <div><span>Weekly commitment</span><strong>{weekConcern.shortName??weekConcern.displayName} needs attention</strong></div>
@@ -146,7 +148,7 @@ export default async function TodayPage() {
           </Link> : null}
           {weekRuntime&&!((weekConcern&&(weekConcern.paceStatus==="behind"||weekConcern.paceStatus==="not_started"))||checkpoint?.due||examCommand.active||attention) ? <p className="all-clear-line">No exceptional changes to your study plan. Continue in the order above.</p> : null}
         </div>
-      </section>
+      </details>
 
       <details className="today-drawer">
         <summary id="today-schedule"><span><strong>Schedule & deadlines</strong><small>Calendar placement, commitments, and due dates</small></span><b>Open</b></summary>

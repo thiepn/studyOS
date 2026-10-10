@@ -58,7 +58,7 @@ export default async function ResourcesPage({searchParams}:{searchParams:Promise
 
   return (
     <main className="shell resource-desk">
-      <header className="header resource-desk-header"><div><p className="eyebrow">{selectedCourse?"Course source desk":"Source pipeline"}</p><h1>{selectedCourse?selectedCourse.display_name+" · Materials":"Resources"}</h1></div><Nav /></header>
+      <header className="header resource-desk-header"><div><p className="eyebrow">{selectedCourse?"Course source desk":"Course materials"}</p><h1>{selectedCourse?selectedCourse.display_name+" · Materials":"Materials"}</h1></div><Nav /></header>
       {selectedCourse?<div className="resource-context-nav">
         <p>{selectedWeek?`Preparing week ${selectedWeek} · `:""}Materials, processing and approval remain within this course.</p>
         <Link href={"/courses/"+selectedCourse.id}>← Course binder</Link>
@@ -73,24 +73,11 @@ export default async function ResourcesPage({searchParams}:{searchParams:Promise
           {course.short_name??course.display_name}</Link>)}
       </nav>
 
-      <section className="resource-desk-flow" aria-labelledby="resource-desk-heading">
-        <div><div><span className="section-kicker">Source-to-study chain</span>
-          <h2 id="resource-desk-heading">Discover. Validate. Approve. Study.</h2></div>
-          <span className="muted tiny">Active semester · {selectedCourse?"One-course view":"All active courses"}</span></div>
-        <p>Drive discovery and declared source authority are not approval. Generated topics, skills and questions enter the study map only after the existing validation and explicit acceptance controls.</p>
-        <dl className="resource-desk-stats">
-          <div><dt>Registered sources</dt><dd>{summary.registered}</dd></div>
-          <div><dt>Verified sources</dt><dd>{summary.verified}</dd></div>
-          <div><dt>Not verified</dt><dd>{summary.pending}</dd></div>
-          <div><dt>Process / review</dt><dd>{summary.queued+summary.candidates}</dd></div>
-          <div><dt>Drive intake</dt><dd>{summary.intake}</dd></div>
-        </dl>
-        <nav className="resource-desk-jump" aria-label="Source workspace sections">
-          <a href="#source-drive">Drive connection</a><a href="#processing-queue">Process sources</a>
-          <a href="#candidate-review">Review candidates</a><a href="#source-intake">Drive intake</a>
-          <a href="#source-library">Search sources</a>
-          <a href="#manual-registration">Register source</a>
-        </nav>
+      <div className="button-row"><a className="primary-button" href="#manual-registration">Add material</a><a className="secondary-button" href="#source-drive">Google Drive</a><a className="secondary-button" href="#processing-queue">Review & processing ({summary.queued+summary.candidates})</a></div>
+      <section id="source-library" className="panel resource-library">
+        <div className="section-heading"><div><p className="eyebrow">Materials</p><h2>Your materials</h2></div><span>{resources.length}</span></div>
+        <p className="resource-stage-help">Search only sources in this active-semester view. Processing status is separate from declared source authority and is not a rights or rubric attestation.</p>
+        <SourceIndex key={(selectedCourse?.id??"all")+":"+(selectedWeek??"all")} resources={resources} courseNames={courseNames} weekNumbers={Object.fromEntries((data.weeks??[]).map(week=>[week.id,week.week_no]))} initialWeek={selectedWeek} />
       </section>
 
       {driveMessage ? <p className={query.drive==="connected"?"form-message":"error"} role="status">{driveMessage}</p> : null}
@@ -111,7 +98,7 @@ export default async function ResourcesPage({searchParams}:{searchParams:Promise
 
       <section id="manual-registration" className="grid resource-grid">
         <div className="panel">
-          <h2>Manual registration</h2>
+          <h2>Add a Drive file</h2>
           <p className="muted">Normally, Drive scanning discovers material automatically. Use this only when you need to register one file manually.</p>
           <ResourceRegisterForm courses={data.courses} defaultCourseId={selectedCourse?.id} defaultWeekNo={selectedWeek} />
         </div>
@@ -137,11 +124,7 @@ export default async function ResourcesPage({searchParams}:{searchParams:Promise
         <DriveIntakeIndex items={unresolvedIntake} courseNames={courseNames} />
       </section>
 
-      <section id="source-library" className="panel resource-library">
-        <div className="section-heading"><div><p className="eyebrow">Source index</p><h2>Registered resources</h2></div><span>{resources.length}</span></div>
-        <p className="resource-stage-help">Search only sources in this active-semester view. Processing status is separate from declared source authority and is not a rights or rubric attestation.</p>
-        <SourceIndex resources={resources} courseNames={courseNames} />
-      </section>
+
     </main>
   );
 }

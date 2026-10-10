@@ -9,6 +9,9 @@ import "./resource-desk.css";
 import "./planning-command.css";
 import "./semester-management.css";
 import "./account/recovery/recovery.css";
+import "./assistant.css";
+import "./ux-workspace.css";
+import { WorkspaceShell } from "@/components/workspace-shell";
 
 export const metadata: Metadata = {
   title: "StudyOS",
@@ -22,7 +25,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en">
       <body>
         <a className="studyos-skip-link" href="#studyos-main">Skip to study content</a>
-        <div id="studyos-main" className="studyos-content-target" tabIndex={-1}>{children}</div>
+        <WorkspaceShell><div id="studyos-main" className="studyos-content-target" tabIndex={-1}>{children}</div></WorkspaceShell>
       </body>
     </html>
   );

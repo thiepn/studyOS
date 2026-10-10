@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import nextEnv from "@next/env";
+
+// Match Next's local configuration loading; CI environment values retain priority.
+nextEnv.loadEnvConfig(process.cwd());
 
 // The Next.js server build alone does not prove browser env inlining.
 // Only inspect built static JavaScript. Never print credential values.

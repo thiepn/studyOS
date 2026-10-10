@@ -159,7 +159,24 @@ export function WeekWorkflowPanel({
               <span className={`health-badge health-${week.health_status}`}>{week.health_status.replaceAll("_", " ")}</span>
             </div>
             <p className="workflow-description">{actionDescription(week.next_action)}</p>
-            <ol className="week-academic-sequence" aria-label="Teaching week progress">
+            {visibleResources.length ? <div className="week-sources" aria-label="Available course source material">
+              <p className="eyebrow">Week materials</p>
+              <ul className="week-source-ledger">
+                {visibleResources.map(resource=><li key={resource.id}>
+                  <div>
+                    <span className="week-source-type">{resourceLabel(resource.resource_type)}</span>
+                    {resource.drive_url
+                      ? <a href={resource.drive_url} target="_blank" rel="noreferrer">{resource.title} <span className="binder-screenreader-only">(opens source file in new tab)</span></a>
+                      : <strong>{resource.title}</strong>}
+                  </div>
+                  <span className="week-source-status" data-verified={isVerifiedCourseSource(resource)}>
+                    {sourceProcessingLabel(resource.processing_status)}
+                  </span>
+                </li>)}
+              </ul>
+              <p className="week-source-note">A verified source is not automatically an approved question, rubric, or mastery result. Check the source approval queue for processing decisions.</p>
+            </div>:null}
+            <details className="course-summary"><summary>Week progress & milestones</summary>            <ol className="week-academic-sequence" aria-label="Teaching week progress">
               {([
                 ["Lecture retrieval",week.lecture_retrieval_completed_at],
                 ["Independent sheet",week.exercise_attempt_completed_at],
@@ -181,23 +198,8 @@ export function WeekWorkflowPanel({
               <span>{week.open_findings} findings</span>
             </div>
 
-            {visibleResources.length ? <div className="week-sources" aria-label="Available course source material">
-              <p className="eyebrow">Registered sources</p>
-              <ul className="week-source-ledger">
-                {visibleResources.map(resource=><li key={resource.id}>
-                  <div>
-                    <span className="week-source-type">{resourceLabel(resource.resource_type)}</span>
-                    {resource.drive_url
-                      ? <a href={resource.drive_url} target="_blank" rel="noreferrer">{resource.title} <span className="binder-screenreader-only">(opens source file in new tab)</span></a>
-                      : <strong>{resource.title}</strong>}
-                  </div>
-                  <span className="week-source-status" data-verified={isVerifiedCourseSource(resource)}>
-                    {sourceProcessingLabel(resource.processing_status)}
-                  </span>
-                </li>)}
-              </ul>
-              <p className="week-source-note">A verified source is not automatically an approved question, rubric, or mastery result. Check the source approval queue for processing decisions.</p>
-            </div>:null}
+</details>
+
             {practiceStep==="prepare-questions" ? <p className="week-practice-qualification" role="note">
               This week has skills but no active, approved questions that fit a 35-minute practice session.
               {practice?.excludedLongQuestions? ` ${practice.excludedLongQuestions} question(s) exceed that window.` : ""}
