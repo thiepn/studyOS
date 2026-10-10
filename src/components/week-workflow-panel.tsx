@@ -188,7 +188,7 @@ export function WeekWorkflowPanel({
                   <div>
                     <span className="week-source-type">{resourceLabel(resource.resource_type)}</span>
                     {resource.drive_url
-                      ? <a href={resource.drive_url} target="_blank" rel="noreferrer">{resource.title} <span className="sr-only">(opens source file in new tab)</span></a>
+                      ? <a href={resource.drive_url} target="_blank" rel="noreferrer">{resource.title} <span className="binder-screenreader-only">(opens source file in new tab)</span></a>
                       : <strong>{resource.title}</strong>}
                   </div>
                   <span className="week-source-status" data-verified={isVerifiedCourseSource(resource)}>

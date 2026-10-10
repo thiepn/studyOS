@@ -59,6 +59,8 @@ test("binder landmarks, week navigation, evidence and source status are accessib
   assert.match(panel,/aria-controls=\{isExpanded/);
   assert.match(panel,/canOpenWeekSolutions\(week\)/);
   assert.match(panel,/sourceProcessingLabel\(resource\.processing_status\)/);
+  assert.match(panel,/binder-screenreader-only/);
+  assert.match(css,/\.binder-screenreader-only\{/);
   assert.match(css,/@media\(max-width:580px\)/);
   assert.match(css,/@media\(forced-colors:active\)/);
   assert.doesNotMatch(css,/gradient\(/);
