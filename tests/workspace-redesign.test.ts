@@ -19,6 +19,7 @@ test("long course names wrap within narrow headers regardless of system font",()
  const css=read("../src/app/globals.css");
  assert.match(css,/\.course-header-identity>div\{min-width:0\}/);
  assert.match(css,/\.course-header h1\{[^}]*overflow-wrap:anywhere/);
+ assert.match(read("../src/app/academic-system.css"),/h1,h2,h3 \{[^}]*overflow-wrap:anywhere/);
 });
 
 test("advanced course reads are selected explicitly by URL-backed tabs",()=>{
