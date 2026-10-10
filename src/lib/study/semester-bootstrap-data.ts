@@ -30,6 +30,22 @@ export async function getSemesterBootstrapEntryState(){
   return getStudyWorkspaceState(supabase);
 }
 
+/** Read-only recovery for an ambiguous first-semester POST response.
+ * A same-name semester with different dates or timezone is a conflict, not a
+ * successful retry. No semester, course, or external source is created here. */
+export function matchingFirstSemester(existing:{
+  id:string;stable_key:string;display_name:string;starts_on:string;
+  ends_on:string|null;timezone:string;
+}|null, submitted:{
+  stableKey:string;displayName:string;startsOn:string;endsOn:string|null;timezone:string;
+}):string|null{
+  return existing?.stable_key===submitted.stableKey&&
+    existing.display_name===submitted.displayName&&
+    existing.starts_on===submitted.startsOn&&
+    (existing.ends_on??null)===(submitted.endsOn??null)&&
+    existing.timezone===submitted.timezone?existing.id:null;
+}
+
 export async function createInitialSemester(value:unknown){
   const row=value&&typeof value==="object"&&!Array.isArray(value)?value as Record<string,unknown>:{};
   const displayName=String(row.displayName??"").trim();
@@ -42,7 +58,19 @@ export async function createInitialSemester(value:unknown){
 
   const supabase=await createClient();
   const state=await getStudyWorkspaceState(supabase);
-  if(state.activeSemester||state.hasAnySemester)throw new StudyServiceError("Semester history already exists; use Semester Rollover instead.","invalid_initial_semester");
+  const existingSemester=async()=>{
+    const {data,error}=await supabase.from("study_semesters")
+      .select("id,stable_key,display_name,starts_on,ends_on,timezone")
+      .eq("user_id",state.userId).eq("active",true).maybeSingle();
+    if(error)throw new StudyServiceError("Could not inspect existing semester after retry","semester_retry_read_failed",error);
+    return data;
+  };
+  const request={stableKey,displayName,startsOn,endsOn,timezone};
+  if(state.activeSemester||state.hasAnySemester){
+    const match=matchingFirstSemester(await existingSemester(),request);
+    if(match)return {semesterId:match,recovered:true};
+    throw new StudyServiceError("A different semester or existing history is already recorded. Refresh Semester Setup or use Semester Rollover; nothing new was created.","initial_semester_conflict");
+  }
 
   const connection=await supabase.rpc("connect_thiepn_app",{p_app_slug:"semester-os"});
   if(connection.error)throw new StudyServiceError(
@@ -53,6 +81,13 @@ export async function createInitialSemester(value:unknown){
     p_stable_key:stableKey,p_display_name:displayName,p_starts_on:startsOn,p_ends_on:endsOn,p_timezone:timezone,
   });
   if(error){
+    // A network timeout can occur after the database committed the first
+    // semester. Reconcile the owner-scoped original record before retrying.
+    const match=matchingFirstSemester(await existingSemester(),request);
+    if(match)return {semesterId:match,recovered:true};
+    if(error.code==="23505")throw new StudyServiceError(
+      "A semester already exists. Reload your workspace instead of submitting another first semester.",
+      "initial_semester_conflict",error);
     if(error.code==="PGRST202"||error.code==="42883")throw new StudyServiceError(
       "The first-semester database function is not installed. The StudyOS database migrations must be repaired before retrying.",
       "initial_semester_schema_unavailable",error);
@@ -163,7 +198,14 @@ export async function createBootstrapCourse(value:unknown){
   try{input=parseBootstrapCourseDraft(value);}
   catch(error){throw new StudyServiceError(error instanceof Error?error.message:"Invalid course payload","invalid_semester_bootstrap_course",error);}
 
-  const supabase=await createClient();await ensureStudyWorkspace(supabase);
+  const supabase=await createClient();
+  const {semesterId,userId}=await ensureStudyWorkspace(supabase);
+  const existing=await supabase.from("study_courses").select("id")
+    .eq("user_id",userId).eq("semester_id",semesterId).eq("stable_key",input.stableKey).maybeSingle();
+  if(existing.error)throw new StudyServiceError("Could not inspect course roster before creating","course_preflight_failed",existing.error);
+  if(existing.data?.id)throw new StudyServiceError(
+    "This course key already exists in the active semester. Refresh the roster before submitting again.",
+    "course_already_exists");
   const {data,error}=await (supabase.rpc as any)("study_create_course",{
     p_stable_key:input.stableKey,p_display_name:input.displayName,p_short_name:input.shortName,
     p_course_kind:input.courseKind,p_professor:input.professor,p_credits:input.credits,p_exam_at:input.examAt,
@@ -172,7 +214,11 @@ export async function createBootstrapCourse(value:unknown){
     p_expects_solution:input.expectsSolution,p_lecture_retrieval_target_hours:input.lectureRetrievalTargetHours,
     p_solution_reconcile_target_hours:input.solutionReconcileTargetHours,p_checkpoint_weight:input.checkpointWeight,
   });
-  if(error)throw new StudyServiceError("Could not add course",error.code||"semester_bootstrap_course_failed",error);
+  if(error){
+    if(error.code==="23505")throw new StudyServiceError(
+      "The course was already created by another request. Refresh the current roster.","course_already_exists",error);
+    throw new StudyServiceError("Could not add course",error.code||"semester_bootstrap_course_failed",error);
+  }
   return data;
 }
 
