@@ -10,7 +10,7 @@ test("Luna bridge signs the exact shared v1 request protocol", async () => {
   let captured!: { url: string; init: RequestInit };
   const answer = await askStudyLuna(input, {
     baseUrl: "https://ai.example.test", appSecret: secret,
-    now: () => 1_700_000_000, uuid: (() => { let n = 0; return () => ++n === 1 ? "request-1" : "nonce-2"; })(),
+    now: () => 1_700_000_000_000, uuid: (() => { let n = 0; return () => ++n === 1 ? "request-1" : "nonce-2"; })(),
     fetcher: async (url, init) => {
       captured = { url: String(url), init: init ?? {} };
       return Response.json({ ok: true, data: { answer: "A determinant is a scalar." }, meta: { capability: "study.explain", requestId: "request-1", model: "gpt-6-luna", version: 1 } });
