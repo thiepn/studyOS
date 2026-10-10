@@ -14,12 +14,14 @@ export type LunaOptions = {
 };
 
 export class LunaError extends Error {
-  constructor(readonly code: "CONFIG" | "BUDGET" | "RATE" | "UPSTREAM") {
+  readonly code: "CONFIG" | "BUDGET" | "RATE" | "UPSTREAM";
+  constructor(code: "CONFIG" | "BUDGET" | "RATE" | "UPSTREAM") {
     super(code === "CONFIG" ? "GPT-6 Luna is not configured for StudyOS." :
       code === "BUDGET" ? "The AI spending limit has been reached." :
       code === "RATE" ? "The AI service is busy. Try again later." :
       "GPT-6 Luna could not answer. Please retry.");
     this.name = "LunaError";
+    this.code = code;
   }
 }
 
