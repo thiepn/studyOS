@@ -74,6 +74,7 @@ export default async function AccountPage({searchParams}:{
         <Link className="primary-button" href={workspaceAction.href}>{workspaceAction.label}</Link>
         <Link className="secondary-button" href="/semesters">Browse semester history</Link>
         <Link className="secondary-button" href="/courses">Courses</Link>
+        <Link className="secondary-button" href="/account/recovery">Recover offline work</Link>
       </div>
       <p className={styles.workspaceFootnote}>Study Drive and Study Calendar use separate Google grants. Their connected email addresses do not select or authorize this academic workspace.</p>
     </section>

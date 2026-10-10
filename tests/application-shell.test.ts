@@ -63,3 +63,18 @@ test("account context and semester navigation destinations do not claim URL-deri
   assert.match(css,/\.academic-context-actions a:focus-visible/);
   assert.match(css,/@media\(max-width:650px\)/);
 });
+
+test("authenticated account recovery route has a discoverable active-context path and semantic navigation",()=>{
+  const page=read("../src/app/account/recovery/page.tsx");
+  const owner=read("../src/components/account-offline-recovery.tsx");
+  const css=read("../src/app/account/recovery/recovery.css");
+  assert.equal(getStudyRouteContext("/account/recovery").parent?.href,"/account");
+  assert.match(read("../src/app/account/page.tsx"),/href="\/account\/recovery"/);
+  assert.match(page,/supabase\.auth\.getUser\(\)/);
+  assert.match(page,/workspace\.userId!==data\.user\.id/);
+  assert.match(owner,/if\(await currentPendingOwner\(\)!==verifiedOwnerId\)/);
+  assert.match(owner,/aria-live="polite"/);
+  assert.match(css,/@media\(max-width:620px\)/);
+  assert.match(css,/@media\(forced-colors:active\)/);
+  assert.doesNotMatch(css,/gradient\(/);
+});

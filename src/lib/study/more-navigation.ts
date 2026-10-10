@@ -21,6 +21,7 @@ export const MORE_SECTIONS = [
   ]},
   { title:"System", description:"Connections and readiness.", entries:[
     {href:"/setup",label:"Connections & setup",description:"Drive, calendar, and activation"},
+    {href:"/account/recovery",label:"Account recovery",description:"Inspect local offline queues and safe owner-bound retries"},
   ]},
 ] as const;
 

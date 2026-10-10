@@ -8,6 +8,7 @@ const exact:Record<string,StudyRouteContext>={
   "/more":{current:"More"},
   "/account":{current:"Account"},
   "/account/connections":{current:"Account connections",parent:{label:"Account",href:"/account"}},
+  "/account/recovery":{current:"Account recovery",parent:{label:"Account",href:"/account"}},
   "/resources":{current:"Resources",parent:{label:"More",href:"/more"}},
   "/week":{current:"This week",parent:{label:"More",href:"/more"}},
   "/handoff":{current:"Weekly review",parent:{label:"More",href:"/more"}},
