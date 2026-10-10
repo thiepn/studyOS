@@ -28,3 +28,11 @@ test("no runtime accepts a self-described approval or performs writes/restores",
   assert.doesNotMatch(src,/\.unlink\(/);
   assert.doesNotMatch(src,/\.from\("study_/);
 });
+
+test("F15 built-server Chromium regression checks interrupted sign-in and correct safe return destination",()=>{
+  const browser=read("../scripts/browser-visual-acceptance.mjs");
+  assert.match(browser,/mobile-recovery-return-path-390-dpr2/);
+  assert.match(browser,/Interrupted sign-in must expose an accessible recovery alert/);
+  assert.match(browser,/After sign-in, return to Account recovery/);
+  assert.match(browser,/No fabricated signed-in account/);
+});
