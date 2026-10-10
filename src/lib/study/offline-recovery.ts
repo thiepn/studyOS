@@ -47,7 +47,7 @@ export function offlineCustodyExplanation(custody:OfflineCustody):string{
     case "malformed":return "One or more offline queues cannot be parsed safely. StudyOS will not replay them through this recovery control.";
     case "legacy_unowned":return "Older queue records without owner metadata are present. They cannot be assigned to another account or automatically replayed.";
     case "ready":return custody.owned
-      ? "Only records explicitly tagged for this verified account may be retried. Server acknowledgements and course history still require review."
+      ? "Only records explicitly tagged for this verified account may be retried. A matching authenticated database receipt is required before removing each local item; independently review course history."
       : "No pending local records are tagged for this account. This does not independently prove server receipt.";
   }
 }

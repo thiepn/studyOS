@@ -5,6 +5,8 @@ import { readStudyMutationResponse,StudySyncError } from "./sync-response";
 import { currentPendingOwner,canReplayPending } from "./pending-owner";
 import {ownerMatchesBeforeOrAfterAck} from "./owner-replay-guard";
 import {appendOwnerPending,sameOfflineOwner} from "./offline-queue-custody";
+import {hasPersistedOfflineReceipt} from "./offline-receipt-client";
+import {withOfflineReplayGuard} from "./offline-replay-guard";
 
 const KEY = "semester-os:pending-attempts:v2";
 const CHANGE_EVENT = "semester-os:sync-changed";
@@ -32,11 +34,20 @@ export function enqueueAttempt(input: AttemptInput, ownerId: string): PendingAtt
   return pending;
 }
 
-export function removePendingAttempt(clientId: string,ownerId?:string) {
-  if (!storageAvailable()||!ownerId) return;
-  localStorage.setItem(KEY, JSON.stringify(listPendingAttempts().filter((attempt) =>
-    attempt.clientId !== clientId || (ownerId!=null&&attempt.ownerId!==ownerId))));
+const replayExpectedRemoval=new Map<string,PendingAttempt>();
+/** Only the exact snapshot verified by the authenticated receipt can be removed.
+ * Keep the original two-argument interface for existing integration users. */
+export function removePendingAttempt(clientId:string,ownerId?:string):boolean{
+  if (!storageAvailable()||!ownerId) return false;
+  const lookup=ownerId+":"+clientId;
+  const expected=replayExpectedRemoval.get(lookup);
+  if(!expected)return false;
+  const before=listPendingAttempts();
+  const matching=before.filter(item=>item.ownerId===ownerId&&item.clientId===clientId);
+  if(matching.length!==1||JSON.stringify(matching[0])!==JSON.stringify(expected))return false;
+  localStorage.setItem(KEY,JSON.stringify(before.filter(item=>item!==matching[0])));
   changed();
+  return true;
 }
 
 async function postAttempt(attempt: AttemptInput) {
@@ -67,26 +78,44 @@ export async function submitAttemptWithFallback(input: AttemptInput) {
 export async function flushPendingAttempts() {
   const ownerId=await currentPendingOwner();
   if(!ownerId)return [];
-  const queue=listPendingAttempts(ownerId);
-  const results: { clientId: string; ok: boolean }[] = [];
-  for (const attempt of queue) {
-    try {
-      // Re-authentication in another tab or browser session must stop before each POST.
-      if(!await ownerMatchesBeforeOrAfterAck(ownerId,attempt.ownerId,currentPendingOwner))break;
-      const response = await postAttempt(attempt);
-      await readStudyMutationResponse(response);
-      // A server acknowledgment obtained across an account change is ambiguous:
-      // keep the item for same-owner reconciliation rather than deleting evidence.
-      if(!await ownerMatchesBeforeOrAfterAck(ownerId,attempt.ownerId,currentPendingOwner))break;
-      removePendingAttempt(attempt.clientId,ownerId);
-      results.push({ clientId: attempt.clientId, ok: true });
-    } catch(error) {
-      results.push({clientId:attempt.clientId,ok:false});
-      if((error instanceof StudySyncError && error.authRequired)
-        ||(typeof navigator!=="undefined"&&!navigator.onLine))break;
+  return await withOfflineReplayGuard("owner-"+ownerId,async()=>{
+    const queue=listPendingAttempts(ownerId);
+    const results: { clientId: string; ok: boolean }[] = [];
+    for(const attempt of queue){
+      try{
+        if(!await ownerMatchesBeforeOrAfterAck(ownerId,attempt.ownerId,currentPendingOwner))break;
+        if(!attempt.clientRequestId||attempt.clientRequestId!==attempt.clientId||!attempt.questionId)
+          throw new Error("Legacy or mismatched attempt identity requires manual recovery.");
+        const receipt={kind:"attempt" as const,recordId:attempt.clientId,questionId:attempt.questionId};
+        // Network may have failed AFTER the original write committed.
+        // Prefer persisted receipt to a duplicate POST when possible.
+        const recordedBefore=await hasPersistedOfflineReceipt(receipt);
+        if(!recordedBefore){
+          if(!await ownerMatchesBeforeOrAfterAck(ownerId,attempt.ownerId,currentPendingOwner))break;
+          const response=await postAttempt(attempt);
+          await readStudyMutationResponse(response);
+        }
+        if(!await ownerMatchesBeforeOrAfterAck(ownerId,attempt.ownerId,currentPendingOwner))break;
+        const recorded=recordedBefore||await hasPersistedOfflineReceipt(receipt);
+        if(!recorded)throw new Error("Server write lacks independent read-back; retained for recovery.");
+        if(!await ownerMatchesBeforeOrAfterAck(ownerId,attempt.ownerId,currentPendingOwner))break;
+        // A queued item edited in another tab after the replay snapshot is
+        // never removed as an acknowledgement of an older write.
+        const removalKey=ownerId+":"+attempt.clientId;
+        replayExpectedRemoval.set(removalKey,attempt);
+        try{
+          if(!removePendingAttempt(attempt.clientId,ownerId))
+            throw new Error("Queued attempt changed since replay snapshot; retain for reconciliation.");
+        }finally{replayExpectedRemoval.delete(removalKey);}
+        results.push({clientId:attempt.clientId,ok:true});
+      }catch(error){
+        results.push({clientId:attempt.clientId,ok:false});
+        // On uncertain evidence, stop rather than POST more queued answers.
+        break;
+      }
     }
-  }
-  return results;
+    return results;
+  })??[];
 }
 
 export { CHANGE_EVENT as STUDY_SYNC_CHANGE_EVENT };
