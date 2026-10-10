@@ -31,10 +31,14 @@ export function AccountOfflineRecovery({verifiedOwnerId}:{verifiedOwnerId:string
     window.addEventListener(STUDY_SYNC_CHANGE_EVENT,changed);
     window.addEventListener("online",changed);
     window.addEventListener("offline",changed);
+    // Other tabs write browser storage without dispatching this tab's custom event.
+    const changedStorage=(event:StorageEvent)=>{if(event.key===null||OFFLINE_QUEUE_KEYS.some(key=>key===event.key))void inspect();};
+    window.addEventListener("storage",changedStorage);
     return ()=>{
       window.removeEventListener(STUDY_SYNC_CHANGE_EVENT,changed);
       window.removeEventListener("online",changed);
       window.removeEventListener("offline",changed);
+      window.removeEventListener("storage",changedStorage);
     };
   },[inspect]);
   async function retry(){
