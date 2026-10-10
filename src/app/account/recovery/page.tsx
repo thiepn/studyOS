@@ -3,6 +3,7 @@ import {redirect} from "next/navigation";
 import {Nav} from "@/components/nav";
 import {AccountOfflineRecovery} from "@/components/account-offline-recovery";
 import {PriorStateRehearsal} from "@/components/prior-state-rehearsal";
+import {RecoveryAcceptanceGuide} from "@/components/recovery-acceptance-guide";
 import {createClient} from "@/lib/supabase/server";
 import {getStudyWorkspaceState} from "@/lib/study/bootstrap";
 import {StudyServiceError} from "@/lib/study/errors";
@@ -36,6 +37,7 @@ export default async function AccountRecoveryPage(){
     </section>
     <AccountOfflineRecovery verifiedOwnerId={workspace.userId}/>
     <PriorStateRehearsal verifiedOwnerId={workspace.userId} activeSemesterId={workspace.activeSemester?.id??null}/>
+    <RecoveryAcceptanceGuide/>
     <section className="account-recovery-next" aria-labelledby="recovery-next-heading">
       <h2 id="recovery-next-heading">If sign-in or course access failed</h2>
       <ol>

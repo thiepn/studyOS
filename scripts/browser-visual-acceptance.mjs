@@ -68,6 +68,12 @@ try{
   await desktop.goto(new URL("/login?next=%2Fapi%2Fstudy%2Fattempt",origin).href,{waitUntil:"networkidle"});
   assert.equal(await desktop.getByText(/After sign-in, return to/).count(),0,
     "API endpoints cannot be selected as post-login UI destinations");
+  // F16: actual Chromium must not present an internal auth route as a
+  // return-to-work destination even when supplied in a nested query.
+  await desktop.goto(new URL("/login?next=%2Fauth%2Fsignout",origin).href,{waitUntil:"networkidle"});
+  assert.equal(await desktop.getByText(/After sign-in, return to/).count(),0);
+  await noOverflow(desktop,"desktop disallowed recovery destination");
+  await evidence(desktop,"desktop-blocked-auth-return-1440");
   const phone=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});
   const mobile=await phone.goto(new URL("/login",origin).href,{waitUntil:"networkidle"});
   assert.equal(mobile?.status(),200);
