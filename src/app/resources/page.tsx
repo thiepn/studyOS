@@ -6,6 +6,8 @@ import { IngestionDecisionButtons } from "@/components/ingestion-decision-button
 import { DriveControls } from "@/components/drive-controls";
 import { ProcessingCandidateForm } from "@/components/processing-candidate-form";
 import { getResourcesData } from "@/lib/study/resources";
+import { SourceIndex } from "@/components/source-index";
+import { resourceDeskSummary } from "@/lib/study/resource-desk";
 import type { Json } from "@/lib/supabase/database.types";
 
 export const dynamic = "force-dynamic";
@@ -50,19 +52,49 @@ export default async function ResourcesPage({searchParams}:{searchParams:Promise
   const candidates = ingestionRuns.filter((run) => run.status === "candidate");
   const drive = data.driveConnection;
   const unresolvedIntake = intakeItems.filter((item) => item.status !== "registered" && item.status !== "ignored");
+  const summary=resourceDeskSummary(resources,queued.length,candidates.length,unresolvedIntake.length);
+  const courseNames=Object.fromEntries(data.courses.map(course=>[course.id,course.display_name]));
 
   return (
-    <main className="shell">
-      <header className="header"><div><p className="eyebrow">{selectedCourse?"Course source desk":"Source pipeline"}</p><h1>{selectedCourse?selectedCourse.display_name+" · Materials":"Resources"}</h1></div><Nav /></header>
+    <main className="shell resource-desk">
+      <header className="header resource-desk-header"><div><p className="eyebrow">{selectedCourse?"Course source desk":"Source pipeline"}</p><h1>{selectedCourse?selectedCourse.display_name+" · Materials":"Resources"}</h1></div><Nav /></header>
       {selectedCourse?<div className="resource-context-nav">
         <p>{selectedWeek?`Preparing week ${selectedWeek} · `:""}Materials, processing and approval remain within this course.</p>
         <Link href={"/courses/"+selectedCourse.id}>← Course binder</Link>
         <Link href="/resources">All materials</Link>
       </div>:query.course?<p className="error" role="status">The requested course is not active in this semester. Showing the current semester's materials.</p>:null}
 
+      <nav className="resource-course-switcher" aria-label="Filter resources by active course">
+        <span>Course desk</span>
+        <Link href="/resources" aria-current={!selectedCourse?"page":undefined}>All courses</Link>
+        {data.courses.map(course=><Link key={course.id} href={"/resources?course="+course.id}
+          aria-current={selectedCourse?.id===course.id?"page":undefined}>
+          {course.short_name??course.display_name}</Link>)}
+      </nav>
+
+      <section className="resource-desk-flow" aria-labelledby="resource-desk-heading">
+        <div><div><span className="section-kicker">Source-to-study chain</span>
+          <h2 id="resource-desk-heading">Discover. Validate. Approve. Study.</h2></div>
+          <span className="muted tiny">Active semester · {selectedCourse?"One-course view":"All active courses"}</span></div>
+        <p>Drive discovery and declared source authority are not approval. Generated topics, skills and questions enter the study map only after the existing validation and explicit acceptance controls.</p>
+        <dl className="resource-desk-stats">
+          <div><dt>Registered sources</dt><dd>{summary.registered}</dd></div>
+          <div><dt>Verified sources</dt><dd>{summary.verified}</dd></div>
+          <div><dt>Not verified</dt><dd>{summary.pending}</dd></div>
+          <div><dt>Process / review</dt><dd>{summary.queued+summary.candidates}</dd></div>
+          <div><dt>Drive intake</dt><dd>{summary.intake}</dd></div>
+        </dl>
+        <nav className="resource-desk-jump" aria-label="Source workspace sections">
+          <a href="#source-drive">Drive connection</a><a href="#processing-queue">Process sources</a>
+          <a href="#candidate-review">Review candidates</a><a href="#source-intake">Drive intake</a>
+          <a href="#source-library">Search sources</a>
+          <a href="#manual-registration">Register source</a>
+        </nav>
+      </section>
+
       {driveMessage ? <p className={query.drive==="connected"?"form-message":"error"} role="status">{driveMessage}</p> : null}
 
-      <section className="panel drive-panel">
+      <section id="source-drive" className="panel drive-panel">
         <div className="section-heading"><div><p className="eyebrow">Separate integration</p><h2>Study Drive</h2></div><span>{drive?.status === "connected" ? "On" : "Off"}</span></div>
         <DriveControls connected={drive?.status === "connected"} email={drive?.google_account_email} inboxUrl={drive?.inbox_folder_url} lastScanAt={drive?.last_scan_at} lastScanStatus={drive?.last_scan_status} lastError={drive?.last_error} />
       </section>
@@ -82,8 +114,9 @@ export default async function ResourcesPage({searchParams}:{searchParams:Promise
           <p className="muted">Normally, Drive scanning discovers material automatically. Use this only when you need to register one file manually.</p>
           <ResourceRegisterForm courses={data.courses} defaultCourseId={selectedCourse?.id} defaultWeekNo={selectedWeek} />
         </div>
-        <div className="panel">
+        <div id="candidate-review" className="panel">
           <h2>Extraction review</h2>
+          <p className="resource-stage-help">Review the source candidate and all validation details. No blocking errors is not an approval or proof that a question or rubric is trustworthy.</p>
           {candidates.length ? candidates.map((run) => {
             const resource = resourceById.get(run.resource_id);
             const count = candidateCounts(run.candidate_payload);
@@ -94,14 +127,15 @@ export default async function ResourcesPage({searchParams}:{searchParams:Promise
         </div>
       </section>
 
-      <section className="panel resource-library">
+      <section id="source-intake" className="panel resource-library">
         <div className="section-heading"><div><p className="eyebrow">Drive discovery</p><h2>Intake queue</h2></div><span>{unresolvedIntake.length}</span></div>
-        {unresolvedIntake.length ? <div className="resource-list">{unresolvedIntake.map((item) => <article key={item.id}><div><strong>{item.title}</strong><span className="status-pill">{item.status.replace("_", " ")}</span></div><p>{item.course_id ? (courseById.get(item.course_id) ?? "Course") : "Course unresolved"} · {item.detected_resource_type ?? "type unresolved"}{item.detected_week_no ? ` · W${item.detected_week_no}` : ""}{item.classification_confidence != null ? ` · ${Math.round(item.classification_confidence * 100)}% classifier` : ""}</p>{item.drive_url ? <a href={item.drive_url} target="_blank" rel="noreferrer">Open file</a> : null}{item.note ? <p className="muted">{item.note}</p> : null}</article>)}</div> : <p className="muted">No unresolved Drive files.</p>}
+        {unresolvedIntake.length ? <div className="resource-list">{unresolvedIntake.map((item) => <article key={item.id}><div><strong>{item.title}</strong><span className="status-pill">{item.status.replace("_", " ")}</span></div><p>{item.course_id ? (courseById.get(item.course_id) ?? "Course") : "Course unresolved"} · {item.detected_resource_type ?? "type unresolved"}{item.detected_week_no ? ` · W${item.detected_week_no}` : ""}{item.classification_confidence != null ? ` · ${Math.round(item.classification_confidence * 100)}% filename classifier (not verified)` : ""}</p>{item.drive_url ? <a href={item.drive_url} target="_blank" rel="noreferrer">Open file</a> : null}{item.note ? <p className="muted">{item.note}</p> : null}</article>)}</div> : <p className="muted">No unresolved Drive files.</p>}
       </section>
 
-      <section className="panel resource-library">
+      <section id="source-library" className="panel resource-library">
         <div className="section-heading"><div><p className="eyebrow">Source index</p><h2>Registered resources</h2></div><span>{resources.length}</span></div>
-        {resources.length ? <div className="resource-list">{resources.map((resource) => <article key={resource.id}><div><strong>{resource.title}</strong><span className={`status-pill status-${resource.processing_status}`}>{resource.processing_status.replace("_", " ")}</span></div><p>{courseById.get(resource.course_id) ?? "Course"} · {resource.resource_type.replace("_", " ")} · {resource.source_authority.replace("_", " ")}</p>{resource.drive_url ? <a href={resource.drive_url} target="_blank" rel="noreferrer">Open source file</a> : null}</article>)}</div> : <p className="muted">No course material registered yet.</p>}
+        <p className="resource-stage-help">Search only sources in this active-semester view. Processing status is separate from declared source authority and is not a rights or rubric attestation.</p>
+        <SourceIndex resources={resources} courseNames={courseNames} />
       </section>
     </main>
   );

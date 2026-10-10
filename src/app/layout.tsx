@@ -5,6 +5,7 @@ import "./shell.css";
 import "./today-workspace.css";
 import "./course-binder.css";
 import "./practice-focus.css";
+import "./resource-desk.css";
 
 export const metadata: Metadata = {
   title: "StudyOS",
