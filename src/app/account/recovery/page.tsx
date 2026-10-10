@@ -37,7 +37,7 @@ export default async function AccountRecoveryPage(){
     </section>
     <AccountOfflineRecovery verifiedOwnerId={workspace.userId}/>
     <PriorStateRehearsal verifiedOwnerId={workspace.userId} activeSemesterId={workspace.activeSemester?.id??null}/>
-    <RecoveryAcceptanceGuide/>
+    <RecoveryAcceptanceGuide verifiedOwnerId={workspace.userId} activeSemesterPresent={!!workspace.activeSemester}/>
     <section className="account-recovery-next" aria-labelledby="recovery-next-heading">
       <h2 id="recovery-next-heading">If sign-in or course access failed</h2>
       <ol>
