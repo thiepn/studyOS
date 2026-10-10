@@ -5,6 +5,7 @@ import {mkdtemp,writeFile,rm} from "node:fs/promises";
 import {join} from "node:path";
 import {tmpdir} from "node:os";
 import {auditF14Review} from "../scripts/f14-evidence-review.mjs";
+import {auditF15HumanAcceptance,F15_DOMAINS} from "../scripts/f15-human-acceptance.mjs";
 import {F13_REQUIRED_CASES} from "../scripts/f13-witness-audit.mjs";
 
 const sha=(b:Buffer|string)=>createHash("sha256").update(b).digest("hex");
@@ -114,4 +115,90 @@ test("missing scenarios and open manual findings never become owner approval",()
 }));
 test("signatures and ledger alone cannot cross the exact head boundary",()=>fixture(async a=>{
   assert.equal((await check({...a,expectedHead:"b".repeat(40)})).reasons[0],"witness_commit_mismatch");
+}));
+
+/** F15 synthetic-only, signed, source-backed reviewer fixtures. These are not
+ * real physical, two-account, human or original-rights attestations. */
+async function f15Fixture(fn:(input:any)=>Promise<void>){
+  return fixture(async base=>{
+    const bytes=Buffer.from("F15 disposable synthetic evidence; no user data");
+    await writeFile(join(base.artifactDirectory,"f15-source.txt"),bytes);
+    const digest=sha(bytes);
+    const packetDigest=sha(JSON.stringify(base.packet));
+    const originals:any={version:"studyos-f15-v1",head,packetSha256:packetDigest,attestations:[],decisions:{}};
+    const roots:any={attestations:[],decisions:[]};
+    const privateKeys=new Map<string,ReturnType<typeof generateKeyPairSync>["privateKey"]>();
+    const makeSigner=(role:string,actorId:string)=>{
+      const pair=generateKeyPairSync("ed25519"),keyId=role+"-key";
+      privateKeys.set(role,pair.privateKey);
+      return {status:"trusted",role,actorId,keyId,publicKeyPem:pair.publicKey.export({format:"pem",type:"spki"}).toString(),revokedKeyIds:[]};
+    };
+    const signRecord=(role:string,record:any)=>{
+      const p=privateKeys.get(role)!;
+      const stripped={...record};delete stripped.signature;
+      record.signature=sign(null,Buffer.from(JSON.stringify(stripped)),p).toString("base64");
+    };
+    for(const domain of F15_DOMAINS){
+      const actorId="actor-"+domain;
+      const root=makeSigner(domain,actorId);roots.attestations.push(root);
+      const record:any={domain,head,packetSha256:packetDigest,actorId,keyId:root.keyId,
+        observedAt:"2026-10-10T14:25:00Z",finding:"observed",sourceKind:"synthetic",
+        path:"f15-source.txt",sha256:digest};
+      signRecord(domain,record);originals.attestations.push(record);
+    }
+    for(const role of ["prerelease","postrelease"]){
+      const actorId="actor-"+role;const root=makeSigner(role,actorId);
+      roots.decisions.push(root);
+      const record:any={role,head,packetSha256:packetDigest,actorId,keyId:root.keyId,
+        recordedAt:"2026-10-10T14:30:00Z",decision:"hold"};
+      signRecord(role,record);originals.decisions[role]=record;
+    }
+    await fn({...base,originals,roots,signRecord});
+  });
+}
+const f15=(x:any)=>auditF15HumanAcceptance({f14:x,originals:x.originals,roots:x.roots,
+  artifactDirectory:x.artifactDirectory,expectedHead:head,now});
+test("F15 independently signed synthetic intake reconciles bytes but keeps both release gates NO_GO",()=>f15Fixture(async x=>{
+  const outcome=await f15(x);
+  assert.equal(outcome.integrity,"verified");
+  assert.equal(outcome.releaseAllowed,false);assert.equal(outcome.preRelease,"NO_GO");
+  assert.equal(outcome.postRelease,"NO_GO");assert.equal(outcome.canRestore,false);
+  assert.equal(outcome.details.length,3);
+  assert.match(outcome.reasons.join(" "),/independent_acceptance_incomplete/);
+}));
+test("tampering a physical/device attestation invalidates its independent signature",()=>f15Fixture(async x=>{
+  x.originals.attestations[0].finding="blocked";
+  assert.equal((await f15(x)).reasons[0],"attestation_authority_invalid");
+}));
+test("revoked accessibility/root signer cannot attest acceptance",()=>f15Fixture(async x=>{
+  x.roots.attestations[0].revokedKeyIds.push(x.originals.attestations[0].keyId);
+  assert.equal((await f15(x)).reasons[0],"attestation_authority_invalid");
+}));
+test("an authentic signature with edited original evidence bytes fails source hash review",()=>f15Fixture(async x=>{
+  await writeFile(join(x.artifactDirectory,"f15-source.txt"),"tampered fixture");
+  assert.equal((await f15(x)).reasons[0],"original_source_hash_mismatch");
+}));
+test("role conflicts cannot hide the same signer behind multiple approvals",()=>f15Fixture(async x=>{
+  const att=x.originals.attestations[0];
+  att.actorId=x.packet.witnessId;
+  x.roots.attestations[0].actorId=att.actorId;
+  x.signRecord(att.domain,att);
+  assert.equal((await f15(x)).reasons[0],"attestation_authority_invalid");
+}));
+test("missing independent postrelease decision remains NO_GO",()=>f15Fixture(async x=>{
+  delete x.originals.decisions.postrelease;
+  assert.equal((await f15(x)).reasons[0],"independent_release_custody_missing");
+}));
+test("forged pre-release approval and invalid source binding cannot become GO",()=>f15Fixture(async x=>{
+  x.originals.decisions.prerelease.decision="approved";x.signRecord("prerelease",x.originals.decisions.prerelease);
+  assert.equal((await f15(x)).reasons[0],"independent_release_custody_missing");
+  x.originals.packetSha256="b".repeat(64);
+  assert.equal((await f15(x)).reasons[0],"original_source_binding");
+}));
+test("an external label and full synthetic signatures never prove real human review",()=>f15Fixture(async x=>{
+  for(const a of x.originals.attestations){a.sourceKind="external";x.signRecord(a.domain,a);}
+  const outcome=await f15(x);
+  assert.equal(outcome.integrity,"verified");
+  assert.equal(outcome.releaseAllowed,false);
+  assert.match(outcome.reasons.join(" "),/real_physical_device_and_two_owner_review_not_self_proven/);
 }));
