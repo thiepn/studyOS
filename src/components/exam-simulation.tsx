@@ -118,8 +118,11 @@ export function ExamSimulation({data}:{data:ExamSimulationPage}){
   </section>;
 
   if(status==="in_progress"&&current) return <section className="exam-sim-shell">
-    <div className="panel exam-sim-toolbar"><div><p className="eyebrow">Timed paper</p><h2>{data.paper.title}</h2><span>{totalAnswered}/{questions.length} answered</span></div><div className={remaining<=300?"exam-clock exam-clock-low":"exam-clock"}>{secondsLabel(remaining)}</div></div>
-    <div className="exam-question-nav">{questions.map((q,i)=><button key={q.exam_question_id} type="button" className={i===index?"active":q.response_text?.trim()?"answered":""} onClick={()=>void go(i)} disabled={busy}>{q.question_no}</button>)}</div>
+    <div className="panel exam-sim-toolbar"><div><p className="eyebrow">Timed paper</p><h2>{data.paper.title}</h2><span>{totalAnswered}/{questions.length} answered</span></div><div className={remaining<=300?"exam-clock exam-clock-low":"exam-clock"} role="timer" aria-live="off" aria-label={"Remaining examination time: "+secondsLabel(remaining)}>{secondsLabel(remaining)}</div></div>
+    <nav className="exam-question-nav" aria-label="Timed paper questions">{questions.map((q,i)=><button key={q.exam_question_id} type="button" className={i===index?"active":q.response_text?.trim()?"answered":""}
+      aria-current={i===index?"step":undefined}
+      aria-label={"Question "+q.question_no+(q.response_text?.trim()?", answer entered":", not yet answered")}
+      onClick={()=>void go(i)} disabled={busy}>{q.question_no}</button>)}</nav>
     <article className="panel exam-question">
       <div className="exam-question-head"><div><p className="eyebrow">Question {current.question_no}</p><h2>{current.max_points} points</h2></div><span>{secondsLabel(accrued(current))} on question</span></div>
       <p className="exam-prompt">{current.prompt_text}</p>
@@ -131,7 +134,10 @@ export function ExamSimulation({data}:{data:ExamSimulationPage}){
 
   if(status==="grading"&&current) return <section className="exam-sim-shell">
     <div className="panel exam-sim-toolbar"><div><p className="eyebrow">Post-exam grading</p><h2>{data.paper.title}</h2><span>{questions.filter((q)=>q.awarded_points!=null).length}/{questions.length} graded</span></div></div>
-    <div className="exam-question-nav">{questions.map((q,i)=><button key={q.exam_question_id} type="button" className={i===index?"active":q.awarded_points!=null?"answered":""} onClick={()=>setIndex(i)}>{q.question_no}</button>)}</div>
+    <nav className="exam-question-nav" aria-label="Grading navigation">{questions.map((q,i)=><button key={q.exam_question_id} type="button" className={i===index?"active":q.awarded_points!=null?"answered":""}
+      aria-current={i===index?"step":undefined}
+      aria-label={"Question "+q.question_no+(q.awarded_points!=null?", grade recorded":", awaiting grade")}
+      onClick={()=>setIndex(i)}>{q.question_no}</button>)}</nav>
     <ExamGradeCard question={current} busy={busy} onGrade={grade}/>
     <div className="button-row">{allGraded?<button className="primary-button button-reset" disabled={busy} onClick={()=>void finish()}>Finish grading</button>:null}<button className="secondary-button button-reset" disabled={busy} onClick={()=>void abandon()}>Abandon simulation</button></div>
     {message?<p className="form-message">{message}</p>:null}

@@ -9,6 +9,7 @@ import { submitAttemptWithFallback } from "@/lib/study/offline-attempts";
 import { finishSessionWithFallback, startSessionWithFallback } from "@/lib/study/offline-sessions";
 import { composeProblemWork } from "@/lib/study/problem-work";
 import { MathContent } from "@/components/math-content";
+import { PracticeFocusGuide } from "@/components/practice-focus-guide";
 import { outlineProof } from "@/lib/study/proof-outline";
 import { parseStudyDraft, studyDraftStorageKey, studyQueueFingerprint, type StudyDraft } from "@/lib/study/study-draft";
 
@@ -272,10 +273,15 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
   if (!draftHydrated) return <section className="panel review-start"><p className="muted">Checking this tab for unfinished work…</p></section>;
 
   if (phase === "ready" || phase === "starting") return (
-    <section className="panel review-start">
+    <section className="panel review-start" aria-labelledby="practice-start-heading" aria-busy={phase==="starting"}>
       <p className="eyebrow">{eyebrow}</p>
-      <h2>{queue.length} questions · {plannedMinutes} planned minutes</h2>
+      <h2 id="practice-start-heading">{queue.length} questions · {plannedMinutes} planned minutes</h2>
       <p>{intro ?? "Work from memory first. Hints lower evidentiary strength. If you give up and reveal the solution before locking an answer, the attempt receives no mastery credit and becomes a repair item."}</p>
+      <ol className="practice-start-rules" aria-label="Independent work sequence">
+        <li>Attempt from memory, on paper or in the working editor.</li>
+        <li>Choose confidence and lock the answer before comparing it with a source.</li>
+        <li>Diagnose the attempt and save or queue it under your signed-in account.</li>
+      </ol>
       {error ? <p className="error" role="alert">{error}</p> : null}
       <button className="primary-button button-reset" type="button" disabled={phase === "starting"} onClick={() => void start()}>{phase === "starting" ? "Starting…" : "Start review"}</button>
     </section>
@@ -304,14 +310,17 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
     <section className={"review-workspace "+(focusMode?"is-focused":"")}>
       <div className="review-session-tools">
         <Link href={returnHref==="/"?"/practice":returnHref} className="review-back-link">← {returnHref==="/"?"Study":returnLabel}</Link>
+        {phase==="answering"&&answerSurface==="typed"
+          ? <button className="practice-focus-jump" type="button" onClick={()=>workingRef.current?.focus()}>Focus working editor</button>
+          : null}
         <button className="review-focus-toggle" type="button" aria-pressed={focusMode} onClick={()=>setFocusMode(value=>!value)}>{focusMode?"Show navigation":"Focus on question"}</button>
       </div>
       {draftNotice ? <p className="draft-recovery-note" role="status">{draftNotice}</p> : null}
-      <div className="review-topline" aria-live="polite">
-        <span>Question {index + 1} of {queue.length}</span>
-        <span>{formatSeconds(phase === "answering" ? elapsed : lockedDuration)} · target {expected} min</span>
-      </div>
-      <progress className="review-session-progress" value={index} max={queue.length} aria-label="Questions completed" />
+      <PracticeFocusGuide phase={phase==="answering"?"answering":phase==="grading"?"grading":"submitting"}
+        sessionType={sessionType} independence={independence} surface={answerSurface}
+        seconds={phase==="answering"?elapsed:lockedDuration} expectedMinutes={expected}
+        completedQuestions={index} totalQuestions={queue.length} queuedAttempts={summary.queued} />
+      <progress className="review-session-progress" value={index} max={queue.length} aria-label="Saved or skipped questions" />
       <article className="panel review-question">
         <div className="question-meta"><span>{current.skillTitle}</span><span>{current.targetDimension} · difficulty {current.question.difficulty}/5</span></div>
         <h2 className="math-question-text"><MathContent text={current.question.prompt}/></h2>
@@ -396,9 +405,10 @@ export function ReviewSession({ queue, plannedMinutes, sessionType = "review", c
           <div className="button-row review-actions"><button className="primary-button button-reset" type="button" disabled={!canSubmit} onClick={() => void submitAssessment()}>{phase === "submitting" ? "Saving…" : "Save & next"}</button><span className="review-save-note">Revealed questions must be recorded before moving on.</span></div>
         </>}
       </article>
-      {draftStatus==="saved" ? <p className="math-draft-status">Work saved in this tab · not synced across devices</p> : null}
+      {draftStatus==="saved" ? <p className="math-draft-status" role="status">Unfinished work stored in this tab · not synced across devices</p> : null}
       {draftStatus==="unavailable" ? <p className="math-draft-warning" role="status">Browser draft storage is unavailable. Copy your work before navigating away.</p> : null}
-      {notice ? <p className="sync-note">{notice}</p> : null}
+      <p className="practice-save-context"><strong>Recovery:</strong> Unfinished drafts are local to this tab. Submitted attempts may queue for account-bound sync if the connection fails; do not clear browser data while sync is pending.</p>
+      {notice ? <p className="sync-note" role="status">{notice}</p> : null}
       {sessionStartedAt ? <p className="session-footnote">Session started {new Date(sessionStartedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}.</p> : null}
     </section>
   );
