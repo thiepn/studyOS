@@ -38,3 +38,8 @@
 @media(max-width:650px){.semester-setup-steps{grid-template-columns:1fr}.semester-setup-steps li{border-right:0!important;border-bottom:1px solid var(--academic-rule);padding:12px 8px}.semester-setup-steps li:last-child{border-bottom:0}.semester-setup-steps li>div{flex:1 1 65%}.semester-setup-step-state{margin-left:auto}.semester-setup-unresolved li{display:grid}.semester-management-links{gap:0 15px}}
 @media(forced-colors:active){.semester-setup-steps li.current{outline:2px solid Highlight;outline-offset:-2px}.semester-setup-step-state{text-decoration:underline}}
 @media(prefers-reduced-motion:reduce){.semester-management-links{scroll-behavior:auto}}
+
+.semester-course-exam-review{border-left:3px solid var(--academic-accent);background:var(--academic-paper-raised);padding:12px 16px;margin:12px 0 16px}
+.semester-course-exam-review>p{font-size:.78rem;line-height:1.6;margin:0 0 6px}
+.semester-course-exam-review .semester-review-confirm{margin-bottom:0}
+.semester-remove-prior-review:focus-within{border-color:var(--academic-accent)}
