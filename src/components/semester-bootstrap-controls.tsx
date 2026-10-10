@@ -68,10 +68,11 @@ export function BootstrapCourseForm({existingCourseKeys=[]}:{existingCourseKeys?
     const rawExam=String(fd.get("examAt")??"").trim();
     try{
       if(rawExam && Number.isNaN(Date.parse(rawExam)))throw new Error("Select a valid exam date and time.");
+      const nameKey=String(fd.get("displayName")??"").normalize("NFKD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"").slice(0,65);
       const response=await fetch("/api/study/semester-bootstrap/course",{
         method:"POST",headers:{"content-type":"application/json"},
         body:JSON.stringify({
-          stableKey:fd.get("stableKey"),displayName:fd.get("displayName"),shortName:fd.get("shortName"),
+          stableKey:fd.get("stableKey")||"course_"+(nameKey||crypto.randomUUID().slice(0,8)),displayName:fd.get("displayName"),shortName:fd.get("shortName"),
           courseKind:fd.get("courseKind"),professor:fd.get("professor"),credits:fd.get("credits"),
           examAt:rawExam?new Date(rawExam).toISOString():null,
           examDurationMinutes:fd.get("examDurationMinutes"),examFormat:fd.get("examFormat"),
@@ -102,11 +103,11 @@ export function BootstrapCourseForm({existingCourseKeys=[]}:{existingCourseKeys?
       <p>Choose a template to fill the form, then review and submit it. Nothing is created automatically. Exam dates, ECTS, lecturers and actual syllabi remain yours to verify.</p>
     </div>
     <form key={presetId??"custom"} className="bootstrap-course-form" onSubmit={submit}>
-      <label><span>Stable key</span><input required name="stableKey" pattern="[a-z0-9_]{2,80}"
-        defaultValue={preset?.stableKey??""} placeholder="differentialgleichungen"/></label>
       <label className="wide"><span>Course name</span><input required name="displayName"
         defaultValue={preset?.displayName??""} placeholder="Course title from university"/></label>
       <label><span>Short name</span><input name="shortName" defaultValue={preset?.shortName??""} placeholder="DGL"/></label>
+      <details className="wide material-advanced"><summary>Course details (optional)</summary><div className="form-grid">
+      <label><span>Reference key</span><input name="stableKey" pattern="[a-z0-9_]{2,80}" defaultValue={preset?.stableKey??""} placeholder="Generated from the course name"/></label>
       <label><span>Kind</span><select name="courseKind" defaultValue={preset?.courseKind??"major"}>
         <option value="major">Major</option><option value="minor">Minor</option><option value="retake">Retake</option>
       </select></label>
@@ -119,9 +120,10 @@ export function BootstrapCourseForm({existingCourseKeys=[]}:{existingCourseKeys?
       <input type="hidden" name="sortOrder" defaultValue={preset?.sortOrder??""}/>
       <label className="check"><input name="expectsExercise" type="checkbox" defaultChecked/> Exercise expected</label>
       <label className="check"><input name="expectsSolution" type="checkbox" defaultChecked/> Official solution expected</label>
+      </div></details>
       <p className="wide muted tiny">Adding a course records its identity only. Drive folder, verified sources, questions and retake baseline are checked separately before semester certification.</p>
       <div className="wide button-row"><button className="primary-button button-reset" disabled={busy}>
-        {busy?"Adding…":"Add course · verification pending"}</button></div>
+        {busy?"Adding…":"Add course"}</button></div>
     </form>
     {message?<p className="form-message" role="status">{message}</p>:null}
   </div>;

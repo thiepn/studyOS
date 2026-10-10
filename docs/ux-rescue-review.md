@@ -1,39 +1,58 @@
-# UX rescue review — 10 October 2026
+# StudyOS redesign review — 10 October 2026
 
-Branch: `codex/studyos-ux-rescue`. Existing assistant changes preserved. Work remains uncommitted for review; no production changes or paid AI requests.
+## Delivery and changes
 
-## Changes
+Delivery target: `main`, based on `85f01f98b3f1de36eb35a40a41fca35a9948563d` (the previous production commit). No user changes were present before this implementation. No schema migrations, paid AI calls, or production academic writes were performed.
 
-| Previously | Implemented |
+| Before | Implemented |
 | --- | --- |
-| Repeated page navigation and mobile menu | One persistent desktop sidebar and five direct mobile destinations; Assistant remains directly accessible |
-| Analytics preceding daily work | Daily recommendation first; course links and upcoming deadlines; expandable planning and advanced insights |
-| Empty account redirected into setup | Short welcome journey with one next setup action |
-| Course cards with passive week markers | Searchable directory, clickable weeks and direct materials/practice/AI links |
-| Course diagnostics mixed into coursework | Contextual section links, materials before weekly metrics, expandable overview, topics and exam tools |
-| Material processing above files | Searchable materials first; course, week, type and verification filters; existing registration and approval controls retained |
-| Prominent risk scores | Practice action and learning evidence first; scores in diagnostic details; untested exam readiness labeled Not assessed |
-| Settings buried at end of tool index | Settings and Drive/Calendar connections first in More |
-| Assistant availability discovered through failed requests | Spending-paused state before composition, course context retained, MathML and fenced code rendering |
-| Focused question still surrounded by global destinations | Global shell hides during focused studying; existing Show navigation control restores it |
+| Competing destinations and repeated page navigation | Five desktop destinations; five mobile destinations; connections/account first in Settings & tools |
+| Dense course page loading exams and diagnostics together | URL-backed Overview, Weeks, Materials, Practice, Progress; exam intelligence and master map read only for their views |
+| Week files buried under learning diagnostics | Current-week files in Overview, direct file rows in Weeks and Materials; source rules expandable; solution gates retained |
+| Technical material form mixed with processing panels | Native Add material dialog using the existing authenticated Drive-registration handler; source details expandable; processing kept in a separate disclosure |
+| Setup reference keys and certification competing with ordinary use | Name-first course form, generated reference key, next material action, separate certification details |
+| Repeated workspace and evidence reads | Request-scoped authenticated client/workspace/roster/evidence snapshots; complete history retained; dedicated course directory summary loader |
+| Partial prefetch leaving a visible route transition | Full prefetch for core destinations; advanced routes excluded; persistent shell and pending-link feedback |
+| Inconsistent cream/green/serif visual rules | Shared slate/white/blue tokens, system sans-serif, restrained borders and corners; superseded declarations removed; login/account and legacy routes inherit the same foundation |
+| Authorization denial could enter an offline retry path | SQL permission denial becomes a permanent 403; failed attempt never appears Recorded |
 
-Actual source changes cover the shell, Today/welcome, Courses, course detail, teaching-week panel, materials, Progress, More, and Assistant. Active study uses the existing ReviewSession with new shell behavior. Auth, scoring, evidence rules, solution gating, offline custody and APIs are preserved. Materials add one authenticated, course-scoped teaching-week read; no schema change.
+Existing planner, scoring, independence, OAuth, owner checks and offline receipt contracts remain intact. Calendar details stream independently from Today’s main content. No shared persistent cache of private records was introduced.
+
+Source changes cover shell/navigation/loading, Today orchestration, Courses, course tabs/overview/materials, focused study context, Materials/registration, first use/semester setup, Settings & tools, Connections, Assistant styling, login/account styling and the shared visual foundation used by advanced routes. Progress retains its existing evidence-led composition with shared read deduplication.
 
 ## Verification
 
-- TypeScript passes.
-- Production build and public browser configuration assertion pass. The assertion now loads local env through Next's loader, preserving CI precedence and all assertions.
-- Full unit suite: 456/457 pass. Existing F16 source-custody symlink test fails with Windows EPERM; it was not skipped or weakened. F20 static contracts pass separately.
-- Chromium: seven synthetic surfaces at 320, 375, 390, 430, 768 and 1280px without horizontal overflow. Fifteen separate candidate screenshots; no locked golden changed.
-- Browser interactions: course search, week navigation, lecture/exercise discovery, hidden solution before independent work, material search/reset, course-to-assistant context, paused AI state, mocked mathematical/code reply, connection discovery, actual ReviewSession start/answer lock/grade/save, rejected-write error and successful mock confirmation.
-- `.env.local` remains ignored. Exact OpenAI secret scan found no key in production browser assets. Spending remains disabled.
+- TypeScript and production build pass with existing local configuration; browser public-configuration assertion passes.
+- Unit suite: 461/462 pass on Windows. The unchanged source-custody symlink test cannot create a symlink (`EPERM`). Linux CI runs the complete suite without skipping it. F20 static release contracts pass separately.
+- Existing anonymous built-server acceptance smoke passes, including login guards, denied unauthenticated writes, callback boundaries and sign-out origin checks.
+- Actual production application routes against a loopback, stateful Supabase protocol double: 17 checks pass, no browser exceptions, 25 candidate screenshots. Six widths: 320, 375, 390, 430, 768, 1280px; no document overflow.
+- Journeys include semester/course creation, search/rediscovery, Week 1 lecture/exercise discovery, material registration and rejected write, real session/attempt handlers, save retry, persisted progress, Today recommendation/deadline, course Assistant context, connections, mobile navigation, Back/Forward and legacy week hashes.
+- Keyboard focus remains inside the native material dialog; Escape closes it. Reduced-motion browser context exercised. Refresh restores unfinished work; interrupted writes stay owner-bound and Queued rather than Recorded.
+- Assistant failure/retry/success, mathematics and code are tested on the actual Assistant page through intercepted responses in a separate no-key local runtime. Main runtime remains spending-disabled.
+- Candidate screenshots inspected for Today, Courses, course overview/tabs, Materials/dialog, focused study, Assistant, Progress, onboarding, settings and connections. Locked screenshot goldens unchanged.
 
-Synthetic fixtures reuse production components in `scripts/ux-preview`; they have no production middleware or server API routes. A deliberately invalid synthetic identity is used only in the browser fixture. Study/assistant requests are intercepted. This qualifies UI behavior, not provider acceptance or actual saved academic evidence.
+These are synthetic provider results. They do not establish live Supabase RLS, Google consent or physical-device keyboard acceptance. Offline receipt replay is covered by existing contracts; this new browser check qualifies draft recovery and truthful queued status, not a live replay receipt.
 
-Candidate images and machine-readable manifest: `C:/Users/junso/.codex/visualizations/2026/10/10/01a1274c-d4f1-7782-84d1-215df57f86c1/studyos-ux-candidates/`.
+## Performance
 
-## Outstanding acceptance
+Five samples per route and navigation mode, Chromium desktop, production server, identical loopback fixture. Medians in milliseconds:
 
-The full sixteen-scenario acceptance requirement is not complete. Creating a semester/course, adding real material, actual persisted progress, and real deadlines need authenticated end-to-end browser checks. Today and Progress server compositions also need authenticated screenshots; synthetic Today uses shared components and does not render the real server orchestration. Drive, Calendar and THIEPN sign-in need owner acceptance. Physical-device keyboard/accessibility qualification remains open. No live RLS, OAuth, migrations or production records were exercised.
+| Route | Baseline document | Redesign document | Baseline warm/prefetched | Redesign warm/prefetched |
+| --- | ---: | ---: | ---: | ---: |
+| Today | 417 | 395 | 842 | 62 |
+| Courses | 98 | 380 | 70 | 68 |
+| Course overview | 135 | 98 | — | — |
+| Assistant | 75 | 70 | 66 | 71 |
+| Progress | 87 | 80 | 74 | 69 |
 
-Highest-value remaining UX work: simplify the material registration/approval forms further, qualify the full first-use creation workflow, and inspect populated Today/Progress with authorized data. This is a substantial implemented redesign with qualified synthetic flows, not a claim that every production acceptance criterion is complete.
+Useful page headings/content are completion markers, never loading placeholders. Document measurements block background prefetch to isolate route work. Core warm useful content meets the controlled 200ms target; warm Today improves about 93%. Document loading has intermittent roughly 300ms rendering/streaming delays, notably Courses in this run; cold-load improvement is not established for every route. Document runs use a warm process, so first-process startup remains separately unqualified. Baseline required Webpack because its temporary dependency junction is unsupported by Turbopack; redesign uses the normal Turbopack build, limiting strict causal comparison.
+
+Route provider GET counts: Today 40→37, Courses 9→3, course overview 12→8, Progress 14→13. Prefetched core clicks make zero provider reads in these samples. Authenticated provider latency is absent from loopback tests. Live anonymous login measured 140→131ms before this release; this is not authenticated production-navigation evidence or a post-release improvement claim.
+
+Evidence: `C:/Users/junso/.codex/visualizations/2026/10/10/01a1274c-d4f1-7782-84d1-215df57f86c1/studyos-redesign/` and sibling `studyos-performance/`. Reproduce with `scripts/application-journey.mjs` and `scripts/navigation-performance.mjs`; set `PLAYWRIGHT_MODULE` when using the bundled Windows runtime. The isolated journey is also in Linux CI.
+
+## Release and remaining acceptance
+
+Push normally to main after checking remote ancestry, then observe GitHub CI and the existing Vercel production deployment. Exact deployed SHA is checked through `/api/health` and the existing read-only deployment qualification script. Previous production SHA above is the rollback reference for a normal revert; no force push or protection changes.
+
+Highest-value remaining acceptance: authenticated owner timing and real Google consent, physical mobile keyboard/screen-reader use, intermittent document-rendering delay, and visual review of populated advanced administration/exam screens. Shared styling covers those routes, but they have not all received individual owner acceptance. Deployment/CI results are reported separately with the final release SHA.

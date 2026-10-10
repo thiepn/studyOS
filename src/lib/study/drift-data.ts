@@ -1,3 +1,4 @@
+import { getLearningAttempts, getMajorCourseRoster, getLearningWeeks } from "./workspace-evidence";
 import { createClient } from "@/lib/supabase/server";
 import { ensureStudyWorkspace } from "./bootstrap";
 import { StudyServiceError } from "./errors";
@@ -22,9 +23,9 @@ export async function getSemesterDrift():Promise<{currentWeek:number;courses:Cou
   const [semesterResult,capacityResult,courseResult,attemptResult,weekResult,questionResult]=await Promise.all([
     db.from("study_semesters").select("starts_on").eq("id",semesterId).single(),
     db.from("study_current_capacity").select("local_today").eq("semester_id",semesterId).maybeSingle(),
-    db.from("study_courses").select("id,display_name,short_name,sort_order").eq("semester_id",semesterId).eq("active",true).eq("course_kind","major").order("sort_order"),
-    db.from("study_attempts").select("course_id,result,independence,duration_seconds,completed_at").order("completed_at",{ascending:true}),
-    db.from("study_week_actions").select("course_id,week_no,next_action,health_status,unresolved_errors").eq("semester_id",semesterId).order("week_no"),
+    getMajorCourseRoster(),
+    getLearningAttempts(),
+    getLearningWeeks(),
     db.from("study_questions").select("course_id").eq("active",true),
   ]);
   const error=semesterResult.error||capacityResult.error||courseResult.error||attemptResult.error||weekResult.error||questionResult.error;

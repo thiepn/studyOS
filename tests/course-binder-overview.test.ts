@@ -71,6 +71,6 @@ test("F07 keeps private API boundaries and adds no direct data mutations",()=>{
   assert.doesNotMatch(module,/(?:fetch\(|supabase\.|\.update\(|\.insert\(|localStorage)/);
   assert.doesNotMatch(ui,/(?:fetch\(|supabase\.|localStorage)/);
   const page=read("../src/app/courses/[id]/page.tsx");
-  assert.match(page,/getCourseWorkflow\(id\)/);
+  assert.match(page,/getCourseWorkflow\(id, \{includeMasterMap:tab==="progress"\}\)/);
   assert.match(page,/getCourseExamIntelligence\(id\)/);
 });

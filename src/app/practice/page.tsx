@@ -168,6 +168,8 @@ export default async function PracticePage({ searchParams }: { searchParams: Pro
       </div> : null}
 
       <ReviewSession queue={data.queue} plannedMinutes={Math.max(1, data.queueMinutes)}
+        returnHref={selectedCourse?.course_id?`/courses/${selectedCourse.course_id}`:"/"}
+        returnLabel={selectedCourse?"Return to course":"Back to Today"}
         courseId={selectedCourse?.course_id ?? undefined}
         eyebrow={selectedCourse ? "Course retrieval" : "Daily retrieval"}
         intro={selectedCourse ? "Review only this course's due skills, within your current daily review budget. Return to all-course review for the full retention queue." : undefined} />

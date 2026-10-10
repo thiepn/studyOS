@@ -62,7 +62,8 @@ test("week commitment changes require deliberate review and objective controls e
 test("Today/Week planning navigation and summary are accessible and do not change planner API",()=>{
   const today=read("../src/app/page.tsx"),week=read("../src/app/week/page.tsx");
   const ui=read("../src/components/planning-command-overview.tsx"),styles=read("../src/app/planning-command.css");
-  assert.match(today,/<PlanningCommandOverview commitments=\{commitments\}/);
+  assert.match(today,/<PlanningCommandOverview commitments=\{orchestration.commitments\}/);
+  assert.match(today,/<Suspense fallback=/);
   assert.match(week,/id="week-courses"/);
   assert.match(week,/id="week-rebalance"/);
   assert.match(ui,/aria-labelledby="planning-command-heading"/);

@@ -1,6 +1,7 @@
 "use client";
 
 import {useMemo,useState} from "react";
+import Link from "next/link";
 import {declaredAuthorityLabel,filterSourceIndex,sourceStatusLabel,verifiedSource,
   type SourceIndexItem,type SourceFilter} from "@/lib/study/resource-desk";
 
@@ -59,6 +60,7 @@ export function SourceIndex({resources,courseNames,weekNumbers={},initialWeek=nu
             {item.drive_url?<a href={item.drive_url} target="_blank" rel="noopener noreferrer"
               aria-label={"Open "+item.title+" in Google Drive (new tab)"}>Open file <span aria-hidden="true">↗</span></a>
               :<span className="source-index-no-link">No source URL recorded</span>}
+            <Link href={"/assistant?course="+item.course_id}>Ask AI about this course</Link>
           </div>
         </article>
       </li>)}

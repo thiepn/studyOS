@@ -15,6 +15,13 @@ test("database exceptions never expose secrets", () => {
   assert.deepEqual(studyAttemptFailure(new Error("database password=secret")), {status:500,message:"Could not save study attempt."});
 });
 
+test("owner policy rejection is sanitized and never treated as a transient offline save", () => {
+  const result=studyAttemptFailure(new StudyServiceError("private policy details", "42501"));
+  assert.equal(result.status,403);
+  assert.match(result.message,/not been recorded/);
+  assert.doesNotMatch(result.message,/private policy/);
+});
+
 test("unrecognized service errors are sanitized", () => {
   assert.deepEqual(studyAttemptFailure(new StudyServiceError("internal SQL", "database_error")), {status:500,message:"Could not save study attempt."});
   assert.deepEqual(studyAttemptFailure(null), {status:500,message:"Could not save study attempt."});

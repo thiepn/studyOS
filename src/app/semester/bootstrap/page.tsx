@@ -9,6 +9,7 @@ import { nextCourseSetupAction } from "@/lib/study/semester-management";
 import { historicalPriorUse } from "@/lib/study/semester-bootstrap";
 import { createClient } from "@/lib/supabase/server";
 import { StudyServiceError } from "@/lib/study/errors";
+import { ContextDetails } from "@/components/context-details";
 
 export const dynamic="force-dynamic";
 
@@ -87,7 +88,8 @@ export default async function SemesterBootstrapPage(){
       <a href="#bootstrap-drive">Certification & Drive</a>
       <a href="#semester-historical">Previous courses</a>
     </nav>
-    <SemesterSetupGuide evaluation={evaluation}/>
+    {data.courses.length?<section className="panel"><p className="section-kicker">Next step</p><h2>Add your first material</h2><p>Open a course to organize lectures, exercise sheets, and study work. Curriculum certification is separate from browsing.</p><Link className="primary-button" href={`/resources?course=${data.courses[0].courseId}&week=1#manual-registration`}>Add material</Link><Link className="secondary-button" href="/courses">Open courses</Link></section>:null}
+    <ContextDetails id="certification-details" title="Curriculum certification & advanced setup"><SemesterSetupGuide evaluation={evaluation}/>
 
     <section id="bootstrap-drive" className={"panel bootstrap-hero "+(evaluation.ready?"ready":"blocked")}>
       <div className="section-heading">
@@ -105,14 +107,14 @@ export default async function SemesterBootstrapPage(){
       {evaluation.blockers.length?<ul className="bootstrap-blockers">{evaluation.blockers.map(item=><li key={item}>{item}</li>)}</ul>:null}
       <BootstrapActionButtons ready={evaluation.ready} certified={evaluation.certified} driveConnected={evaluation.driveConnected}/>
       <p className="muted">Deployment, callback and integration settings: <Link href="/setup/platform">Platform setup checklist</Link>.</p>
-    </section>
+    </section></ContextDetails>
 
     <section id="semester-roster" className="panel bootstrap-intake">
       <div className="section-heading">
         <div><p className="eyebrow">Course roster</p><h2>Add real courses</h2></div>
         <span>{data.courses.length}</span>
       </div>
-      <p className="muted">Add only courses that actually belong to this semester. Stable keys become the internal identity used for historical lineage and Drive classification.</p>
+      <p className="muted">Add the courses you are taking this semester. You can add exam and teaching details later.</p>
       <BootstrapCourseForm existingCourseKeys={data.courses.map(course=>course.stableKey)}/>
     </section>
 

@@ -4,6 +4,8 @@ import { StudyServiceError } from "./errors";
 import { buildCalibrationProfile, buildCalibrationQueue, type CalibrationAttempt, type CalibrationProfile } from "./calibration";
 import { queueMinutes } from "./queue";
 import type { StudyQuestion } from "./types";
+import { cache } from "react";
+import { getLearningAttempts, getMajorCourseRoster } from "./workspace-evidence";
 
 export type CourseCalibration = {
   courseId:string;
@@ -20,20 +22,18 @@ type CalibrationState = {
   skillTitles:Map<string,string>;
 };
 
-async function loadCalibrationState():Promise<CalibrationState>{
+const loadCalibrationState=cache(async ():Promise<CalibrationState>=>{
   const supabase=await createClient();
   const {semesterId}=await ensureStudyWorkspace(supabase);
   const db=supabase as any;
-  const courseResult=await db.from("study_courses").select("id,display_name,short_name,sort_order")
-    .eq("semester_id",semesterId).eq("active",true).eq("course_kind","major").order("sort_order");
+  const courseResult=await getMajorCourseRoster();
   if(courseResult.error)throw new StudyServiceError("Could not load calibration courses",courseResult.error.code||"calibration_read_failed",courseResult.error);
   const courses=(courseResult.data??[]) as CalibrationState["courses"];
   const courseIds=courses.map((c)=>c.id);
   if(!courseIds.length)return {courses,attempts:[],questions:[],skillTitles:new Map()};
 
   const [attemptResult,questionResult,skillResult]=await Promise.all([
-    db.from("study_attempts").select("course_id,skill_id,question_id,evidence_dimension,result,independence,self_confidence,duration_seconds,error_types,completed_at")
-      .in("course_id",courseIds).order("completed_at",{ascending:true}),
+    getLearningAttempts(),
     db.from("study_questions").select("*").in("course_id",courseIds).eq("active",true),
     db.from("study_skills").select("id,title,course_id").in("course_id",courseIds).eq("active",true),
   ]);
@@ -42,7 +42,7 @@ async function loadCalibrationState():Promise<CalibrationState>{
 
   const questions=(questionResult.data??[]) as StudyQuestion[];
   const expectedByQuestion=new Map(questions.map((q)=>[q.id,Number(q.expected_minutes)]));
-  const attempts=((attemptResult.data??[]) as Array<any>).map((a):CalibrationAttempt=>({
+  const attempts=((attemptResult.data??[]) as Array<any>).filter(a=>courseIds.includes(a.course_id)).map((a):CalibrationAttempt=>({
     courseId:String(a.course_id),skillId:String(a.skill_id),questionId:String(a.question_id),
     evidenceDimension:a.evidence_dimension,result:a.result,independence:a.independence,
     selfConfidence:a.self_confidence==null?null:Number(a.self_confidence),
@@ -53,7 +53,7 @@ async function loadCalibrationState():Promise<CalibrationState>{
   }));
   const skillTitles=new Map<string,string>(((skillResult.data??[]) as Array<any>).map((s)=>[String(s.id),String(s.title)]));
   return {courses,attempts,questions,skillTitles};
-}
+});
 
 export async function getSemesterCalibration(){
   const state=await loadCalibrationState();

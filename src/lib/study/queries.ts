@@ -3,6 +3,17 @@ import { ensureStudyWorkspace } from "./bootstrap";
 import { buildReviewQueue, queueMinutes, scopeDueSkills } from "./queue";
 import { StudyServiceError } from "./errors";
 import type { DueSkill, StudyQuestion, TodayData } from "./types";
+import { cache } from "react";
+
+/** Directory reads no question bodies and never builds a practice queue. */
+export const getCourseSummaries = cache(async () => {
+  const supabase = await createClient();
+  const { semesterId } = await ensureStudyWorkspace(supabase);
+  const { data, error } = await supabase.from("study_course_progress").select("*")
+    .eq("semester_id", semesterId).order("sort_order");
+  if (error) throw new StudyServiceError("Could not load courses", error.code || "course_read_failed", error);
+  return data ?? [];
+});
 
 export async function getTodayData(courseId?: string | null): Promise<TodayData> {
   const supabase = await createClient();
@@ -11,7 +22,7 @@ export async function getTodayData(courseId?: string | null): Promise<TodayData>
   const [semesterResult, capacityResult, courseResult, dueResult, operatingModeResult, resultResult] = await Promise.all([
     supabase.from("study_semesters").select("review_daily_budget_minutes").eq("id", semesterId).single(),
     (supabase as any).from("study_current_capacity").select("effective_review_budget_minutes").eq("semester_id", semesterId).maybeSingle(),
-    supabase.from("study_course_progress").select("*").eq("semester_id", semesterId).order("sort_order"),
+    getCourseSummaries().then(data => ({data, error:null})),
     supabase.from("study_due_skills").select("*").eq("semester_id", semesterId).eq("is_due", true).order("priority_score", { ascending: false }),
     supabase.from("study_course_operating_mode").select("course_id,operating_mode").eq("semester_id", semesterId),
     (supabase as any).from("study_exam_results").select("course_id,attempt_no,result_status,outcome,retake_decision")

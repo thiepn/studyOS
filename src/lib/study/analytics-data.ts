@@ -1,3 +1,4 @@
+import { getLearningAttempts, getInterventionSessions, getMajorCourseRoster, getLearningWeeks } from "./workspace-evidence";
 import { createClient } from "@/lib/supabase/server";
 import { ensureStudyWorkspace } from "./bootstrap";
 import { StudyServiceError } from "./errors";
@@ -22,10 +23,10 @@ export async function getSemesterLearningAnalytics(){
   const [semesterResult,capacityResult,courseResult,attemptResult,sessionResult,weekResult]=await Promise.all([
     db.from("study_semesters").select("starts_on").eq("id",semesterId).single(),
     db.from("study_current_capacity").select("local_today").eq("semester_id",semesterId).maybeSingle(),
-    db.from("study_courses").select("id,display_name,short_name,sort_order").eq("semester_id",semesterId).eq("active",true).eq("course_kind","major").order("sort_order"),
-    db.from("study_attempts").select("course_id,session_id,result,independence,duration_seconds,completed_at").order("completed_at",{ascending:true}),
-    db.from("study_sessions").select("id,course_id,session_type,planned_minutes,actual_minutes,started_at,ended_at,note").eq("session_type","relearning").not("course_id","is",null).order("started_at",{ascending:true}),
-    db.from("study_week_actions").select("course_id,week_no,next_action,health_status,unresolved_errors").eq("semester_id",semesterId).order("week_no"),
+    getMajorCourseRoster(),
+    getLearningAttempts(),
+    getInterventionSessions(),
+    getLearningWeeks(),
   ]);
   const error=semesterResult.error||capacityResult.error||courseResult.error||attemptResult.error||sessionResult.error||weekResult.error;
   if(error)throw new StudyServiceError("Could not load semester learning analytics",error.code||"learning_analytics_failed",error);

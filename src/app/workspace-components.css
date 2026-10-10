@@ -1,0 +1,21 @@
+/* Shared composition primitives; screen CSS owns only its internal layout. */
+.workspace-account a{display:flex;min-height:44px;align-items:center;padding:8px 12px;text-decoration:none;font-size:14px}
+.workspace-account a:hover{background:var(--academic-accent-wash);color:var(--academic-accent)}
+.workspace-destinations a{position:relative;gap:12px;display:flex;align-items:center;font-size:15px}
+.navigation-pending{width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;margin-left:auto;animation:nav-turn .6s linear infinite}
+@keyframes nav-turn{to{transform:rotate(360deg)}}
+.course-section-nav{gap:0;overflow-x:auto;flex-wrap:nowrap;scrollbar-width:thin}
+.course-section-nav a{padding:12px 20px;text-decoration:none;border-bottom:2px solid transparent;white-space:nowrap;font-size:14px;font-weight:600}
+.course-section-nav a[aria-current=page]{color:var(--academic-accent);border-color:var(--academic-accent)}
+.course-tools{display:flex;gap:24px;margin:32px 0 0;padding-top:16px;border-top:1px solid var(--academic-rule);font-size:14px}
+.course-material-filters{display:grid;grid-template-columns:2fr 1fr 1fr;gap:16px}.course-material-filters label{display:grid;gap:8px;font-size:14px}.course-material-filters input,.course-material-filters select{padding:12px;border:1px solid var(--academic-rule);background:white;width:100%;min-width:0}.course-material-list{padding:0;list-style:none}.course-material-list li{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:20px 0;border-bottom:1px solid var(--academic-rule)}.course-material-list li>div{display:grid;gap:8px;min-width:0}.course-material-list strong{overflow-wrap:anywhere}.course-material-list span{font-size:13px;color:var(--academic-muted)}
+.loading-line{height:16px;background:#e2e8f0;border-radius:6px;width:45%;margin-bottom:16px}.loading-title{height:32px;width:28%}.loading-section{height:176px;background:#fff;border:1px solid var(--academic-rule);border-radius:8px;margin-top:32px}
+.material-dialog{border:1px solid var(--academic-rule);border-radius:8px;padding:24px;width:min(640px,calc(100% - 32px));max-height:calc(100dvh - 32px);overflow:auto;color:var(--academic-ink);background:var(--academic-sheet)}
+.material-dialog::backdrop{background:rgb(15 23 42 / .4)}.dialog-heading{display:flex;justify-content:space-between;gap:16px;align-items:center}.dialog-heading h2{margin:0}.dialog-close{min-width:44px;min-height:44px;background:none;border:1px solid var(--academic-rule);border-radius:8px;cursor:pointer}
+.material-dialog .resource-form{margin-top:20px}.material-advanced{margin-top:16px}.material-advanced summary{min-height:44px;cursor:pointer;display:list-item}.material-advanced .form-grid{padding-top:12px}.form-message[data-error=true]{color:var(--danger)}
+.settings-shortcuts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:24px 0}.settings-shortcuts a{background:white;border:1px solid var(--academic-rule);border-radius:8px;padding:20px;text-decoration:none;font-weight:600;min-height:64px}.settings-shortcuts a:hover{border-color:var(--academic-accent)}
+.connections-stack{display:grid;gap:24px;margin:24px 0}.connection-state{font-size:14px!important;font-weight:600!important;color:var(--academic-muted)}
+.practice-shell:has(.review-workspace.is-focused) .practice-modes,.practice-shell:has(.review-workspace.is-focused) .course-review-context{display:none}
+@media(max-width:760px){.workspace-desktop-nav{display:none!important}.workspace-mobile-nav{display:grid}.workspace-mobile-nav a{display:flex;justify-content:center;font-size:12px}.course-section-nav a{padding:12px}.settings-shortcuts{grid-template-columns:1fr}.workspace-account{display:none}.navigation-pending{position:absolute;right:4px;top:4px;width:8px;height:8px}.material-dialog{padding:16px}.workspace-main h1{font-size:28px}.workspace-frame:has(.review-workspace.is-focused) .workspace-mobile-nav{display:none}}
+@media(prefers-reduced-motion:reduce){.navigation-pending{animation:none}}
+@media(max-width:760px){.course-material-filters{grid-template-columns:1fr 1fr}.course-material-filters label:first-child{grid-column:1/-1}.course-material-list li{align-items:flex-start;flex-direction:column}}

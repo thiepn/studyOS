@@ -107,7 +107,7 @@ export type WeekResource = {
   processing_status: string;
 };
 
-export async function getCourseWorkflow(courseId: string) {
+export async function getCourseWorkflow(courseId: string, {includeMasterMap=true}:{includeMasterMap?:boolean}={}) {
   if (!UUID.test(courseId)) throw new StudyServiceError("Invalid course ID", "invalid_course");
   const supabase = await createClient();
   const { semesterId } = await ensureStudyWorkspace(supabase);
@@ -119,7 +119,7 @@ export async function getCourseWorkflow(courseId: string) {
     db.from("study_reconciliation_findings").select("id,teaching_week_id,course_id,skill_id,error_type,title,detail,severity,status,repair_scheduled_at,created_at,exercise_resource_id,solution_resource_id").eq("course_id", courseId).in("status", ["open","repair_scheduled"]).order("created_at", { ascending: false }),
     db.from("study_skills").select("id,title,stable_key").eq("course_id", courseId).eq("active", true).order("title"),
     db.from("study_resources").select("id,teaching_week_id,resource_type,title,drive_url,processing_status").eq("course_id", courseId).eq("active", true).order("created_at", { ascending: false }),
-    db.from("study_course_master_map").select("*").eq("semester_id", semesterId).eq("course_id", courseId).order("first_week_no", { ascending: true, nullsFirst: false }).order("topic_title"),
+    includeMasterMap ? db.from("study_course_master_map").select("*").eq("semester_id", semesterId).eq("course_id", courseId).order("first_week_no", { ascending: true, nullsFirst: false }).order("topic_title") : Promise.resolve({data:[],error:null}),
     db.from("study_skill_retention_diagnostics").select("skill_id,first_week_no")
       .eq("semester_id",semesterId).eq("course_id",courseId),
     db.from("study_questions").select("id,primary_skill_id,expected_minutes,active,answer_key_or_rubric")

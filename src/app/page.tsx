@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Suspense } from "react";
+import { cache } from "react";
 import { FirstUseWelcome } from "@/components/first-use-welcome";
 import { Nav } from "@/components/nav";
 import { DailyPlan } from "@/components/daily-plan";
@@ -21,6 +23,12 @@ function dayLabel(date:string){
   return new Date(date+"T12:00:00Z").toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"});
 }
 
+const loadCalendar = cache(getCalendarAutopilot);
+async function CalendarDetails({orchestration,overview=false}:{orchestration:Awaited<ReturnType<typeof getDailyOrchestration>>;overview?:boolean}){
+ const calendar=await loadCalendar(orchestration);
+ return overview?<PlanningCommandOverview commitments={orchestration.commitments} capacity={orchestration.capacity} calendar={calendar} hasWeeklyCommitment={Boolean(orchestration.weekRuntime)} now={new Date()}/>:<CalendarAutopilotPanel data={calendar}/>;
+}
+
 export default async function TodayPage() {
   const workspace=await getStudyWorkspaceState();
   if(!workspace.activeSemester)return <FirstUseWelcome/>;
@@ -36,7 +44,6 @@ export default async function TodayPage() {
   );
   if(!activeCourseCount)return <FirstUseWelcome hasSemester/>;
   const orchestration=await getDailyOrchestration();
-  const calendar=await getCalendarAutopilot(orchestration);
   const {today:data,pulse,capacity,plan,commitments,courses,settings}=orchestration;
   const overview=buildTodayOverview(plan,data.queueMinutes,commitments,new Date());
 
@@ -121,7 +128,7 @@ export default async function TodayPage() {
       <section className="today-courses"><div className="section-heading"><h2>Your courses</h2><Link href="/courses">All courses →</Link></div><div className="today-course-links">{courses.map(course=><Link key={course.id} href={"/courses/"+course.id}><strong>{course.display_name}</strong><span>Weeks & materials →</span></Link>)}</div></section>
       <section className="today-upcoming"><div className="section-heading"><h2>Upcoming deadlines</h2><a href="#today-schedule">Manage schedule</a></div>{commitments.slice().sort((a,b)=>a.due_at.localeCompare(b.due_at)).slice(0,4).map(item=><div className="upcoming-row" key={item.id}><strong>{item.title}</strong><time dateTime={item.due_at}>{new Date(item.due_at).toLocaleDateString("en-GB",{day:"numeric",month:"short"})}</time></div>)}{!commitments.length?<p className="muted">No upcoming deadlines recorded. Add one in your schedule.</p>:null}</section>
       <details className="today-drawer"><summary>Study overview & planning details</summary><div className="today-drawer-body">      <TodayOverview data={overview} mode={capacity.mode} weekPercent={weekRuntime?.progress.completionPercent??null}/>
-      <PlanningCommandOverview commitments={commitments} capacity={capacity} calendar={calendar} hasWeeklyCommitment={Boolean(weekRuntime)} now={new Date()}/>
+      <Suspense fallback={<p role="status">Loading calendar details…</p>}><CalendarDetails orchestration={orchestration} overview/></Suspense>
 
 </div></details>
 
@@ -152,7 +159,7 @@ export default async function TodayPage() {
 
       <details className="today-drawer">
         <summary id="today-schedule"><span><strong>Schedule & deadlines</strong><small>Calendar placement, commitments, and due dates</small></span><b>Open</b></summary>
-        <div className="today-drawer-body"><CalendarAutopilotPanel data={calendar}/><CommitmentsPanel commitments={commitments} courses={courses}/></div>
+        <div className="today-drawer-body"><Suspense fallback={<p role="status">Loading calendar…</p>}><CalendarDetails orchestration={orchestration}/></Suspense><CommitmentsPanel commitments={commitments} courses={courses}/></div>
       </details>
 
       <details className="today-drawer">

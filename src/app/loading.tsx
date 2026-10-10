@@ -1,7 +1,2 @@
 import { StudySystemState } from "@/components/study-system-state";
-export default function Loading(){
-  return <main className="shell system-state-shell studyos-system-state" aria-busy="true">
-    <StudySystemState kind="loading" title="Opening your study workspace…"
-      detail="Loading the current semester, academic records and study plan."/>
-  </main>;
-}
+export default function Loading(){return <main className="shell studyos-system-state" aria-busy="true"><StudySystemState kind="loading" title="Opening workspace…" detail="Your courses and study work are loading."/><div className="loading-section" aria-hidden="true"/></main>;}

@@ -11,9 +11,10 @@ export class StudySyncError extends Error {
 export async function readStudyMutationResponse(response: Response): Promise<unknown> {
   const type=response.headers.get("content-type")??"";
   const loginRedirect=response.redirected && /\/login(?:\?|$)/.test(new URL(response.url).pathname);
-  if(loginRedirect || response.status===401 || response.status===403) {
+  if(loginRedirect || response.status===401) {
     throw new StudySyncError("Your sign-in expired. Sign in again before saving or syncing study work.",true,true);
   }
+  if(response.status===403) throw new StudySyncError("This account cannot save this work. Nothing was recorded; check your account before retrying.",true,true);
   const permanent=response.status>=400 && response.status<500 && response.status!==429;
   let payload:unknown=null;
   if(type.includes("application/json")) {

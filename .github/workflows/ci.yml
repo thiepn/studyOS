@@ -84,3 +84,15 @@ jobs:
           path: evidence/f05-browser/
           if-no-files-found: warn
           retention-days: 14
+
+      - name: Stateful isolated application journeys
+        run: node scripts/application-journey.mjs
+
+      - name: Retain isolated application screenshots and timings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: application-journey-evidence
+          path: evidence/application-journey/
+          if-no-files-found: warn
+          retention-days: 14

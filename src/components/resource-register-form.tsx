@@ -30,12 +30,13 @@ export function ResourceRegisterForm({ courses, defaultCourseId, defaultWeekNo }
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
     const fd = new FormData(form);
-    setBusy(true); setMessage(null);
+    setBusy(true); setMessage(null); setFailed(false);
     try {
       const response = await fetch("/api/study/resources/register", {
         method: "POST",
@@ -47,11 +48,12 @@ export function ResourceRegisterForm({ courses, defaultCourseId, defaultWeekNo }
         }),
       });
       const body = await response.json();
-      if (!response.ok) throw new Error(body?.error || "Could not register resource");
-      setMessage("Registered. The resource is queued for structured extraction.");
+      if (!response.ok || body?.ok !== true) throw new Error(body?.error || "Could not save material");
+      setMessage("Saved. Your material is ready to open; academic extraction still needs review.");
       form.reset();
       router.refresh();
     } catch (error) {
+      setFailed(true);
       setMessage(error instanceof Error ? error.message : "Could not register resource");
     } finally { setBusy(false); }
   }
@@ -64,12 +66,11 @@ export function ResourceRegisterForm({ courses, defaultCourseId, defaultWeekNo }
         <label className="wide"><span>Title</span><input name="title" required maxLength={240} placeholder="Lecture 03 — Metric spaces" /></label>
         <label className="wide"><span>Google Drive file URL</span><input name="driveUrl" required inputMode="url" placeholder="https://drive.google.com/file/d/…" /></label>
         <label><span>Teaching week</span><input name="weekNo" type="number" min="1" max="40" inputMode="numeric" defaultValue={defaultWeekNo ?? undefined} placeholder="1" /></label>
-        <label><span>Authority</span><select name="sourceAuthority" defaultValue="unknown">{AUTHORITIES.map((x) => <option key={x.value} value={x.value}>{x.label}</option>)}</select></label>
-        <label className="wide"><span>Original filename <em>optional</em></span><input name="originalFilename" placeholder="VL03.pdf" /></label>
       </div>
+      <details className="material-advanced"><summary>Source details (optional)</summary><div className="form-grid"><label><span>Authority</span><select name="sourceAuthority" defaultValue="unknown">{AUTHORITIES.map((x) => <option key={x.value} value={x.value}>{x.label}</option>)}</select></label><label><span>Original filename <em>optional</em></span><input name="originalFilename" placeholder="VL03.pdf" /></label></div></details>
       <p className="resource-provenance-note" role="note">Choose the material's declared authority only if you know it; otherwise keep “Unknown.” This selection does not verify authorship, reuse rights, course approval, question accuracy or a rubric.</p>
-      <div className="button-row"><button className="primary-button button-reset" disabled={busy} type="submit">{busy ? "Registering…" : "Register resource"}</button></div>
-      {message ? <p className="form-message" role="status" aria-live="polite">{message}</p> : null}
+      <div className="button-row"><button className="primary-button button-reset" disabled={busy} type="submit">{busy ? "Saving…" : "Save material"}</button></div>
+      {message ? <p className="form-message" data-error={failed} role={failed?"alert":"status"} aria-live="polite">{message}</p> : null}
     </form>
   );
 }

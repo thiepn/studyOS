@@ -1,3 +1,4 @@
+import { getLearningAttempts, getInterventionSessions, getMajorCourseRoster } from "./workspace-evidence";
 import { createClient } from "@/lib/supabase/server";
 import { ensureStudyWorkspace } from "./bootstrap";
 import { StudyServiceError } from "./errors";
@@ -60,9 +61,9 @@ async function loadStrategyState():Promise<StrategyState>{
   const [semesterResult,capacityResult,courseResult,attemptResult,sessionResult,questionResult,skillResult]=await Promise.all([
     db.from("study_semesters").select("starts_on").eq("id",semesterId).single(),
     db.from("study_current_capacity").select("local_today").eq("semester_id",semesterId).maybeSingle(),
-    db.from("study_courses").select("id,display_name,short_name,sort_order").eq("semester_id",semesterId).eq("active",true).eq("course_kind","major").order("sort_order"),
-    db.from("study_attempts").select("course_id,session_id,question_id,skill_id,evidence_dimension,result,independence,duration_seconds,completed_at").order("completed_at",{ascending:true}),
-    db.from("study_sessions").select("id,course_id,session_type,planned_minutes,actual_minutes,started_at,ended_at,note").eq("session_type","relearning").not("course_id","is",null).order("started_at",{ascending:true}),
+    getMajorCourseRoster(),
+    getLearningAttempts(),
+    getInterventionSessions(),
     db.from("study_questions").select("*").eq("active",true),
     db.from("study_skills").select("id,course_id,title,prerequisite_importance").eq("active",true),
   ]);

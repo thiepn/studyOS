@@ -10,6 +10,8 @@ import { SourceIndex } from "@/components/source-index";
 import { DriveIntakeIndex } from "@/components/drive-intake-index";
 import { resourceDeskSummary } from "@/lib/study/resource-desk";
 import type { Json } from "@/lib/supabase/database.types";
+import { MaterialDialog } from "@/components/material-dialog";
+import { ContextDetails } from "@/components/context-details";
 
 export const dynamic = "force-dynamic";
 
@@ -73,21 +75,21 @@ export default async function ResourcesPage({searchParams}:{searchParams:Promise
           {course.short_name??course.display_name}</Link>)}
       </nav>
 
-      <div className="button-row"><a className="primary-button" href="#manual-registration">Add material</a><a className="secondary-button" href="#source-drive">Google Drive</a><a className="secondary-button" href="#processing-queue">Review & processing ({summary.queued+summary.candidates})</a></div>
+      <div className="button-row"><MaterialDialog><ResourceRegisterForm courses={data.courses} defaultCourseId={selectedCourse?.id} defaultWeekNo={selectedWeek}/></MaterialDialog><a className="secondary-button" href="#source-drive">Google Drive</a><a className="secondary-button" href="#processing-queue">Review & processing ({summary.queued+summary.candidates})</a></div>
       <section id="source-library" className="panel resource-library">
         <div className="section-heading"><div><p className="eyebrow">Materials</p><h2>Your materials</h2></div><span>{resources.length}</span></div>
         <p className="resource-stage-help">Search only sources in this active-semester view. Processing status is separate from declared source authority and is not a rights or rubric attestation.</p>
-        <SourceIndex key={(selectedCourse?.id??"all")+":"+(selectedWeek??"all")} resources={resources} courseNames={courseNames} weekNumbers={Object.fromEntries((data.weeks??[]).map(week=>[week.id,week.week_no]))} initialWeek={selectedWeek} />
+        <SourceIndex resources={resources} key={(selectedCourse?.id??"all")+":"+(selectedWeek??"all")} courseNames={courseNames} weekNumbers={Object.fromEntries((data.weeks??[]).map(week=>[week.id,week.week_no]))} initialWeek={selectedWeek} />
       </section>
 
       {driveMessage ? <p className={query.drive==="connected"?"form-message":"error"} role="status">{driveMessage}</p> : null}
 
-      <section id="source-drive" className="panel drive-panel">
+      <ContextDetails id="drive-details" title="Google Drive connection & file discovery"><section id="source-drive" className="panel drive-panel">
         <div className="section-heading"><div><p className="eyebrow">Separate integration</p><h2>Study Drive</h2></div><span>{drive?.status === "connected" ? "On" : "Off"}</span></div>
         <DriveControls connected={drive?.status === "connected"} email={drive?.google_account_email} inboxUrl={drive?.inbox_folder_url} lastScanAt={drive?.last_scan_at} lastScanStatus={drive?.last_scan_status} lastError={drive?.last_error} />
-      </section>
+      </section></ContextDetails>
 
-      <section id="processing-queue" className="panel processing-queue-panel">
+      <ContextDetails id="material-review" title="Review material processing & approval"><section id="processing-queue" className="panel processing-queue-panel">
         <div className="section-heading"><div><p className="eyebrow">Source-grounded processing</p><h2>Processing queue</h2></div><span>{queued.length}</span></div>
         <p className="muted">Queued academic sources are not allowed into the study map until they have a source-anchored topic/skill/question candidate and you explicitly accept it.</p>
         {queued.length ? <div className="processing-list">{queued.map((run) => {
@@ -96,12 +98,7 @@ export default async function ResourcesPage({searchParams}:{searchParams:Promise
         })}</div> : <p className="muted">No source is waiting for semantic processing.</p>}
       </section>
 
-      <section id="manual-registration" className="grid resource-grid">
-        <div className="panel">
-          <h2>Add a Drive file</h2>
-          <p className="muted">Normally, Drive scanning discovers material automatically. Use this only when you need to register one file manually.</p>
-          <ResourceRegisterForm courses={data.courses} defaultCourseId={selectedCourse?.id} defaultWeekNo={selectedWeek} />
-        </div>
+      <section className="resource-grid">
         <div id="candidate-review" className="panel">
           <h2>Extraction review</h2>
           <p className="resource-stage-help">Review the source candidate and all validation details. No blocking errors is not an approval or proof that a question or rubric is trustworthy.</p>
@@ -123,7 +120,7 @@ export default async function ResourcesPage({searchParams}:{searchParams:Promise
         <div className="section-heading"><div><p className="eyebrow">Drive discovery</p><h2>Intake queue</h2></div><span>{unresolvedIntake.length}</span></div>
         <DriveIntakeIndex items={unresolvedIntake} courseNames={courseNames} />
       </section>
-
+      </ContextDetails>
 
     </main>
   );

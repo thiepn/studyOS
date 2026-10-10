@@ -2,8 +2,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/database.types";
 import { StudyServiceError } from "./errors";
+import { cache } from "react";
 
 export async function getStudyWorkspaceState(existingClient?: SupabaseClient<Database>) {
+  return readWorkspaceState(existingClient ?? await createClient());
+}
+
+const readWorkspaceState = cache(async (existingClient: SupabaseClient<Database>) => {
   const supabase = existingClient ?? await createClient();
   const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
   if (claimsError || !claimsData?.claims?.sub) throw new StudyServiceError("Authentication required", "not_authenticated", claimsError);
@@ -26,7 +31,7 @@ export async function getStudyWorkspaceState(existingClient?: SupabaseClient<Dat
     activeSemester: null,
     hasAnySemester: (historical.data??[]).length>0,
   };
-}
+});
 
 export async function ensureStudyWorkspace(existingClient?: SupabaseClient<Database>) {
   const state=await getStudyWorkspaceState(existingClient);

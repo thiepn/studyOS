@@ -2,8 +2,10 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { env } from "@/lib/env";
 import type { Database } from "./database.types";
+import { cache } from "react";
 
-export async function createClient() {
+// Request lifetime only. Never persist an authenticated client across accounts.
+export const createClient = cache(async function createClient() {
   const cookieStore = await cookies();
   return createServerClient<Database>(env.supabaseUrl, env.supabasePublishableKey, {
     cookies: {
@@ -14,4 +16,4 @@ export async function createClient() {
       },
     },
   });
-}
+});

@@ -8,13 +8,21 @@ import { getCourseWorkflow } from "@/lib/study/workflow";
 import { getCourseExamIntelligence } from "@/lib/study/exams";
 import { ExamIntelligence } from "@/components/exam-intelligence";
 import { courseInitials, courseToneClass } from "@/lib/study/course-visual";
+import { CourseTabs } from "@/components/course-tabs";
+import { CourseMaterialList } from "@/components/course-material-list";
+import { courseBinderOverview, sourceProcessingLabel } from "@/lib/study/course-binder-overview";
 
 export const dynamic = "force-dynamic";
 
-export default async function CourseDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function CourseDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams:Promise<{tab?:string}> }) {
   const { id } = await params;
-  const [data, exam] = await Promise.all([getCourseWorkflow(id), getCourseExamIntelligence(id)]);
+  const query = await searchParams;
+  const tab = ["weeks","materials","practice","progress","exams","settings"].includes(query.tab??"")?query.tab!:"overview";
+  const data = await getCourseWorkflow(id, {includeMasterMap:tab==="progress"});
+  const exam = tab==="exams"?await getCourseExamIntelligence(id):null;
   const c = data.configuration;
+  const overview=courseBinderOverview(data.weeks,data.resources);
+  const currentFiles=data.resources.filter(file=>file.teaching_week_id===overview.activeWeek?.teaching_week_id&&(!["solution","exam_solution"].includes(file.resource_type)||overview.canOpenSolutions)).slice(0,3);
   return (
     <main className={`shell course-shell ${courseToneClass(c.stable_key)}`}>
       <header className="header course-header">
@@ -31,8 +39,8 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
         <Nav courseName={c.display_name} />
       </header>
 
-      <nav className="course-section-nav" aria-label="Course sections"><a href="#course-weeks">Weeks & materials</a><Link href={"/resources?course="+c.course_id}>All materials</Link><Link href={"/practice?course="+c.course_id}>Practice</Link><Link href={"/progress#course-"+c.course_id}>Progress</Link></nav>
-      <details className="course-summary"><summary>Course overview & weekly progress</summary><CourseBinderOverview courseId={c.course_id} weeks={data.weeks} resources={data.resources}/></details>
+      <CourseTabs courseId={c.course_id} selected={tab}/>
+      {tab==="overview"?<CourseBinderOverview courseId={c.course_id} weeks={data.weeks} resources={data.resources}/>:null}
 
       <div className="button-row course-back-row">
         <Link className="secondary-button" href="/courses">← All courses</Link>
@@ -43,7 +51,9 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
         {c.course_kind === "retake" ? <Link className="secondary-button" href={"/diagnostics/" + c.course_id}>Baseline diagnostic</Link> : null}
       </div>
 
-      <section id="course-weeks" className="workflow-heading">
+      {tab==="overview"&&currentFiles.length?<section className="course-overview-files"><h2>Current week files</h2><ul className="course-material-list">{currentFiles.map(file=><li key={file.id}><div><strong>{file.title}</strong><span>{file.resource_type.replaceAll("_"," ")} · {sourceProcessingLabel(file.processing_status)}</span></div>{file.drive_url?<a className="secondary-button" href={file.drive_url} target="_blank" rel="noreferrer">Open file ↗</a>:<span>No file link recorded</span>}</li>)}</ul></section>:null}
+
+      {tab==="weeks"?<><section id="course-weeks" className="workflow-heading">
         <div><p className="eyebrow">Current coursework</p><h2>Teaching weeks</h2></div>
         <p>Continue the first unfinished week. The binder keeps the sources, independent work, solution checking and repair together.</p>
       </section>
@@ -56,12 +66,16 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
         resources={data.resources}
         weekPractice={data.weekPractice}
       />
+      </>:null}
+      {tab==="materials"?<CourseMaterialList resources={data.resources} weeks={data.weeks}/>:null}
+      {tab==="practice"?<section className="panel"><h2>Practice this course</h2><p>Review due questions or choose a teaching week for focused retrieval.</p><Link className="primary-button" href={`/practice?course=${id}`}>Review questions</Link><Link className="secondary-button" href={`/courses/${id}?tab=weeks`}>Choose a week</Link></section>:null}
 
-      <details id="course-master-map" className="course-summary"><summary>Topics & learning evidence</summary><CourseMasterMap topics={data.masterMap}/></details>
+      {tab==="progress"?<section id="course-master-map"><h2>Topics & learning evidence</h2><CourseMasterMap topics={data.masterMap}/></section>:null}
 
-      <details id="course-exam-intelligence" className="course-summary"><summary>Exam preparation & past papers</summary><ExamIntelligence papers={exam.papers} blueprint={exam.blueprint} strategy={exam.strategy}/></details>
+      {exam?<section id="course-exam-intelligence"><h2>Exam preparation & past papers</h2><ExamIntelligence papers={exam.papers} blueprint={exam.blueprint} strategy={exam.strategy}/></section>:null}
+      <div className="course-tools"><Link prefetch={false} href={`/courses/${id}?tab=exams`}>Exam tools</Link><Link prefetch={false} href={`/courses/${id}?tab=settings`}>Course settings</Link></div>
 
-      <details id="course-settings" className="course-settings-drawer">
+      {tab==="settings"?<details open id="course-settings" className="course-settings-drawer">
         <summary>
           <span><strong>Course settings</strong><small>Identity, exam information, weekly release pattern</small></span>
           <b>{c.short_name ?? c.stable_key}</b>
@@ -70,7 +84,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
           <p className="muted">The stable internal key remains unchanged.</p>
           <CourseConfigForm configuration={c} />
         </div>
-      </details>
+      </details>:null}
     </main>
   );
 }
