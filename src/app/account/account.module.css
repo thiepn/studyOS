@@ -37,3 +37,5 @@
 .identity :global(.account-session-review form){margin-top:14px}
 .identity :global(.account-session-review button){min-height:44px}
 .identity :global(.account-session-review summary:focus-visible){outline:2px solid #394e43;outline-offset:3px}
+
+.workspace .button-row a[href="/account/recovery"]{font-weight:750}

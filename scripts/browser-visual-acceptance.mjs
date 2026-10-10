@@ -64,6 +64,16 @@ try{
   assert.equal(new URL(phone.url()).searchParams.get("next"),"/courses");
   await noOverflow(phone,"protected route mobile redirect");
   await evidence(phone,"mobile-protected-redirect-390-dpr2");
+  // F13: actual built-server route access must still require an authenticated
+  // THIEPN session. This is NOT an authenticated or cross-account screenshot.
+  await phone.goto(new URL("/account/recovery",origin).href,{waitUntil:"networkidle"});
+  assert.equal(new URL(phone.url()).pathname,"/login","Account recovery must not be anonymously accessible");
+  assert.equal(new URL(phone.url()).searchParams.get("next"),"/account/recovery");
+  assert.ok(await phone.getByText("After sign-in, return to Account recovery.",{exact:false}).count(),
+    "Recovered destination should be readable without displaying account secrets");
+  await noOverflow(phone,"account recovery protected redirect");
+  await evidence(phone,"mobile-account-recovery-redirect-390-dpr2");
+  manifest.limitations.push("Account recovery route checked anonymously only; no signed-in ownership evidence");
   await phone.close();await desktop.close();
   await writeFile(resolve(output,"manifest.json"),JSON.stringify(manifest,null,2)+"\n");
   console.log("F05 real Chromium anonymous screenshot acceptance passed:",manifest.files.map(f=>f.name).join(", "));

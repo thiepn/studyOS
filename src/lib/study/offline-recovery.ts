@@ -1,0 +1,53 @@
+/** Account-specific browser queue custody. No payloads or owner IDs leave the browser.
+ * Server-side API authentication and RLS, not this presentation, authorize writes. */
+export const OFFLINE_QUEUE_KEYS=[
+  "semester-os:pending-attempts:v2",
+  "semester-os:pending-session-starts:v1",
+  "semester-os:pending-session-finishes:v1",
+] as const;
+export type OfflineQueueRaw=Record<(typeof OFFLINE_QUEUE_KEYS)[number],string|null>;
+export type OfflineCustodyStatus="ready"|"owner_mismatch"|"storage_unavailable"|"malformed"|"legacy_unowned";
+export type OfflineCustody={
+  status:OfflineCustodyStatus;
+  owned:number;
+  otherOwner:number;
+  unowned:number;
+  total:number;
+  canRetry:boolean;
+};
+export function inspectOfflineCustody(
+  raw:OfflineQueueRaw|null,
+  verifiedServerOwner:string,
+  currentBrowserOwner:string|null,
+):OfflineCustody{
+  const denied=(status:OfflineCustodyStatus):OfflineCustody=>({status,owned:0,otherOwner:0,unowned:0,total:0,canRetry:false});
+  if(!verifiedServerOwner||!currentBrowserOwner||currentBrowserOwner!==verifiedServerOwner)
+    return denied("owner_mismatch");
+  if(!raw)return denied("storage_unavailable");
+  let owned=0,otherOwner=0,unowned=0;
+  for(const key of OFFLINE_QUEUE_KEYS){
+    let records:unknown;
+    try{records=JSON.parse(raw[key]??"[]");}catch{return denied("malformed");}
+    if(!Array.isArray(records)||records.length>10000)return denied("malformed");
+    for(const record of records){
+      if(!record||typeof record!=="object"||Array.isArray(record))return denied("malformed");
+      const id=(record as {ownerId?:unknown}).ownerId;
+      if(typeof id!=="string"||id.length===0)unowned++;
+      else if(id===verifiedServerOwner)owned++;
+      else otherOwner++;
+    }
+  }
+  return {status:unowned?"legacy_unowned":"ready",owned,otherOwner,unowned,
+    total:owned+otherOwner+unowned,canRetry:unowned===0&&owned>0};
+}
+export function offlineCustodyExplanation(custody:OfflineCustody):string{
+  switch(custody.status){
+    case "owner_mismatch":return "The browser session cannot be matched to the verified THIEPN Account. Re-authenticate without replaying queued work.";
+    case "storage_unavailable":return "Local browser storage is unavailable. Do not assume offline work was preserved or delivered.";
+    case "malformed":return "One or more offline queues cannot be parsed safely. StudyOS will not replay them through this recovery control.";
+    case "legacy_unowned":return "Older queue records without owner metadata are present. They cannot be assigned to another account or automatically replayed.";
+    case "ready":return custody.owned
+      ? "Only records explicitly tagged for this verified account may be retried. Server acknowledgements and course history still require review."
+      : "No pending local records are tagged for this account. This does not independently prove server receipt.";
+  }
+}
