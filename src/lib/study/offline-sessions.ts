@@ -6,6 +6,9 @@ import { currentPendingOwner,canReplayPending } from "./pending-owner";
 import {ownerMatchesBeforeOrAfterAck} from "./owner-replay-guard";
 import { readStudyMutationResponse,StudySyncError } from "./sync-response";
 import {appendOwnerPending,sameOfflineOwner} from "./offline-queue-custody";
+import {hasPersistedOfflineReceipt} from "./offline-receipt-client";
+import {withOfflineReplayGuard} from "./offline-replay-guard";
+import type {OfflineReceiptRequest} from "./offline-receipt-contract";
 
 const START_KEY = "semester-os:pending-session-starts:v1";
 const FINISH_KEY = "semester-os:pending-session-finishes:v1";
@@ -65,25 +68,49 @@ export async function startSessionWithFallback(input:ReviewSessionStartInput){
 export async function finishSessionWithFallback(input:ReviewSessionFinishInput){
   return submitSessionWithFallback("/api/study/session/finish",FINISH_KEY,input);
 }
-async function flushQueue<T extends {sessionId:string;ownerId?:string}>(key:string,path:string){
+async function flushQueue<T extends {sessionId:string;ownerId?:string;queuedAt:string}>(
+  key:string,path:string,kind:"session_start"|"session_finish",
+){
   const ownerId=await currentPendingOwner();
   if(!ownerId)return;
-  const items=read<T>(key).filter(item=>canReplayPending(item.ownerId,ownerId));
-  for(const item of items){
-    try{
-      if(!await ownerMatchesBeforeOrAfterAck(ownerId,item.ownerId,currentPendingOwner))break;
-      await post(path,item as unknown as ReviewSessionStartInput|ReviewSessionFinishInput);
-      if(!await ownerMatchesBeforeOrAfterAck(ownerId,item.ownerId,currentPendingOwner))break;
-      write(key,read<T>(key).filter(row=>row.sessionId!==item.sessionId||row.ownerId!==ownerId));
-    }catch(error){
-      if((error instanceof StudySyncError && error.authRequired)
-        ||(typeof navigator!=="undefined"&&!navigator.onLine))break;
+  await withOfflineReplayGuard("owner-"+ownerId,async()=>{
+    const items=read<T>(key).filter(item=>canReplayPending(item.ownerId,ownerId));
+    for(const item of items){
+      try{
+        if(!await ownerMatchesBeforeOrAfterAck(ownerId,item.ownerId,currentPendingOwner))break;
+        const receipt:OfflineReceiptRequest=kind==="session_start"
+          ?{kind,recordId:item.sessionId,
+            startedAt:(item as unknown as ReviewSessionStartInput).startedAt,
+            sessionType:(item as unknown as ReviewSessionStartInput).sessionType??"review",
+            plannedMinutes:(item as unknown as ReviewSessionStartInput).plannedMinutes,
+            courseId:(item as unknown as ReviewSessionStartInput).courseId??null}
+          :{kind,recordId:item.sessionId,
+            endedAt:(item as unknown as ReviewSessionFinishInput).endedAt,
+            note:(item as unknown as ReviewSessionFinishInput).note??null};
+        const recordedBefore=await hasPersistedOfflineReceipt(receipt);
+        if(!recordedBefore){
+          if(!await ownerMatchesBeforeOrAfterAck(ownerId,item.ownerId,currentPendingOwner))break;
+          await post(path,item as unknown as ReviewSessionStartInput|ReviewSessionFinishInput);
+        }
+        if(!await ownerMatchesBeforeOrAfterAck(ownerId,item.ownerId,currentPendingOwner))break;
+        const recorded=recordedBefore||await hasPersistedOfflineReceipt(receipt);
+        if(!recorded)throw new Error("Missing session database read-back");
+        if(!await ownerMatchesBeforeOrAfterAck(ownerId,item.ownerId,currentPendingOwner))break;
+        const latest=read<T>(key),matches=latest.filter(row=>
+          row.sessionId===item.sessionId&&row.ownerId===ownerId);
+        if(matches.length!==1||matches[0].queuedAt!==item.queuedAt)break;
+        write(key,latest.filter(row=>row!==matches[0]));
+      }catch{
+        // Replayed session data never disappears on a network, auth, read
+        // permission, stale-record or original-owner uncertainty.
+        break;
+      }
     }
-  }
+  });
 }
 export async function flushPendingSessionStarts(){
-  await flushQueue<PendingStart>(START_KEY,"/api/study/session/start");
+  await flushQueue<PendingStart>(START_KEY,"/api/study/session/start","session_start");
 }
 export async function flushPendingSessionFinishes(){
-  await flushQueue<PendingFinish>(FINISH_KEY,"/api/study/session/finish");
+  await flushQueue<PendingFinish>(FINISH_KEY,"/api/study/session/finish","session_finish");
 }
