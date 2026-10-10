@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { safeStudyReturnPath } from "@/lib/study/auth-return";
+import { getStudyRouteContext } from "@/lib/study/route-context";
 import { AUTH_FAILURES, safeAuthFailure } from "@/lib/study/auth-flow";
 import { LoginSubmit } from "@/components/login-submit";
 import styles from "./login.module.css";
@@ -36,7 +37,7 @@ export default async function LoginPage({ searchParams }: {
         <p className={styles.explainer}>Sign in to continue where you left off. Your university materials and study history stay linked to your THIEPN Account.</p>
         {failure ? <div className={styles.notice} role="alert"><strong>Sign-in needs attention.</strong> {AUTH_FAILURES[failure]}</div> : null}
         {!failure && signedOut ? <div className={`${styles.notice} ${styles.success}`} role="status">You have signed out of this StudyOS session.</div> : null}
-        {next !== "/" ? <p className={styles.destination}>After sign-in, return to your requested StudyOS page.</p> : null}
+        {next !== "/" ? <p className={styles.destination}>After sign-in, return to {getStudyRouteContext(next).current}. This destination is checked for same-origin safety; access to its academic records is checked separately.</p> : null}
         <LoginSubmit next={next}/>
         <p className={styles.meta}><strong>One account for THIEPN.</strong> Google is used to verify your THIEPN identity. Your Study Drive and Calendar may use different Google accounts; those connections are managed separately inside StudyOS.</p>
       </div>

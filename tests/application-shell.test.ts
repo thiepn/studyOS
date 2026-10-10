@@ -13,7 +13,7 @@ test("route context never derives an account identity from arbitrary URLs",()=>{
   assert.equal(getStudyRouteContext("/resources").parent?.href,"/more");
   assert.equal(getStudyRouteContext("/account").current,"Account");
   assert.equal(getStudyRouteContext("/semester/archive/abc").parent?.href,"/semesters");
-  assert.equal(getStudyRouteContext("/account/unknown").current,"Study workspace");
+  assert.equal(getStudyRouteContext("/account/unknown").current,"Account settings");
   assert.equal(getStudyRouteContext("/").parent,undefined);
 });
 test("page shell has a visible keyboard-first skip route to focusable main content",()=>{
@@ -52,4 +52,14 @@ test("browser artifacts use an exact checkout instead of a synthetic PR merge re
   assert.match(workflow,/STUDYOS_EXPECTED_SHA:/);
   assert.match(browser,/execFileSync\("git",\["rev-parse","HEAD"\]/);
   assert.match(browser,/exactHead!==expected/);
+});
+
+test("account context and semester navigation destinations do not claim URL-derived ownership",()=>{
+  assert.equal(getStudyRouteContext("/account/unknown").parent?.href,"/account");
+  const nav=read("../src/components/nav.tsx");
+  assert.match(nav,/href="\/semester\/bootstrap" aria-label="Manage active semester setup"/);
+  assert.match(nav,/href="\/semesters" aria-label="Browse active and archived semesters"/);
+  const css=read("../src/app/shell.css");
+  assert.match(css,/\.academic-context-actions a:focus-visible/);
+  assert.match(css,/@media\(max-width:650px\)/);
 });
