@@ -127,7 +127,7 @@ async function f15Fixture(fn:(input:any)=>Promise<void>){
     const packetDigest=sha(JSON.stringify(base.packet));
     const originals:any={version:"studyos-f15-v1",head,packetSha256:packetDigest,attestations:[],decisions:{}};
     const roots:any={attestations:[],decisions:[]};
-    const privateKeys=new Map<string,ReturnType<typeof generateKeyPairSync>["privateKey"]>();
+    const privateKeys=new Map<string,KeyObject>();
     const makeSigner=(role:string,actorId:string)=>{
       const pair=generateKeyPairSync("ed25519"),keyId=role+"-key";
       privateKeys.set(role,pair.privateKey);
