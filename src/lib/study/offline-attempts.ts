@@ -38,7 +38,7 @@ const replayExpectedRemoval=new Map<string,PendingAttempt>();
 /** Only the exact snapshot verified by the authenticated receipt can be removed.
  * Keep the original two-argument interface for existing integration users. */
 export function removePendingAttempt(clientId:string,ownerId?:string):boolean{
-  if(!storageAvailable()||!ownerId) return false;
+  if (!storageAvailable()||!ownerId) return false;
   const lookup=ownerId+":"+clientId;
   const expected=replayExpectedRemoval.get(lookup);
   if(!expected)return false;
