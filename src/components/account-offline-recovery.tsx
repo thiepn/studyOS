@@ -67,7 +67,8 @@ export function AccountOfflineRecovery({verifiedOwnerId}:{verifiedOwnerId:string
       <strong>{custody.status==="ready"?"Owner-matched queue":custody.status.replaceAll("_"," ")}</strong>
       <p>{offlineCustodyExplanation(custody)}</p>
       {custody.status==="ready"||custody.status==="legacy_unowned"
-        ?<p>{custody.owned} for current account · {custody.otherOwner} for other accounts · {custody.unowned} older unowned · {custody.total} local queue entries</p>
+        ?<><p>{custody.owned} for current account · {custody.otherOwner} for other accounts · {custody.unowned} older unowned · {custody.total} local queue entries</p>
+          <p>{custody.atCapacity?"Local queue capacity reached. New offline saves can fail. ":""}Approximate stored queue volume: {Math.ceil(custody.storageBytes/1024)} KiB (all local owners). Do not clear this storage before owner-controlled recovery.</p></>
         :null}
     </div>:<p role="status">Inspecting this browser's queue metadata. No writes are performed.</p>}
     <p>Connection: {online===null?"unverified":online?"browser reports online":"browser reports offline"}. Being online does not prove the StudyOS server acknowledged an update.</p>

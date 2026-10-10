@@ -43,12 +43,46 @@ export async function getFirstWeekProof(
   const activeIds=questions.map(q=>q.id);
   if(!activeIds.length)return buildFirstWeekProof(ids,weekRows,resources,links,[],[]);
 
-  const attemptResult=await db.from("study_attempts")
-    .select("id,question_id,course_id,independence").eq("user_id",userId)
-    .eq("independence","independent").in("course_id",ids).in("question_id",activeIds)
-    .limit(1000);
-  if(attemptResult.error)throw new StudyServiceError("Could not verify recorded independent Week-1 attempts",
-    attemptResult.error.code||"first_week_proof_failed",attemptResult.error);
-  return buildFirstWeekProof(ids,weekRows,resources,links,questions,
-    (attemptResult.data??[]) as ProofAttempt[]);
+  const attempts=await readAllFirstWeekIndependentAttempts(db,userId,ids,activeIds);
+  return buildFirstWeekProof(ids,weekRows,resources,links,questions,attempts);
+}
+
+/** PostgREST defaults and previous .limit(1000) silently hid valid historical
+ * independent attempts. Paginate by stable unique id, with bounded pages and
+ * question-ID batches. If the safety bound is exceeded, fail closed rather
+ * than misreporting missing academic evidence or making unbounded requests. */
+const PROOF_PAGE_SIZE=500;
+const PROOF_ID_BATCH=40;
+const PROOF_MAX_ROWS=20000;
+
+export async function readAllFirstWeekIndependentAttempts(
+  db:any,userId:string,courseIds:readonly string[],questionIds:readonly string[],
+):Promise<ProofAttempt[]>{
+  const courses=[...new Set(courseIds)],questions=[...new Set(questionIds)];
+  if(!userId||!courses.length||!questions.length)return [];
+  const attempts:ProofAttempt[]=[];
+  for(let pos=0;pos<questions.length;pos+=PROOF_ID_BATCH){
+    const batch=questions.slice(pos,pos+PROOF_ID_BATCH);
+    for(let page=0;;page++){
+      if(page*PROOF_PAGE_SIZE>=PROOF_MAX_ROWS||attempts.length>=PROOF_MAX_ROWS)
+        throw new StudyServiceError("Week-1 proof exceeds safe retrieval budget; use scoped reconciliation",
+          "first_week_proof_limit");
+      const offset=page*PROOF_PAGE_SIZE;
+      const result=await db.from("study_attempts")
+        .select("id,question_id,course_id,independence")
+        .eq("user_id",userId).eq("independence","independent")
+        .in("course_id",courses).in("question_id",batch)
+        .order("id",{ascending:true}).range(offset,offset+PROOF_PAGE_SIZE-1);
+      if(result.error)throw new StudyServiceError("Could not verify recorded independent Week-1 attempts",
+        result.error.code||"first_week_proof_failed",result.error);
+      if(!Array.isArray(result.data))
+        throw new StudyServiceError("Week-1 proof response was incomplete","first_week_proof_incomplete");
+      const records=result.data as ProofAttempt[];
+      if(records.length>PROOF_PAGE_SIZE||attempts.length+records.length>PROOF_MAX_ROWS)
+        throw new StudyServiceError("Week-1 proof exceeds safe retrieval budget","first_week_proof_limit");
+      attempts.push(...records);
+      if(records.length<PROOF_PAGE_SIZE)break;
+    }
+  }
+  return attempts;
 }
