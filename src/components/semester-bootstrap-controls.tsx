@@ -33,8 +33,12 @@ export function InitialSemesterForm(){
           endsOn:fd.get("endsOn")||null,timezone:fd.get("timezone"),
         }),
       });
-      const body=await response.json();if(!response.ok)throw new Error(body?.error||"Could not create semester");
-      setMessage("Semester created. Add the real course roster next.");
+      const body=await response.json();
+      if(response.status===409)router.refresh();
+      if(!response.ok)throw new Error(body?.error||"Could not create semester");
+      setMessage(body?.data?.recovered
+        ?"The existing matching semester was recovered; no duplicate was created."
+        :"Semester created. Add the real course roster next.");
       router.refresh();
     }catch(error){setMessage(error instanceof Error?error.message:"Could not create semester");}
     finally{setBusy(false);}
@@ -77,6 +81,7 @@ export function BootstrapCourseForm({existingCourseKeys=[]}:{existingCourseKeys?
         }),
       });
       const body=await response.json();
+      if(response.status===409)router.refresh();
       if(!response.ok||body?.ok!==true)throw new Error(body?.error||"Could not add course");
       form.reset();setPresetId(null);
       setMessage("Course added. Review source links and provision its Drive folder.");
@@ -161,7 +166,8 @@ export function BootstrapActionButtons({ready,certified,driveConnected}:{ready:b
     if(key==="certify"&&(!ready||certified||!reviewed))return;
     setBusy(key);setMessage(null);
     try{
-      const response=await fetch(path,{method:"POST"});
+      const response=await fetch(path,{method:"POST",
+        ...(key==="certify"?{headers:{"content-type":"application/json"},body:JSON.stringify({reviewed:true})}:{})});
       const body=await response.json().catch(()=>({}));
       if(!response.ok)throw new Error(body?.error||"Action failed");
       setMessage(key==="drive"?"Semester Drive folders are ready.":"Semester setup confirmed by the server.");
