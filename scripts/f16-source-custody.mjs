@@ -52,11 +52,22 @@ export async function auditF16SourceCustody({packet,trustRoots,artifactDirectory
   if(!Array.isArray(trustRoots)||trustRoots.length!==ROLES.length
     ||!Array.isArray(packet.receipts)||packet.receipts.length!==ROLES.length)
     return outcome("separate_authorities_missing");
+  if(typeof packet.packetId!=="string"||packet.packetId.length<8||packet.packetId.length>120
+    ||!Array.isArray(packet.ownerChecks)||packet.ownerChecks.length!==2)
+    return outcome("packet_metadata_invalid");
+  // Every separately signed receipt binds the WHOLE proposed source/owner
+  // manifest, not just a mutable packet identifier. Changing any source/owner
+  // assertion invalidates all six originally signed decisions.
+  const commitment=digest(Buffer.from(JSON.stringify({
+    version:packet.version,head:packet.head,packetId:packet.packetId,
+    source:packet.source,ownerChecks:packet.ownerChecks,
+  })));
   const actors=new Set(),names=new Set();
   for(const role of ROLES){
     const receipt=packet.receipts.find(r=>r?.role===role);
     if(!receipt||receipt.head!==expectedHead||receipt.packetId!==packet.packetId
-      ||receipt.decision!=="hold"||!recent(receipt.issuedAt,now)
+      ||receipt.decision!=="hold"||receipt.sourceCommitment!==commitment
+      ||!recent(receipt.issuedAt,now)
       ||!receipt.actorId||actors.has(receipt.actorId)||!checkTrust(trustRoots,receipt,role))
       return outcome("signed_"+role+"_receipt_invalid");
     actors.add(receipt.actorId);
