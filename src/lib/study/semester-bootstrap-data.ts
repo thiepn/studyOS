@@ -3,6 +3,7 @@ import { ensureStudyWorkspace, getStudyWorkspaceState } from "./bootstrap";
 import { StudyServiceError } from "./errors";
 import { evaluateSemesterBootstrap, parseBootstrapCourseDraft, type BootstrapRelation } from "./semester-bootstrap";
 import { validateNewSemester } from "./semester-rollover";
+import { matchingFirstSemester } from "./initial-semester-retry";
 
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -28,22 +29,6 @@ function initialSemesterKey(displayName:string,startsOn:string){
 export async function getSemesterBootstrapEntryState(){
   const supabase=await createClient();
   return getStudyWorkspaceState(supabase);
-}
-
-/** Read-only recovery for an ambiguous first-semester POST response.
- * A same-name semester with different dates or timezone is a conflict, not a
- * successful retry. No semester, course, or external source is created here. */
-export function matchingFirstSemester(existing:{
-  id:string;stable_key:string;display_name:string;starts_on:string;
-  ends_on:string|null;timezone:string;
-}|null, submitted:{
-  stableKey:string;displayName:string;startsOn:string;endsOn:string|null;timezone:string;
-}):string|null{
-  return existing?.stable_key===submitted.stableKey&&
-    existing.display_name===submitted.displayName&&
-    existing.starts_on===submitted.startsOn&&
-    (existing.ends_on??null)===(submitted.endsOn??null)&&
-    existing.timezone===submitted.timezone?existing.id:null;
 }
 
 export async function createInitialSemester(value:unknown){

@@ -3,6 +3,7 @@ import { Nav } from "@/components/nav";
 import { getActivationData } from "@/lib/study/activation";
 import { getStudyWorkspaceState } from "@/lib/study/bootstrap";
 import { redirect } from "next/navigation";
+import { deriveFirstUseActions } from "@/lib/study/first-use-actions";
 
 export const dynamic="force-dynamic";
 
@@ -19,6 +20,19 @@ export default async function SetupPage(){
   if(!state.activeSemester)redirect(state.hasAnySemester?"/semester/rollover":"/semester/bootstrap");
   const data=await getActivationData();const {evaluation,snapshot,courses,server,semester,firstWeekProof}=data;
   const proofByCourse=new Map(firstWeekProof.map(row=>[row.courseId,row]));
+  // Derived only from this signed-in owner's semester data and source-linked
+  // first-week proofs. This does not grant real-world release acceptance.
+  const firstUse=deriveFirstUseActions({
+    courseCount:courses.length,
+    majorCourses:courses.filter(c=>c.course_kind==="major").map(c=>({id:c.course_id,name:c.display_name})),
+    proofs:firstWeekProof,
+    driveConnected:Boolean(data.drive?.status==="connected"&&snapshot.drive_connected),
+    driveTreeReady:Boolean(snapshot.drive_tree_ready),
+    calendarConnected:Boolean(data.calendar?.status==="connected"&&snapshot.calendar_connected),
+    calendarLastSyncAt:data.calendar?.last_sync_at??null,
+    calendarLastSyncStatus:data.calendar?.last_sync_status??null,
+    calendarLastError:data.calendar?.last_error??null,
+  });
   const majorCourses=courses.filter(course=>course.course_kind==="major");
   const startLabel=semester.starts_on
     ?new Date(String(semester.starts_on)+"T12:00:00Z").toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})
@@ -35,16 +49,24 @@ export default async function SetupPage(){
     </section>
 
     <section className="panel first-week-proof" aria-labelledby="real-first-use-heading">
-      <div className="section-heading"><div><p className="eyebrow">F18 · real-use acceptance</p><h2 id="real-first-use-heading">Prove one complete study session</h2></div><span>Manual acceptance pending</span></div>
-      <p>Use your own authorized account and real university material. This checklist is guidance, not a certification or an attestation.</p>
-      <ol>
-        <li><Link href="/semester/bootstrap">Confirm your actual semester and course roster</Link> (no sample courses).</li>
-        <li><Link href="/resources">Connect the intended Study Drive and approve a real Week-1 source</Link>.</li>
-        <li><Link href="/practice">Answer a source-linked question independently</Link> and confirm it appears in the review history.</li>
-        <li><Link href="/">Sync the selected Study Calendar, review free time and today's next action</Link>.</li>
-        <li>Repeat the flow on a second device; independently verify account isolation and offline replay before production acceptance.</li>
+      <div className="section-heading">
+        <div><p className="eyebrow">F19 · first-use evidence</p><h2 id="real-first-use-heading">Your next real study action</h2></div>
+        <span>{firstUse.completed}/{firstUse.total} evidence steps</span>
+      </div>
+      <p>Read-only, owner-scoped acceptance guidance. A successful local build, checkbox, or green count cannot establish a real Google connection, physical-device result, account isolation or release approval.</p>
+      <ol className="study-admission-list">
+        {firstUse.actions.map((action,index)=><li key={action.id}>
+          <span className="study-admission-number">{String(index+1).padStart(2,"0")}</span>
+          <div><strong>{action.title}</strong><p>{action.detail}</p>
+            {action.state==="pending"?<Link href={action.href}>{action.label} →</Link>:null}
+          </div>
+          <span className={"study-admission-state "+(action.state==="recorded"?"ready":"pending")}>
+            {action.state==="recorded"?"Recorded":"Required"}
+          </span>
+        </li>)}
       </ol>
-      <p className="muted">Only actual source, attempt and integration records determine readiness. No button on this checklist grants release or recovery authorization.</p>
+      {firstUse.next?<p className="muted"><strong>Next action:</strong> <Link href={firstUse.next.href}>{firstUse.next.label}</Link>. {firstUse.next.detail}</p>:
+        <p className="muted">The required application records are present. Independent real-account, browser/device, two-user privacy, source rights and recovery acceptance remain separate and unapproved.</p>}
     </section>
 
     <section className="activation-gates">
