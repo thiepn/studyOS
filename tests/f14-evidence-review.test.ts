@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import {generateKeyPairSync,sign,createHash} from "node:crypto";
+import {generateKeyPairSync,sign,createHash,type KeyObject} from "node:crypto";
 import {mkdtemp,writeFile,rm} from "node:fs/promises";
 import {join} from "node:path";
 import {tmpdir} from "node:os";
@@ -12,8 +12,8 @@ const head="a".repeat(40),now=new Date("2026-10-10T15:00:00Z");
 async function fixture(callback:(ctx:any)=>Promise<void>){
   const directory=await mkdtemp(join(tmpdir(),"studyos-f14-"));
   const witnessKey=generateKeyPairSync("ed25519"),reviewKey=generateKeyPairSync("ed25519"),custodyKey=generateKeyPairSync("ed25519");
-  const pem=(key:ReturnType<typeof generateKeyPairSync>)=>key.publicKey.export({format:"pem",type:"spki"}).toString();
-  const signJson=(data:any,privateKey:ReturnType<typeof generateKeyPairSync>["privateKey"])=>sign(null,Buffer.from(JSON.stringify(data)),privateKey).toString("base64");
+  const pem=(key:{publicKey:KeyObject})=>key.publicKey.export({format:"pem",type:"spki"}).toString();
+  const signJson=(data:any,privateKey:KeyObject)=>sign(null,Buffer.from(JSON.stringify(data)),privateKey).toString("base64");
   const file=Buffer.from("Synthetic, nonuser test capture");await writeFile(join(directory,"capture.png"),file);
   const fileSha=sha(file),witnessKeyId="witness-fixture",reviewKeyId="review-fixture";
   const packet:any={version:"studyos-f13-v1",head,originKind:"synthetic",
