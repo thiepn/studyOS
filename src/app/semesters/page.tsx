@@ -17,6 +17,11 @@ export default async function SemestersPage(){
       <Nav />
     </header>
 
+    <p className="semester-archive-boundary">Only the active semester permits ordinary coursework planning. Archived semesters are historical, read-only academic ledgers; reviewing one does not switch active course or mastery state.</p>
+    <nav className="semester-management-links" aria-label="Semester workspaces">
+      <Link href="/semester/bootstrap">Manage current setup</Link><Link href="/courses">Active course roster</Link>
+      <Link href="/semester/rollover">Review rollover eligibility</Link>
+    </nav>
     {data.activeSemester?<section className="panel semester-history-active">
       <div className="section-heading">
         <div><p className="eyebrow">Active workspace</p><h2>{data.activeSemester.display_name}</h2></div>

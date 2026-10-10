@@ -25,6 +25,7 @@ export default async function ArchivedSemesterPage({params}:{params:Promise<{sem
       <Nav />
     </header>
 
+    <p className="semester-archive-boundary"><strong>Read-only historical record.</strong> This semester's outcomes, attempts and readiness snapshots cannot certify current coursework, create current study credit, or replace a new-semester baseline. Any archived Calendar cleanup is a separately authorized operation.</p>
     <section className="panel archive-ledger-hero">
       <div className="section-heading">
         <div><p className="eyebrow">Historical context</p><h2>Read-only semester ledger</h2></div>
