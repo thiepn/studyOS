@@ -18,3 +18,15 @@
 .services :global(.study-connection-confirm) p{font-size:.86rem;line-height:1.6;color:#59675d;margin:8px 0}
 .services :global(.study-connection-confirm) form{margin:0}
 @media(max-width:800px){.services{grid-template-columns:1fr}.intro{flex-direction:column;gap:13px}.identity,.service{padding:24px}}
+
+.workspace{background:#fff;border:1px solid #d9ddd6;border-top:3px solid #394e43;padding:clamp(22px,3vw,34px);margin:0 0 18px}
+.workspace h2{font:500 clamp(1.45rem,2.4vw,1.9rem)/1.2 Georgia,"Times New Roman",serif;margin:0 0 14px}
+.workspaceSummary{display:grid;gap:6px;margin-bottom:13px}
+.workspaceSummary strong{font-size:1.02rem}
+.workspaceSummary p{color:#626c64;font-size:.83rem;line-height:1.6;margin:0}
+.workspace .detail{margin:0 0 13px}
+.workspaceFootnote{color:#68736a;font-size:.75rem;line-height:1.6;margin:14px 0 0;max-width:80ch}
+.workspace .button-row a{min-height:44px}
+.workspace a:focus-visible{outline:2px solid #394e43;outline-offset:3px}
+@media(max-width:650px){.workspace{padding:21px 18px}.workspace .button-row{flex-wrap:wrap}.workspace .button-row a{max-width:100%;white-space:normal}}
+@media(forced-colors:active){.workspace{border-top-color:Highlight}.workspace a:focus-visible{outline-color:Highlight}}

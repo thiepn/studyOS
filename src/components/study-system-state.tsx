@@ -19,5 +19,7 @@ export function StudySystemActions({retry}:{retry?:()=>void}) {
     {retry?<button type="button" className="primary-button button-reset" onClick={retry}>Retry loading</button>:null}
     <Link href="/" className={retry?"secondary-button":"primary-button"}>Today</Link>
     <Link href="/courses" className="secondary-button">Courses</Link>
+    <Link href="/semester/bootstrap" className="secondary-button">Semester setup</Link>
+    <Link href="/account" className="secondary-button">Account & recovery</Link>
   </>;
 }

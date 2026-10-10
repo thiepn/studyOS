@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Nav } from "@/components/nav";
 import { ConnectionActions } from "@/components/connection-actions";
 import { connectionView, connectionNotice } from "@/lib/study/connection-recovery";
+import { workspaceEntryAction } from "@/lib/study/workspace-entry";
 import styles from "./account.module.css";
 
 export const dynamic = "force-dynamic";
@@ -18,7 +19,7 @@ export default async function AccountPage({searchParams}:{
   const userId=data.user.id;
   // All three identities are deliberately independent. Reads are scoped to
   // the verified Supabase owner, never to a Google account inferred from email.
-  const [driveResult,calendarResult,blocksResult]=await Promise.all([
+  const [driveResult,calendarResult,blocksResult,semesterResult,historyResult]=await Promise.all([
     supabase.from("study_drive_connections")
       .select("status,google_account_email,google_account_sub,last_scan_at,last_error")
       .eq("user_id",userId).maybeSingle(),
@@ -27,16 +28,29 @@ export default async function AccountPage({searchParams}:{
       .eq("user_id",userId).maybeSingle(),
     supabase.from("study_scheduled_blocks").select("id",{head:true,count:"exact"})
       .eq("user_id",userId).eq("status","committed"),
+    supabase.from("study_semesters").select("id,display_name,stable_key,starts_on,ends_on")
+      .eq("user_id",userId).eq("active",true).maybeSingle(),
+    supabase.from("study_semesters").select("id",{head:true,count:"exact"}).eq("user_id",userId),
   ]);
   const connectionReadError=Boolean(driveResult.error||calendarResult.error||blocksResult.error);
   const drive=connectionView("drive",driveResult.data);
   const calendar=connectionView("calendar",calendarResult.data);
   const notice=connectionNotice(query.notice);
+  const activeSemester=semesterResult.error?null:semesterResult.data??null;
+  const courseResult=activeSemester
+    ?await supabase.from("study_courses").select("id",{head:true,count:"exact"})
+      .eq("user_id",userId).eq("semester_id",activeSemester.id).eq("active",true)
+    :null;
+  const workspaceReadError=Boolean(semesterResult.error||historyResult.error||courseResult?.error);
+  const workspaceAction=workspaceEntryAction({
+    available:!workspaceReadError,activeSemesterName:activeSemester?.display_name??null,
+    activeCourseCount:courseResult?.count??null,hasSemesterHistory:(historyResult.count??0)>0,
+  });
   const pendingBlocks=blocksResult.count??0;
   return <main className="shell">
     <header className="header">
       <div><p className="eyebrow">StudyOS / Settings</p><h1>Account & connections</h1></div>
-      <Nav/>
+      <Nav semesterName={workspaceReadError?undefined:activeSemester?.display_name}/>
     </header>
     <div className={styles.intro}>
       <p>One THIEPN identity owns your academic work. Study Drive and Study Calendar are independent Google authorizations, and can use other Google accounts.</p>
@@ -45,6 +59,23 @@ export default async function AccountPage({searchParams}:{
     {query.error==="signout_failed"?<p role="alert" className="error">Sign-out failed. Your session remains active; retry from this page.</p>:null}
     {notice?<p role="status" className={styles.notice}>{notice}</p>:null}
     {connectionReadError?<p role="alert" className="error">Connection status cannot be verified right now. Retry this page before changing Google accounts.</p>:null}
+    <section className={styles.workspace} aria-labelledby="studyos-account-workspace">
+      <div className={styles.serviceTop}><span className={styles.number}>Verified THIEPN Account / StudyOS workspace</span>
+        <span className={workspaceReadError?styles.issue:styles.status}>{workspaceReadError?"Read unavailable":activeSemester?"Active semester":"No active semester"}</span></div>
+      <h2 id="studyos-account-workspace">Academic workspace</h2>
+      {workspaceReadError?<p className={styles.warning} role="alert"><strong>Workspace status unavailable.</strong> The semester or roster lookup failed. StudyOS will not infer a current semester from an email, URL or Google Drive account.</p>:
+        activeSemester?<div className={styles.workspaceSummary}>
+          <strong>{activeSemester.display_name}</strong>
+          <p>{activeSemester.starts_on} {activeSemester.ends_on?"→ "+activeSemester.ends_on:"· end date not recorded"} · {courseResult?.count??0} active course{courseResult?.count===1?"":"s"}</p>
+        </div>:<p className={styles.detail}>No active semester is recorded for this authenticated account. Archived work remains separate from new study planning.</p>}
+      <p className={styles.detail}>{workspaceAction.detail}</p>
+      <div className="button-row">
+        <Link className="primary-button" href={workspaceAction.href}>{workspaceAction.label}</Link>
+        <Link className="secondary-button" href="/semesters">Browse semester history</Link>
+        <Link className="secondary-button" href="/courses">Courses</Link>
+      </div>
+      <p className={styles.workspaceFootnote}>Study Drive and Study Calendar use separate Google grants. Their connected email addresses do not select or authorize this academic workspace.</p>
+    </section>
     <div className={styles.stack}>
       <section className={styles.identity} aria-labelledby="account-owner">
         <div className={styles.serviceTop}><span className={styles.number}>01 / Identity</span><span className={styles.status}>Verified session</span></div>
