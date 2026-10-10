@@ -11,7 +11,7 @@ export async function getStudyWorkspaceState(existingClient?: SupabaseClient<Dat
   const userId=String(claimsData.claims.sub);
 
   const active = await supabase.from("study_semesters").select("id,stable_key,display_name")
-    .eq("active",true).maybeSingle();
+    .eq("user_id",userId).eq("active",true).maybeSingle();
   if (active.error) throw new StudyServiceError("Could not inspect the active StudyOS semester", active.error.code || "study_init_check_failed", active.error);
   if (active.data?.id) return {
     userId,
@@ -19,7 +19,7 @@ export async function getStudyWorkspaceState(existingClient?: SupabaseClient<Dat
     hasAnySemester: true,
   };
 
-  const historical = await supabase.from("study_semesters").select("id").limit(1);
+  const historical = await supabase.from("study_semesters").select("id").eq("user_id",userId).limit(1);
   if (historical.error) throw new StudyServiceError("Could not inspect StudyOS semester history", historical.error.code || "study_init_check_failed", historical.error);
   return {
     userId,

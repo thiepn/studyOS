@@ -21,8 +21,12 @@ jobs:
       NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder-publishable-key
       APP_ORIGIN: http://localhost:3000
+      STUDYOS_EXPECTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
     steps:
+      # Exact branch commit, not GitHub's synthetic PR merge commit.
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - uses: actions/setup-node@v7
         with:
@@ -56,3 +60,27 @@ jobs:
             cat /tmp/studyos-server.log
             exit 1
           fi
+      - name: Install isolated real-browser testing tools
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts playwright@1.56.1
+          npx playwright install --with-deps chromium
+
+      - name: Real browser desktop and mobile evidence
+        run: |
+          set -euo pipefail
+          npm run start -- --hostname 127.0.0.1 --port 3107 > /tmp/studyos-browser-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          if ! node scripts/browser-visual-acceptance.mjs; then
+            cat /tmp/studyos-browser-server.log
+            exit 1
+          fi
+
+      - name: Retain screenshot evidence and SHA256 manifest
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: f05-anonymous-browser-evidence
+          path: evidence/f05-browser/
+          if-no-files-found: warn
+          retention-days: 14

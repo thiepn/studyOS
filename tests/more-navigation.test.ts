@@ -14,8 +14,8 @@ test("More is a dedicated page with grouped operational routes",()=>{
 });
 test("deep operational paths inherit More and main tabs stay separate",()=>{
   assert.equal(isMorePath("/semester/archive/example"),true);
-  assert.equal(isMorePath("/strategy"),true);
-  for(const route of ["/","/practice","/practice/exam/123","/courses","/courses/123","/progress","/outlook","/quality","/weekly"]){
+  for(const route of ["/strategy","/outlook","/quality"])assert.equal(isMorePath(route),true);
+  for(const route of ["/","/practice","/practice/exam/123","/courses","/courses/123","/progress","/weekly"]){
     assert.equal(isMorePath(route),false,route);
   }
 });

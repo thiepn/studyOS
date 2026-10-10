@@ -3,6 +3,7 @@ import { Nav } from "@/components/nav";
 import { getActivationData } from "@/lib/study/activation";
 import { getStudyWorkspaceState } from "@/lib/study/bootstrap";
 import { redirect } from "next/navigation";
+import { deriveFirstUseActions } from "@/lib/study/first-use-actions";
 
 export const dynamic="force-dynamic";
 
@@ -19,6 +20,19 @@ export default async function SetupPage(){
   if(!state.activeSemester)redirect(state.hasAnySemester?"/semester/rollover":"/semester/bootstrap");
   const data=await getActivationData();const {evaluation,snapshot,courses,server,semester,firstWeekProof}=data;
   const proofByCourse=new Map(firstWeekProof.map(row=>[row.courseId,row]));
+  // Derived only from this signed-in owner's semester data and source-linked
+  // first-week proofs. This does not grant real-world release acceptance.
+  const firstUse=deriveFirstUseActions({
+    courseCount:courses.length,
+    majorCourses:courses.filter(c=>c.course_kind==="major").map(c=>({id:c.course_id,name:c.display_name})),
+    proofs:firstWeekProof,
+    driveConnected:Boolean(data.drive?.status==="connected"&&snapshot.drive_connected),
+    driveTreeReady:Boolean(snapshot.drive_tree_ready),
+    calendarConnected:Boolean(data.calendar?.status==="connected"&&snapshot.calendar_connected),
+    calendarLastSyncAt:data.calendar?.last_sync_at??null,
+    calendarLastSyncStatus:data.calendar?.last_sync_status??null,
+    calendarLastError:data.calendar?.last_error??null,
+  });
   const majorCourses=courses.filter(course=>course.course_kind==="major");
   const startLabel=semester.starts_on
     ?new Date(String(semester.starts_on)+"T12:00:00Z").toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"})
@@ -32,6 +46,27 @@ export default async function SetupPage(){
         <p>Platform readiness, your personal integrations, and real learning evidence are deliberately certified separately. Code passing CI does not make the semester operational.</p>
       </div>
       <div className="activation-hero-stats"><span><strong>{snapshot.course_count}</strong> courses</span><span><strong>{snapshot.majors_with_timetable}/{snapshot.major_course_count}</strong> major timetables</span><span><strong>{snapshot.retake_baselines_completed}/{snapshot.retake_course_count}</strong> retake baselines</span></div>
+    </section>
+
+    <section className="panel first-week-proof" aria-labelledby="real-first-use-heading">
+      <div className="section-heading">
+        <div><p className="eyebrow">F19 · first-use evidence</p><h2 id="real-first-use-heading">Your next real study action</h2></div>
+        <span>{firstUse.completed}/{firstUse.total} evidence steps</span>
+      </div>
+      <p>Read-only, owner-scoped acceptance guidance. A successful local build, checkbox, or green count cannot establish a real Google connection, physical-device result, account isolation or release approval.</p>
+      <ol className="study-admission-list">
+        {firstUse.actions.map((action,index)=><li key={action.id}>
+          <span className="study-admission-number">{String(index+1).padStart(2,"0")}</span>
+          <div><strong>{action.title}</strong><p>{action.detail}</p>
+            {action.state==="pending"?<Link href={action.href}>{action.label} →</Link>:null}
+          </div>
+          <span className={"study-admission-state "+(action.state==="recorded"?"ready":"pending")}>
+            {action.state==="recorded"?"Recorded":"Required"}
+          </span>
+        </li>)}
+      </ol>
+      {firstUse.next?<p className="muted"><strong>Next action:</strong> <Link href={firstUse.next.href}>{firstUse.next.label}</Link>. {firstUse.next.detail}</p>:
+        <p className="muted">The required application records are present. Independent real-account, browser/device, two-user privacy, source rights and recovery acceptance remain separate and unapproved.</p>}
     </section>
 
     <section className="activation-gates">

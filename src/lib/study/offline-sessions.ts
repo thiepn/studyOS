@@ -3,7 +3,12 @@
 import type { ReviewSessionFinishInput, ReviewSessionStartInput } from "./types";
 import { STUDY_SYNC_CHANGE_EVENT } from "./offline-attempts";
 import { currentPendingOwner,canReplayPending } from "./pending-owner";
+import {ownerMatchesBeforeOrAfterAck} from "./owner-replay-guard";
 import { readStudyMutationResponse,StudySyncError } from "./sync-response";
+import {appendOwnerPending,sameOfflineOwner} from "./offline-queue-custody";
+import {hasPersistedOfflineReceipt} from "./offline-receipt-client";
+import {withOfflineReplayGuard} from "./offline-replay-guard";
+import type {OfflineReceiptRequest} from "./offline-receipt-contract";
 
 const START_KEY = "semester-os:pending-session-starts:v1";
 const FINISH_KEY = "semester-os:pending-session-finishes:v1";
@@ -32,49 +37,86 @@ async function post(path:string,input:ReviewSessionStartInput|ReviewSessionFinis
   const response=await fetch(path,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
   return readStudyMutationResponse(response);
 }
-async function saveOffline<T extends {sessionId:string}>(key:string,input:T){
-  const ownerId=await currentPendingOwner();
+function saveOffline<T extends {sessionId:string}>(key:string,input:T,ownerId:string){
   if(!ownerId)throw new StudySyncError("Sign in before preserving this session offline.",true,true);
-  const queue=read<T&{queuedAt:string;ownerId:string}>(key).filter(row=>row.sessionId!==input.sessionId);
-  write(key,[...queue,{...input,queuedAt:new Date().toISOString(),ownerId}].slice(-20));
+  const pending={...input,queuedAt:new Date().toISOString(),ownerId};
+  const stored=typeof window!=="undefined"?localStorage.getItem(key):null;
+  const updated=appendOwnerPending(stored,pending,row=>row.sessionId,20);
+  write(key,updated);
+}
+async function submitSessionWithFallback(
+  path:string,key:string,input:ReviewSessionStartInput|ReviewSessionFinishInput,
+){
+  const ownerId=await currentPendingOwner();
+  if(!ownerId)throw new StudySyncError("Sign in before submitting or preserving this session.",true,true);
+  let responseData:unknown;
+  try{responseData=await post(path,input);}
+  catch(error){
+    if(error instanceof StudySyncError && error.permanent)throw error;
+    if(!sameOfflineOwner(ownerId,await currentPendingOwner()))
+      throw new StudySyncError("Account changed during the session request. Check the original account's history before any retry.",true,true);
+    saveOffline(key,input,ownerId);
+    return {queued:true as const,data:null};
+  }
+  if(!sameOfflineOwner(ownerId,await currentPendingOwner()))
+    throw new StudySyncError("Account changed before session acknowledgement was confirmed. Check the original account's history.",true,true);
+  return {queued:false as const,data:responseData};
 }
 export async function startSessionWithFallback(input:ReviewSessionStartInput){
-  try{
-    const data=await post("/api/study/session/start",input);
-    return {queued:false as const,data};
-  }catch(error){
-    if(error instanceof StudySyncError && error.permanent)throw error;
-    await saveOffline(START_KEY,input);
-    return {queued:true as const,data:null};
-  }
+  return submitSessionWithFallback("/api/study/session/start",START_KEY,input);
 }
 export async function finishSessionWithFallback(input:ReviewSessionFinishInput){
-  try{
-    const data=await post("/api/study/session/finish",input);
-    return {queued:false as const,data};
-  }catch(error){
-    if(error instanceof StudySyncError && error.permanent)throw error;
-    await saveOffline(FINISH_KEY,input);
-    return {queued:true as const,data:null};
-  }
+  return submitSessionWithFallback("/api/study/session/finish",FINISH_KEY,input);
 }
-async function flushQueue<T extends {sessionId:string;ownerId?:string}>(key:string,path:string){
+async function flushQueue<T extends {sessionId:string;ownerId?:string;queuedAt:string}>(
+  key:string,path:string,kind:"session_start"|"session_finish",
+){
   const ownerId=await currentPendingOwner();
   if(!ownerId)return;
-  const items=read<T>(key).filter(item=>canReplayPending(item.ownerId,ownerId));
-  for(const item of items){
-    try{
-      await post(path,item as unknown as ReviewSessionStartInput|ReviewSessionFinishInput);
-      write(key,read<T>(key).filter(row=>row.sessionId!==item.sessionId||row.ownerId!==ownerId));
-    }catch(error){
-      if((error instanceof StudySyncError && error.authRequired)
-        ||(typeof navigator!=="undefined"&&!navigator.onLine))break;
+  await withOfflineReplayGuard("owner-"+ownerId,async()=>{
+    const items=read<T>(key).filter(item=>canReplayPending(item.ownerId,ownerId));
+    for(const item of items){
+      try{
+        if(!await ownerMatchesBeforeOrAfterAck(ownerId,item.ownerId,currentPendingOwner))break;
+        const receipt:OfflineReceiptRequest=kind==="session_start"
+          ?{kind,recordId:item.sessionId,
+            startedAt:(item as unknown as ReviewSessionStartInput).startedAt,
+            sessionType:(item as unknown as ReviewSessionStartInput).sessionType??"review",
+            plannedMinutes:(item as unknown as ReviewSessionStartInput).plannedMinutes,
+            courseId:(item as unknown as ReviewSessionStartInput).courseId??null}
+          :{kind,recordId:item.sessionId,
+            endedAt:(item as unknown as ReviewSessionFinishInput).endedAt,
+            note:(item as unknown as ReviewSessionFinishInput).note??null};
+        const recordedBefore=await hasPersistedOfflineReceipt(receipt);
+        if(!recordedBefore){
+          if(!await ownerMatchesBeforeOrAfterAck(ownerId,item.ownerId,currentPendingOwner))break;
+          await post(path,item as unknown as ReviewSessionStartInput|ReviewSessionFinishInput);
+        }
+        if(!await ownerMatchesBeforeOrAfterAck(ownerId,item.ownerId,currentPendingOwner))break;
+        const recorded=recordedBefore||await hasPersistedOfflineReceipt(receipt);
+        if(!recorded)throw new Error("Missing session database read-back");
+        if(!await ownerMatchesBeforeOrAfterAck(ownerId,item.ownerId,currentPendingOwner))break;
+        const latest=read<T>(key),matches=latest.filter(row=>
+          row.sessionId===item.sessionId&&row.ownerId===ownerId);
+        if(matches.length!==1||matches[0].queuedAt!==item.queuedAt
+          ||JSON.stringify(matches[0])!==JSON.stringify(item))break;
+        // Re-read immediately before removal so foreign and newly replaced
+        // local evidence is not dropped by an obsolete replay snapshot.
+        write(key,read<T>(key).filter(row=>!(
+          row.sessionId===item.sessionId&&row.ownerId===ownerId&&
+          JSON.stringify(row)===JSON.stringify(item)
+        )));
+      }catch{
+        // Replayed session data never disappears on a network, auth, read
+        // permission, stale-record or original-owner uncertainty.
+        break;
+      }
     }
-  }
+  });
 }
 export async function flushPendingSessionStarts(){
-  await flushQueue<PendingStart>(START_KEY,"/api/study/session/start");
+  await flushQueue<PendingStart>(START_KEY,"/api/study/session/start","session_start");
 }
 export async function flushPendingSessionFinishes(){
-  await flushQueue<PendingFinish>(FINISH_KEY,"/api/study/session/finish");
+  await flushQueue<PendingFinish>(FINISH_KEY,"/api/study/session/finish","session_finish");
 }

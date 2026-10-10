@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { parseAttemptInput, recordAttempt } from "@/lib/study/mutations";
-import { StudyServiceError } from "@/lib/study/errors";
+import { studyAttemptFailure } from "@/lib/study/attempt-error";
 
 export async function POST(request: Request) {
   try {
@@ -8,8 +8,8 @@ export async function POST(request: Request) {
     const data = await recordAttempt(input);
     return NextResponse.json({ ok: true, data });
   } catch (error) {
-    const code = error instanceof StudyServiceError ? error.code : "unknown";
-    const status = code === "invalid_attempt" ? 400 : code === "not_authenticated" ? 401 : 500;
-    return NextResponse.json({ ok: false, error: error instanceof Error ? error.message : "Unknown error" }, { status });
+    const { status, message } = studyAttemptFailure(error);
+    if (status === 500) console.error("[StudyOS attempt] Internal request failure", error);
+    return NextResponse.json({ ok: false, error: message }, { status });
   }
 }

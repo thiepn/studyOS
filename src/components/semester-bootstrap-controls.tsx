@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { availablePresets } from "@/lib/study/semester-presets";
+import {semesterDateValidation} from "@/lib/study/semester-management";
 
 type Course={courseId:string;displayName:string;shortName:string|null;courseKind:string};
 type PriorOption={id:string;semester_id:string;semester_name:string;display_name:string;short_name:string|null;course_kind:string;stable_key:string};
@@ -23,6 +24,8 @@ export function InitialSemesterForm(){
     event.preventDefault();setBusy(true);setMessage(null);
     const fd=new FormData(event.currentTarget);
     try{
+      const dates=semesterDateValidation(String(fd.get("startsOn")??""),String(fd.get("endsOn")??""));
+      if(dates)throw new Error(dates);
       const response=await fetch("/api/study/semester-bootstrap/semester",{
         method:"POST",headers:{"content-type":"application/json"},
         body:JSON.stringify({
@@ -30,8 +33,12 @@ export function InitialSemesterForm(){
           endsOn:fd.get("endsOn")||null,timezone:fd.get("timezone"),
         }),
       });
-      const body=await response.json();if(!response.ok)throw new Error(body?.error||"Could not create semester");
-      setMessage("Semester created. Add the real course roster next.");
+      const body=await response.json();
+      if(response.status===409)router.refresh();
+      if(!response.ok)throw new Error(body?.error||"Could not create semester");
+      setMessage(body?.data?.recovered
+        ?"The existing matching semester was recovered; no duplicate was created."
+        :"Semester created. Add the real course roster next.");
       router.refresh();
     }catch(error){setMessage(error instanceof Error?error.message:"Could not create semester");}
     finally{setBusy(false);}
@@ -60,6 +67,7 @@ export function BootstrapCourseForm({existingCourseKeys=[]}:{existingCourseKeys?
     const fd=new FormData(form);
     const rawExam=String(fd.get("examAt")??"").trim();
     try{
+      if(rawExam && Number.isNaN(Date.parse(rawExam)))throw new Error("Select a valid exam date and time.");
       const response=await fetch("/api/study/semester-bootstrap/course",{
         method:"POST",headers:{"content-type":"application/json"},
         body:JSON.stringify({
@@ -73,6 +81,7 @@ export function BootstrapCourseForm({existingCourseKeys=[]}:{existingCourseKeys?
         }),
       });
       const body=await response.json();
+      if(response.status===409)router.refresh();
       if(!response.ok||body?.ok!==true)throw new Error(body?.error||"Could not add course");
       form.reset();setPresetId(null);
       setMessage("Course added. Review source links and provision its Drive folder.");
@@ -110,8 +119,9 @@ export function BootstrapCourseForm({existingCourseKeys=[]}:{existingCourseKeys?
       <input type="hidden" name="sortOrder" defaultValue={preset?.sortOrder??""}/>
       <label className="check"><input name="expectsExercise" type="checkbox" defaultChecked/> Exercise expected</label>
       <label className="check"><input name="expectsSolution" type="checkbox" defaultChecked/> Official solution expected</label>
+      <p className="wide muted tiny">Adding a course records its identity only. Drive folder, verified sources, questions and retake baseline are checked separately before semester certification.</p>
       <div className="wide button-row"><button className="primary-button button-reset" disabled={busy}>
-        {busy?"Adding…":"Add verified course"}</button></div>
+        {busy?"Adding…":"Add course · verification pending"}</button></div>
     </form>
     {message?<p className="form-message" role="status">{message}</p>:null}
   </div>;
@@ -148,30 +158,70 @@ export function BootstrapPriorForm({courses,options}:{courses:Course[];options:P
 }
 
 export function BootstrapActionButtons({ready,certified,driveConnected}:{ready:boolean;certified:boolean;driveConnected:boolean}){
-  const router=useRouter();const [busy,setBusy]=useState<string|null>(null);const [message,setMessage]=useState<string|null>(null);
+  const router=useRouter();
+  const [busy,setBusy]=useState<string|null>(null);
+  const [message,setMessage]=useState<string|null>(null);
+  const [reviewed,setReviewed]=useState(false);
   async function post(path:string,key:string){
+    if(key==="certify"&&(!ready||certified||!reviewed))return;
     setBusy(key);setMessage(null);
     try{
-      const response=await fetch(path,{method:"POST"});const body=await response.json();
+      const response=await fetch(path,{method:"POST",
+        ...(key==="certify"?{headers:{"content-type":"application/json"},body:JSON.stringify({reviewed:true})}:{})});
+      const body=await response.json().catch(()=>({}));
       if(!response.ok)throw new Error(body?.error||"Action failed");
-      setMessage(key==="drive"?"Semester Drive folders are ready.":"Semester setup confirmed.");
+      setMessage(key==="drive"?"Semester Drive folders are ready.":"Semester setup confirmed by the server.");
+      if(key==="certify")setReviewed(false);
       router.refresh();
     }catch(error){setMessage(error instanceof Error?error.message:"Action failed");}
     finally{setBusy(null);}
   }
   return <div className="bootstrap-actions">
-    {driveConnected?<button className="secondary-button button-reset" disabled={Boolean(busy)} onClick={()=>void post("/api/integrations/google-drive/provision","drive")}>{busy==="drive"?"Provisioning…":"Provision / repair semester Drive"}</button>:<a className="secondary-button" href="/api/integrations/google-drive/start">Connect Study Drive</a>}
-    <button className="primary-button button-reset" disabled={!ready||certified||Boolean(busy)} onClick={()=>void post("/api/study/semester-bootstrap/certify","certify")}>{certified?"Setup confirmed":busy==="certify"?"Certifying…":"Confirm semester setup"}</button>
-    {message?<p className="form-message" role="status">{message}</p>:null}
+    {driveConnected?<button className="secondary-button button-reset" type="button" disabled={Boolean(busy)}
+      onClick={()=>void post("/api/integrations/google-drive/provision","drive")}>
+      {busy==="drive"?"Provisioning…":"Provision / repair semester Drive"}
+    </button>:<a className="secondary-button" href="/api/integrations/google-drive/start">Connect Study Drive</a>}
+    {!certified?<label className="semester-review-confirm">
+      <input type="checkbox" checked={reviewed} disabled={!ready||Boolean(busy)}
+        onChange={event=>setReviewed(event.target.checked)}/>
+      <span>I inspected the real roster, current-semester Drive folders, verified curriculum and fresh retake baselines. I authorize requesting server-side certification.</span>
+    </label>:<p role="status">This semester's setup is already certified in the database.</p>}
+    <button className="primary-button button-reset" type="button" disabled={!ready||certified||!reviewed||Boolean(busy)}
+      onClick={()=>void post("/api/study/semester-bootstrap/certify","certify")}>
+      {certified?"Setup confirmed":busy==="certify"?"Certifying…":"Confirm reviewed semester setup"}
+    </button>
+    {message?<p className="form-message" role="status" aria-live="polite">{message}</p>:null}
   </div>;
 }
 
 export function RemovePriorButton({priorId}:{priorId:string}){
-  const router=useRouter();const [busy,setBusy]=useState(false);
+  const router=useRouter();
+  const [busy,setBusy]=useState(false);
+  const [confirmed,setConfirmed]=useState(false);
+  const [error,setError]=useState<string|null>(null);
   async function remove(){
-    setBusy(true);
-    try{await fetch("/api/study/semester-bootstrap/prior",{method:"DELETE",headers:{"content-type":"application/json"},body:JSON.stringify({priorId})});router.refresh();}
+    if(!confirmed||busy)return;
+    setBusy(true);setError(null);
+    try{
+      const response=await fetch("/api/study/semester-bootstrap/prior",{
+        method:"DELETE",headers:{"content-type":"application/json"},body:JSON.stringify({priorId}),
+      });
+      const body=await response.json().catch(()=>({}));
+      if(!response.ok)throw new Error(body?.error||"Could not detach historical source.");
+      setConfirmed(false);router.refresh();
+    }catch(caught){setError(caught instanceof Error?caught.message:"Could not detach prior.");}
     finally{setBusy(false);}
   }
-  return <button className="link-button button-reset" disabled={busy} onClick={()=>void remove()}>{busy?"Removing…":"Remove"}</button>;
+  return <details className="semester-remove-prior-review">
+    <summary>Review removal of historical link</summary>
+    <p>This detaches the advisory link from the current course. It does not erase the archived semester or restore any mastery.</p>
+    <label className="semester-review-confirm"><input type="checkbox" checked={confirmed} disabled={busy}
+      onChange={event=>setConfirmed(event.target.checked)}/>
+      <span>Detach this prior-course relationship.</span></label>
+    <div className="button-row">
+      <button className="secondary-button button-reset" type="button" disabled={!confirmed||busy}
+        onClick={()=>void remove()}>{busy?"Detaching…":"Confirm detach"}</button>
+    </div>
+    {error?<p className="error" role="alert">{error}</p>:null}
+  </details>;
 }

@@ -51,17 +51,20 @@ export async function getResourcesData():Promise<ResourcesData>{
   // The current semester's active roster defines the only allowed course IDs.
   let resources:ResourcesData["resources"]=[];
   let ingestionRuns:ResourcesData["ingestionRuns"]=[];
+  let weeks:NonNullable<ResourcesData["weeks"]>=[];
   if(courseIds.length){
-    const [resourcesResult,runsResult]=await Promise.all([
+    const [resourcesResult,runsResult,weeksResult]=await Promise.all([
       supabase.from("study_resources").select("*").in("course_id",courseIds).eq("active",true).order("created_at",{ascending:false}),
       supabase.from("study_ingestion_runs").select("*").in("course_id",courseIds).order("created_at",{ascending:false}),
+      supabase.from("study_teaching_weeks").select("id,week_no").in("course_id",courseIds),
     ]);
-    const error=resourcesResult.error||runsResult.error;
+    const error=resourcesResult.error||runsResult.error||weeksResult.error;
     if(error)throw new StudyServiceError("Could not load source records",error.code||"resource_read_failed",error);
     resources=resourcesResult.data??[];
     ingestionRuns=runsResult.data??[];
+    weeks=weeksResult.data??[];
   }
-  return {semesterId,courses,resources,ingestionRuns,driveConnection:driveResult.data??null,intakeItems:intakeResult.data??[]};
+  return {semesterId,courses,resources,weeks,ingestionRuns,driveConnection:driveResult.data??null,intakeItems:intakeResult.data??[]};
 }
 
 export async function registerResource(input:ResourceRegistrationInput){

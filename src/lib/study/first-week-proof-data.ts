@@ -1,4 +1,5 @@
 import { StudyServiceError } from "./errors";
+import {readPagedIndependentAttempts,FirstWeekPagingError} from "./first-week-paging";
 import { buildFirstWeekProof, type FirstWeekProof, type ProofWeek, type ProofResource,
   type ProofLink, type ProofQuestion, type ProofAttempt } from "./first-week-proof";
 
@@ -43,12 +44,13 @@ export async function getFirstWeekProof(
   const activeIds=questions.map(q=>q.id);
   if(!activeIds.length)return buildFirstWeekProof(ids,weekRows,resources,links,[],[]);
 
-  const attemptResult=await db.from("study_attempts")
-    .select("id,question_id,course_id,independence").eq("user_id",userId)
-    .eq("independence","independent").in("course_id",ids).in("question_id",activeIds)
-    .limit(1000);
-  if(attemptResult.error)throw new StudyServiceError("Could not verify recorded independent Week-1 attempts",
-    attemptResult.error.code||"first_week_proof_failed",attemptResult.error);
-  return buildFirstWeekProof(ids,weekRows,resources,links,questions,
-    (attemptResult.data??[]) as ProofAttempt[]);
+  let attempts:ProofAttempt[];
+  try{attempts=await readPagedIndependentAttempts(db,userId,ids,activeIds);}
+  catch(error){
+    if(error instanceof FirstWeekPagingError)
+      throw new StudyServiceError("Could not verify complete independent Week-1 evidence",error.code,error);
+    throw error;
+  }
+  return buildFirstWeekProof(ids,weekRows,resources,links,questions,attempts);
 }
+

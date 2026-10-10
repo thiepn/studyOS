@@ -6,8 +6,10 @@ export const MORE_SECTIONS = [
     {href:"/handoff",label:"Weekly review",description:"Close the week and prepare the next"},
   ]},
   { title:"Materials", description:"Source-grounded academic materials.", entries:[
-    {href:"/resources",label:"Resource inbox",description:"Connect Drive, process, and approve sources"},
+    {href:"/resources",label:"Materials",description:"Connect Drive, process, and approve sources"},
+    {href:"/assistant",label:"Study Assistant",description:"Ask questions with optional course context"},
   ]},
+  { title:"Advanced study insights", description:"Explore learning patterns and future workload.", entries:[{href:"/strategy",label:"Study methods",description:"Adjust how you learn"},{href:"/outlook",label:"Semester outlook",description:"Future workload and readiness"},{href:"/quality",label:"Evidence quality",description:"Inspect academic evidence"}]},
   { title:"Exams", description:"From final preparation to official outcomes.", entries:[
     {href:"/exam-command",label:"Exam plan",description:"Prioritize exam runways"},
     {href:"/exam-day",label:"Exam day",description:"Boundaries, closure, and recovery"},
@@ -19,8 +21,10 @@ export const MORE_SECTIONS = [
     {href:"/semesters",label:"History",description:"Browse completed semesters"},
     {href:"/semester/rollover",label:"Rollover",description:"Start the next semester"},
   ]},
-  { title:"System", description:"Connections and readiness.", entries:[
-    {href:"/setup",label:"Connections & setup",description:"Drive, calendar, and activation"},
+  { title:"Settings", description:"Connections and readiness.", entries:[
+    {href:"/account",label:"Account",description:"Identity and synchronization"},
+    {href:"/setup",label:"Drive & Calendar connections",description:"Drive, calendar, and activation"},
+    {href:"/account/recovery",label:"Account recovery",description:"Inspect local offline queues and safe owner-bound retries"},
   ]},
 ] as const;
 

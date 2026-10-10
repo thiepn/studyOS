@@ -4,6 +4,8 @@ import {
   BootstrapActionButtons,BootstrapCourseForm,BootstrapPriorForm,InitialSemesterForm,RemovePriorButton,
 } from "@/components/semester-bootstrap-controls";
 import { getSemesterBootstrapData, getSemesterBootstrapEntryState } from "@/lib/study/semester-bootstrap-data";
+import { SemesterSetupGuide } from "@/components/semester-setup-guide";
+import { nextCourseSetupAction } from "@/lib/study/semester-management";
 import { historicalPriorUse } from "@/lib/study/semester-bootstrap";
 import { createClient } from "@/lib/supabase/server";
 import { StudyServiceError } from "@/lib/study/errors";
@@ -78,8 +80,16 @@ export default async function SemesterBootstrapPage(){
       <div><p className="eyebrow">Semester setup</p><h1>{data.semester.display_name}</h1></div>
       <Nav />
     </header>
+    <nav className="semester-management-links" aria-label="Semester management">
+      <Link href="/semesters">Semester history</Link>
+      <Link href="/courses">Active course binders</Link>
+      <a href="#semester-roster">Current roster</a>
+      <a href="#bootstrap-drive">Certification & Drive</a>
+      <a href="#semester-historical">Previous courses</a>
+    </nav>
+    <SemesterSetupGuide evaluation={evaluation}/>
 
-    <section className={"panel bootstrap-hero "+(evaluation.ready?"ready":"blocked")}>
+    <section id="bootstrap-drive" className={"panel bootstrap-hero "+(evaluation.ready?"ready":"blocked")}>
       <div className="section-heading">
         <div><p className="eyebrow">Semester readiness</p><h2>{evaluation.certified?"Setup confirmed":evaluation.ready?"Ready to confirm":"Setup incomplete"}</h2></div>
         <span>{evaluation.percent}%</span>
@@ -97,7 +107,7 @@ export default async function SemesterBootstrapPage(){
       <p className="muted">Deployment, callback and integration settings: <Link href="/setup/platform">Platform setup checklist</Link>.</p>
     </section>
 
-    <section className="panel bootstrap-intake">
+    <section id="semester-roster" className="panel bootstrap-intake">
       <div className="section-heading">
         <div><p className="eyebrow">Course roster</p><h2>Add real courses</h2></div>
         <span>{data.courses.length}</span>
@@ -122,7 +132,9 @@ export default async function SemesterBootstrapPage(){
         </div>
         <p>{course.verifiedResourceCount} verified source{course.verifiedResourceCount===1?"":"s"} · {course.skillCount} skills · {course.questionCount} questions</p>
         {course.blockers.length?<ul>{course.blockers.map(item=><li key={item}>{item}</li>)}</ul>:<p className="bootstrap-ok">Current curriculum baseline is independently anchored.</p>}
+        <p className="muted"><strong>Next setup action:</strong> {nextCourseSetupAction(course).detail}</p>
         <div className="button-row">
+          <Link className={course.ready?"secondary-button":"primary-button"} href={nextCourseSetupAction(course).href}>{nextCourseSetupAction(course).label}</Link>
           <Link className="secondary-button" href={"/courses/"+course.courseId}>Configure</Link>
           <Link className="secondary-button" href="/resources">Curriculum sources</Link>
           {course.courseKind==="retake"?<Link className="secondary-button" href={"/diagnostics/"+course.courseId}>Baseline diagnostic</Link>:null}
@@ -131,7 +143,7 @@ export default async function SemesterBootstrapPage(){
       {!evaluation.courses.length?<section className="panel"><p>No active courses exist yet. Add the real semester roster above.</p></section>:null}
     </section>
 
-    <section className="panel bootstrap-priors">
+    <section id="semester-historical" className="panel bootstrap-priors">
       <div className="section-heading">
         <div><p className="eyebrow">Previous-semester context</p><h2>Use history without restoring mastery</h2></div>
         <span>{data.priors.length}</span>

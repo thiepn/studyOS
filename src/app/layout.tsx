@@ -1,5 +1,17 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./academic-system.css";
+import "./shell.css";
+import "./today-workspace.css";
+import "./course-binder.css";
+import "./practice-focus.css";
+import "./resource-desk.css";
+import "./planning-command.css";
+import "./semester-management.css";
+import "./account/recovery/recovery.css";
+import "./assistant.css";
+import "./ux-workspace.css";
+import { WorkspaceShell } from "@/components/workspace-shell";
 
 export const metadata: Metadata = {
   title: "StudyOS",
@@ -11,7 +23,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <a className="studyos-skip-link" href="#studyos-main">Skip to study content</a>
+        <WorkspaceShell><div id="studyos-main" className="studyos-content-target" tabIndex={-1}>{children}</div></WorkspaceShell>
+      </body>
     </html>
   );
 }

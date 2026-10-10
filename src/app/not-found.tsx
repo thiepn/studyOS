@@ -1,17 +1,9 @@
-import Link from "next/link";
-
-export default function NotFound() {
-  return (
-    <main className="shell system-state-shell">
-      <section className="system-state">
-        <span className="section-kicker">StudyOS</span>
-        <h1>Nothing is here.</h1>
-        <p>The study view may have moved, or the course/semester item no longer exists.</p>
-        <div className="button-row">
-          <Link className="primary-button" href="/">Today</Link>
-          <Link className="secondary-button" href="/courses">Courses</Link>
-        </div>
-      </section>
-    </main>
-  );
+import { StudySystemActions, StudySystemState } from "@/components/study-system-state";
+export default function NotFound(){
+  return <main className="shell system-state-shell studyos-system-state">
+    <StudySystemState kind="missing" title="This study page was not found."
+      detail="The requested page was not found or is not available to this session. Check the active semester, your account, or the course link without assuming another person’s records are visible.">
+      <StudySystemActions/>
+    </StudySystemState>
+  </main>;
 }

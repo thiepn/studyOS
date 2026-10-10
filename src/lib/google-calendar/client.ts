@@ -47,12 +47,14 @@ export async function listGoogleCalendars(accessToken:string){
   return rows;
 }
 export async function listGoogleCalendarEvents(accessToken:string,calendarId:string,timeMin:string,timeMax:string){
-  const rows:GoogleCalendarEvent[]=[]; let token="";
+  const rows:GoogleCalendarEvent[]=[]; let token=""; const seenTokens=new Set<string>(); let pages=0;
   do{
+    if(++pages>50)throw new Error("Calendar event pagination exceeded the supported bound");
     const params=new URLSearchParams({timeMin,timeMax,singleEvents:"true",orderBy:"startTime",maxResults:"2500"});
     if(token)params.set("pageToken",token);
     const data=await calendarFetch<{items?:GoogleCalendarEvent[];nextPageToken?:string}>(accessToken,"calendars/"+encodeURIComponent(calendarId)+"/events?"+params);
     rows.push(...(data.items??[])); token=data.nextPageToken??"";
+    if(token){if(seenTokens.has(token))throw new Error("Calendar returned a repeating pagination token");seenTokens.add(token);}
   }while(token);
   return rows;
 }

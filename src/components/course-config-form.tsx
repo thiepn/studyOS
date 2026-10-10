@@ -19,6 +19,9 @@ export function CourseConfigForm({ configuration }: { configuration: CourseConfi
   const [expectsExercise, setExpectsExercise] = useState(configuration.expects_exercise ?? true);
   const [expectsSolution, setExpectsSolution] = useState(configuration.expects_solution ?? true);
   const examDefault = useMemo(() => localDateTime(configuration.exam_at), [configuration.exam_at]);
+  const [examDraft,setExamDraft]=useState(examDefault);
+  const [reviewedExam,setReviewedExam]=useState(false);
+  const examChanged=examDraft!==examDefault;
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -26,6 +29,8 @@ export function CourseConfigForm({ configuration }: { configuration: CourseConfi
     setBusy(true); setMessage(null);
     try {
       const examValue = String(fd.get("examAt") ?? "").trim();
+      if(examChanged&&!reviewedExam)throw new Error("Review the changed exam date before saving.");
+      if(examValue&&Number.isNaN(Date.parse(examValue)))throw new Error("Choose a valid exam date and time.");
       const response = await fetch(`/api/study/courses/${configuration.course_id}/configuration`, {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -47,7 +52,8 @@ export function CourseConfigForm({ configuration }: { configuration: CourseConfi
       });
       const body = await response.json();
       if (!response.ok) throw new Error(body?.error || "Could not save course configuration");
-      setMessage("Course configuration saved.");
+      setMessage("Course configuration saved. Exam details remain your own declared values until verified against the university's official publication.");
+      setReviewedExam(false);
       router.refresh();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Could not save course configuration");
@@ -63,7 +69,8 @@ export function CourseConfigForm({ configuration }: { configuration: CourseConfi
         <label><span>Short name</span><input name="shortName" defaultValue={configuration.short_name ?? ""} placeholder="e.g. Ana III" /></label>
         <label><span>Professor</span><input name="professor" defaultValue={configuration.professor ?? ""} /></label>
         <label><span>ECTS</span><input name="credits" type="number" min="0.5" max="60" step="0.5" defaultValue={configuration.credits ?? ""} /></label>
-        <label><span>Exam date/time</span><input name="examAt" type="datetime-local" defaultValue={examDefault} /></label>
+        <label><span>Exam date/time</span><input name="examAt" type="datetime-local" value={examDraft}
+          onChange={event=>{setExamDraft(event.target.value);setReviewedExam(false);}} /></label>
         <label><span>Exam duration (min)</span><input name="examDurationMinutes" type="number" min="15" max="600" defaultValue={configuration.exam_duration_minutes ?? ""} /></label>
         <label><span>Exam format</span><input name="examFormat" defaultValue={configuration.exam_format ?? ""} placeholder="written, oral, coding…" /></label>
         <label><span>Lectures / week</span><input name="expectedLecturesPerWeek" type="number" min="0" max="7" defaultValue={configuration.expected_lectures_per_week ?? ""} /></label>
@@ -71,12 +78,19 @@ export function CourseConfigForm({ configuration }: { configuration: CourseConfi
         <label><span>Solution reconciliation target (h)</span><input name="solutionReconcileTargetHours" type="number" min="1" max="336" defaultValue={configuration.solution_reconcile_target_hours ?? 48} /></label>
         <label><span>Checkpoint weight</span><input name="checkpointWeight" type="number" min="0.1" max="10" step="0.1" defaultValue={configuration.checkpoint_weight ?? 1} /></label>
       </div>
+      {examChanged?<div className="semester-course-exam-review">
+        <p><strong>Exam schedule changed.</strong> Confirm the date/time or removal against the authoritative course notice. Editing this field changes planning inputs, not an official exam result.</p>
+        <label className="semester-review-confirm">
+          <input type="checkbox" checked={reviewedExam} onChange={event=>setReviewedExam(event.target.checked)} disabled={busy}/>
+          <span>I reviewed the modified exam date or its removal before saving this course.</span>
+        </label>
+      </div>:null}
       <div className="toggle-row">
         <label><input type="checkbox" checked={expectsExercise} onChange={(event) => setExpectsExercise(event.target.checked)} /> Exercise sheet expected</label>
         <label><input type="checkbox" checked={expectsSolution} onChange={(event) => setExpectsSolution(event.target.checked)} /> Official solution expected</label>
       </div>
-      <div className="button-row"><button className="primary-button button-reset" type="submit" disabled={busy}>{busy ? "Saving…" : "Save configuration"}</button></div>
-      {message ? <p className="form-message" role="status">{message}</p> : null}
+      <div className="button-row"><button className="primary-button button-reset" type="submit" disabled={busy||(examChanged&&!reviewedExam)}>{busy ? "Saving…" : "Save configuration"}</button></div>
+      {message ? <p className="form-message" role="status" aria-live="polite">{message}</p> : null}
     </form>
   );
 }

@@ -35,6 +35,7 @@ export type ResourcesData = {
   semesterId: string;
   courses: Pick<StudyCourse,"id"|"display_name"|"short_name"|"sort_order"|"drive_folder_url">[];
   resources: StudyResource[];
+  weeks?: {id:string;week_no:number}[];
   ingestionRuns: StudyIngestionRun[];
   driveConnection: Pick<StudyDriveConnection,"status"|"google_account_email"|"inbox_folder_url"|"last_scan_at"|"last_scan_status"|"last_error"> | null;
   intakeItems: StudyIntakeItem[];

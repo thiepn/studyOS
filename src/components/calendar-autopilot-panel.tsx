@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, type FormEvent } from "react";
+import {CALENDAR_EVIDENCE,calendarEvidenceStatus,canProposeCalendarCommit} from "@/lib/study/planning-command";
 
 type Props={
   data:{
@@ -22,14 +23,24 @@ export function CalendarAutopilotPanel({data}:Props){
   const router=useRouter(); const [busy,setBusy]=useState<string|null>(null); const [message,setMessage]=useState<string|null>(null);
   const [selected,setSelected]=useState<string[]>(data.sources.filter(x=>x.selected).map(x=>x.calendar_id));
   const futureBlocks=useMemo(()=>data.scheduledBlocks.filter(x=>x.status==="committed"),[data.scheduledBlocks]);
+  const [commitConfirmed,setCommitConfirmed]=useState(false);
+  const [cancellation,setCancellation]=useState<string|null>(null);
+  const evidenceState=calendarEvidenceStatus(data.connection,data.stale);
+  const evidence=CALENDAR_EVIDENCE[evidenceState];
+  const commitEligible=canProposeCalendarCommit(evidenceState,data.proposal.blocks.length)&&data.sources.some(source=>source.selected);
 
   async function post(path:string,body?:unknown){
     setBusy(path);setMessage(null);
     try{
       const response=await fetch(path,{method:"POST",headers:body?{"content-type":"application/json"}:undefined,body:body?JSON.stringify(body):undefined});
       const json=await response.json().catch(()=>({})); if(!response.ok)throw new Error(json?.error||"Request failed");
-      if(path.endsWith("/commit"))setMessage((json.created?.length??0)+" calendar block(s) created"+((json.errors?.length??0)?"; "+json.errors.length+" failed.":"."));
-      else setMessage(json?.note??"Updated.");
+      if(path.endsWith("/commit")){
+        const created=Array.isArray(json.created)?json.created.length:0;
+        const failures=Array.isArray(json.errors)?json.errors.length:0;
+        setMessage(created+" calendar block(s) created"+(failures?"; "+failures+" failed. Inspect the calendar and retry only unresolved items.":"."));
+        setCommitConfirmed(false);
+      }
+      else {setMessage(json?.note??"Updated.");if(path.endsWith("/cancel"))setCancellation(null);}
       router.refresh(); return json;
     }catch(error){setMessage(error instanceof Error?error.message:"Request failed");return null;}
     finally{setBusy(null);}
@@ -51,17 +62,19 @@ export function CalendarAutopilotPanel({data}:Props){
   if(!data.connection||data.connection.status!=="connected")return <section className="panel calendar-panel">
     <div className="section-heading"><div><p className="eyebrow">Schedule</p><h2>Study Calendar</h2></div><span>Off</span></div>
     <p>Connect the Google Calendar account you want StudyOS to use. It is a separate OAuth connection from Study Drive and from any Google account connected to ChatGPT.</p>
+    {data.connection?.last_error?<p role="status" className="warning-text">Calendar needs reconnection or recovery. Existing study records are preserved.</p>:null}
     <a className="primary-button" href="/api/integrations/google-calendar/start">Connect Study Calendar</a>
     <p className="muted tiny">Only the primary calendar is selected initially. Other visible calendars remain excluded until you select them here.</p>
   </section>;
 
   return <section className="panel calendar-panel">
-    <div className="section-heading"><div><p className="eyebrow">Schedule</p><h2>Study Calendar</h2></div><span>{data.stale?"stale":"synced"}</span></div>
+    <div className="section-heading"><div><p className="eyebrow">Schedule</p><h2>Study Calendar</h2></div><span>{evidence.label}</span></div>
+    <p className="calendar-evidence-notice" role="status"><strong>{evidence.label}</strong>{evidence.description} Proposed time blocks are not actual Google events.</p>
     <div className="calendar-connection">
       <div><strong>{data.connection.google_account_email??"Connected Google account"}</strong><span>{data.connection.last_sync_at?"Last sync "+new Date(data.connection.last_sync_at).toLocaleString():"Not synced yet"}{data.connection.last_sync_status?" · "+data.connection.last_sync_status:""}</span></div>
       <div className="button-row">
         <button className="secondary-button button-reset" disabled={Boolean(busy)} onClick={()=>void post("/api/integrations/google-calendar/sync")}>{busy?.includes("/sync")?"Syncing…":"Sync now"}</button>
-        <a className="secondary-button" href="/api/integrations/google-calendar/start">Switch account</a>
+        <a className="secondary-button" href="/account">Switch account safely</a>
         <button className="secondary-button button-reset" disabled={Boolean(busy)} onClick={()=>void post("/api/integrations/google-calendar/disconnect")}>Disconnect</button>
       </div>
     </div>
@@ -73,9 +86,20 @@ export function CalendarAutopilotPanel({data}:Props){
         {data.proposal.blocks.length?<div className="calendar-proposal">{data.proposal.blocks.map((block)=><article key={block.candidateId+block.startAt}>
           <div className="calendar-time"><strong>{time(block.startAt,data.timezone)}</strong><span>– {time(block.endAt,data.timezone)}</span></div>
           <div><strong>{block.title}</strong><span>{block.minutes} min{block.partial?" · partial":""}</span></div>
-        </article>)}</div>:<p className="muted">No planned study task currently needs calendar placement.</p>}
+        </article>)}</div>:<p className="muted">No uncommitted study task currently fits a proposed block. This does not mean the calendar has been freshly synchronized.</p>}
         {data.proposal.unscheduled.length?<p className="warning-text">{data.proposal.unscheduled.length} planned item(s) do not fit the current free windows. StudyOS leaves them unscheduled instead of creating overlaps.</p>:null}
-        {data.proposal.blocks.length?<button className="primary-button button-reset" disabled={Boolean(busy)} onClick={()=>void post("/api/study/calendar/commit")}>{busy?.includes("/commit")?"Creating events…":"Commit today to Google Calendar"}</button>:null}
+        {data.proposal.blocks.length?<div className="calendar-commit-gate">
+          {commitEligible?<label>
+            <input type="checkbox" checked={commitConfirmed} disabled={Boolean(busy)}
+              onChange={event=>setCommitConfirmed(event.target.checked)}/>
+            <span>I reviewed today's proposed blocks and authorize creating these busy events in my connected Google Calendar.</span>
+          </label>:<p className="calendar-evidence-notice" role="note">Calendar write preparation is paused. Sync successfully to review fresh free/busy evidence before committing events.</p>}
+          <button className="primary-button button-reset" type="button" disabled={Boolean(busy)||!commitEligible||!commitConfirmed}
+            onClick={()=>void post("/api/study/calendar/commit",{confirmed:true})}>
+            {busy?.includes("/commit")?"Creating events…":"Create reviewed Calendar events"}
+          </button>
+          <small>This creates external events. A proposal and an acknowledgment are not a successful Google Calendar write; partial failures remain explicit.</small>
+        </div>:null}
         <p className="muted tiny">Committed blocks are busy events with a {data.settings.study_reminder_minutes}-minute Google Calendar popup reminder.</p>
       </div>
 
@@ -96,7 +120,11 @@ export function CalendarAutopilotPanel({data}:Props){
 
     {futureBlocks.length?<details className="calendar-scheduled"><summary>Committed StudyOS blocks ({futureBlocks.length})</summary><div>{futureBlocks.map(block=><article key={block.id}>
       <div><strong>{block.title}</strong><span>{dateLabel(block.plan_date,data.timezone)} · {time(block.start_at,data.timezone)}–{time(block.end_at,data.timezone)}</span></div>
-      <div>{block.event_url?<a href={block.event_url} target="_blank" rel="noreferrer">Calendar</a>:null}<button type="button" disabled={Boolean(busy)} onClick={()=>void post("/api/study/calendar/blocks/"+block.id+"/cancel")}>Cancel block</button></div>
+      <div>{block.event_url?<a href={block.event_url} target="_blank" rel="noopener noreferrer">Calendar event</a>:null}
+        {cancellation===block.id?<div className="calendar-cancel-check"><span>Delete this external Calendar event?</span>
+          <button type="button" disabled={Boolean(busy)} onClick={()=>void post("/api/study/calendar/blocks/"+block.id+"/cancel")}>Confirm delete</button>
+          <button type="button" disabled={Boolean(busy)} onClick={()=>setCancellation(null)}>Keep event</button>
+        </div>:<button type="button" disabled={Boolean(busy)} onClick={()=>setCancellation(block.id)}>Review cancellation</button>}</div>
     </article>)}</div></details>:null}
 
     <details className="calendar-settings"><summary>Calendar sources & scheduling rules</summary>
@@ -116,6 +144,6 @@ export function CalendarAutopilotPanel({data}:Props){
         <button className="secondary-button button-reset" disabled={Boolean(busy)} type="submit">Save scheduling rules</button>
       </form>
     </details>
-    {message?<p className="form-message" role="status">{message}</p>:null}
+    {message?<p className="form-message" role="status" aria-live="polite">{message}</p>:null}
   </section>;
 }

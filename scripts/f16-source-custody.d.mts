@@ -1,0 +1,2 @@
+export type F16CustodyVerdict={integrity:"verified"|"rejected";releaseAllowed:false;restoreAllowed:false;staging:"NO_GO";release:"NO_GO";postrelease:"NO_GO";sourceComparison:string;reasons:string[];sourceDigests?:Array<{kind:string;sha256:string}>};
+export declare function auditF16SourceCustody(options:{packet:any;trustRoots:any;artifactDirectory:string;expectedHead:string;now?:Date}):Promise<F16CustodyVerdict>;
