@@ -1,13 +1,13 @@
 /* Shared semantic tokens and components. Legacy names map to the same system. */
 :root {
-  --academic-paper:#ffffff;
+  --academic-paper:#faf9f6;
   --academic-paper-raised:#f7f7f5;
-  --academic-sheet:#ffffff;
-  --academic-ink:#252b36;
+  --academic-sheet:#faf9f6;
+  --academic-ink:#232622;
   --academic-ink-secondary:#4b5565;
-  --academic-muted:#697383;
+  --academic-muted:#60665d;
   --academic-faint:#697383;
-  --academic-rule:#e6e9ee;
+  --academic-rule:#dedfd7;
   --academic-rule-strong:#c9c8c3;
   --academic-accent:#3d62a6;
   --academic-accent-wash:#f0f4fb;

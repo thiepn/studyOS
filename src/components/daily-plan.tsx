@@ -25,7 +25,7 @@ export function DailyPlan({plan}:{plan:DailyPlanType}){
 
     {current ? <article className="now-task" aria-label="First recommended task">
       <div className="now-copy">
-        <span className="task-context"><span className="task-current-dot"/> Up next · {current.courseName??(current.kind==="review"?"All courses":"Semester")}</span>
+        <span className="task-context"><span className="task-order" aria-hidden="true">01 /</span> Up next · {current.courseName??(current.kind==="review"?"All courses":"Semester")}</span>
         <h3>{taskTitle(current)}</h3>
         <p>{current.kind==="review"?"Recall what you’ve learned, then revisit the questions that need another attempt.":current.reason}</p>
         <div className="task-meta"><span><WorkspaceIcon name="clock"/>{current.scheduledMinutes} min</span>{current.partial?<span>partial block</span>:null}{current.urgent?<span className="urgent-tag">Urgent priority</span>:null}</div>
@@ -33,8 +33,8 @@ export function DailyPlan({plan}:{plan:DailyPlanType}){
       <div className="focus-action-row"><ActionLink item={current} label={startLabel(current)} primary/><details className="task-explanation"><summary>Why this next?</summary><p>{current.reason}</p></details></div>
     </article> : <div className="sequence-empty"><strong>Nothing scheduled.</strong><span>Open a course to find materials and practice, or adjust your available time below.</span><Link href="/courses">Open your courses →</Link></div>}
 
-    {next.length ? <><h3 className="next-task-heading">Also on your plan</h3><ol className="next-task-list" aria-label="Upcoming study tasks">{next.slice(0,3).map((item)=><li key={item.id}>
-      <span className="task-list-icon" aria-hidden="true"><WorkspaceIcon name={item.kind==="commitment"?"today":item.kind==="review"?"study":"book"}/></span>
+    {next.length ? <><h3 className="next-task-heading">Also on your plan</h3><ol className="next-task-list" aria-label="Upcoming study tasks">{next.slice(0,3).map((item,index)=><li key={item.id}>
+      <span className="task-list-icon" aria-hidden="true">{String(index+2).padStart(2,"0")}</span>
       <div className="next-task-copy">
         <span className="task-context">{item.courseName??(item.kind==="review"?"All courses":"Semester")}</span>
         <strong>{taskTitle(item)}</strong>
