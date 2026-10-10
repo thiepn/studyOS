@@ -63,7 +63,7 @@ try{
   await evidence(desktop,"desktop-account-recovery-redirect-1440");
   const privateApi=await desktop.request.get(new URL("/api/study/attempt",origin).href,{maxRedirects:0});
   assert.equal(privateApi.status(),401,"Protected academic API must return 401 JSON instead of a login redirect");
-  assert.match(privateApi.headers()["content-type"]??"",/application\\/json/);
+  assert.ok((privateApi.headers()["content-type"]??"").includes("application/json"),"Private API must return JSON");
   assert.equal((await privateApi.json()).ok,false);
   await desktop.goto(new URL("/login?next=%2Fapi%2Fstudy%2Fattempt",origin).href,{waitUntil:"networkidle"});
   assert.equal(await desktop.getByText(/After sign-in, return to/).count(),0,
