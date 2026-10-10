@@ -30,3 +30,18 @@ test("recovery is user-controlled, not a claim that an interrupted action succee
   assert.match(states,/href="\/account"/);
   assert.match(states,/href="\/semester\/bootstrap"/);
 });
+
+test("account switching requires explicit sign-out without cross-owner queue replay",()=>{
+  const page=read("../src/app/account/page.tsx");
+  const actions=read("../src/components/account-session-actions.tsx");
+  const signin=read("../src/app/login/page.tsx");
+  const courses=read("../src/app/courses/page.tsx");
+  assert.match(page,/<AccountSessionActions\/>/);
+  assert.match(actions,/action="\/auth\/signout" method="post"/);
+  assert.match(actions,/offline work is owner-scoped/i);
+  assert.match(actions,/cannot be replayed into a different owner's account/);
+  assert.match(signin,/getStudyRouteContext\(next\)\.current/);
+  assert.match(courses,/getStudyWorkspaceState\(\)/);
+  assert.match(courses,/if\(!state\.activeSemester\)redirect\(state\.hasAnySemester\?"\/semester\/rollover":"\/semester\/bootstrap"\)/);
+  assert.match(read("../src/lib/study/offline-owner-policy.ts"),/ownerId===currentUser/);
+});

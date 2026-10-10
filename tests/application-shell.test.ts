@@ -13,7 +13,7 @@ test("route context never derives an account identity from arbitrary URLs",()=>{
   assert.equal(getStudyRouteContext("/resources").parent?.href,"/more");
   assert.equal(getStudyRouteContext("/account").current,"Account");
   assert.equal(getStudyRouteContext("/semester/archive/abc").parent?.href,"/semesters");
-  assert.equal(getStudyRouteContext("/account/unknown").current,"Study workspace");
+  assert.equal(getStudyRouteContext("/account/unknown").current,"Account settings");
   assert.equal(getStudyRouteContext("/").parent,undefined);
 });
 test("page shell has a visible keyboard-first skip route to focusable main content",()=>{

@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getStudyWorkspaceState } from "@/lib/study/bootstrap";
 import { AcademicPageHeading, AcademicEmptyState } from "@/components/academic-ui";
 import { getTodayData, getWeeklyHealth } from "@/lib/study/queries";
 import { courseInitials, courseToneClass } from "@/lib/study/course-visual";
@@ -6,6 +8,8 @@ import { courseInitials, courseToneClass } from "@/lib/study/course-visual";
 export const dynamic = "force-dynamic";
 
 export default async function CoursesPage() {
+  const state=await getStudyWorkspaceState();
+  if(!state.activeSemester)redirect(state.hasAnySemester?"/semester/rollover":"/semester/bootstrap");
   const [data, health] = await Promise.all([getTodayData(), getWeeklyHealth()]);
   const byCourse = new Map<string, typeof health>();
   for (const row of health) {

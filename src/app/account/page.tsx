@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Nav } from "@/components/nav";
 import { ConnectionActions } from "@/components/connection-actions";
+import { AccountSessionActions } from "@/components/account-session-actions";
 import { connectionView, connectionNotice } from "@/lib/study/connection-recovery";
 import { workspaceEntryAction } from "@/lib/study/workspace-entry";
 import styles from "./account.module.css";
@@ -83,7 +84,7 @@ export default async function AccountPage({searchParams}:{
         <p className={styles.email}>{data.user.email??"Authenticated account (email unavailable)"}</p>
         <p className={styles.detail}>This verified account owns StudyOS courses, attempts, planning, and study records. Signing out does not remove Drive folders or Google Calendar events.</p>
         <div className="button-row">
-          <form action="/auth/signout" method="post"><button type="submit" className="secondary-button button-reset">Sign out of StudyOS</button></form>
+          <AccountSessionActions/>
         </div>
       </section>
       <div className={styles.services}>

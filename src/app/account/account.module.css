@@ -30,3 +30,10 @@
 .workspace a:focus-visible{outline:2px solid #394e43;outline-offset:3px}
 @media(max-width:650px){.workspace{padding:21px 18px}.workspace .button-row{flex-wrap:wrap}.workspace .button-row a{max-width:100%;white-space:normal}}
 @media(forced-colors:active){.workspace{border-top-color:Highlight}.workspace a:focus-visible{outline-color:Highlight}}
+
+.identity :global(.account-session-review){margin:0;max-width:80ch;border-top:1px solid #d9ddd6;padding-top:12px}
+.identity :global(.account-session-review summary){display:flex;align-items:center;min-height:44px;font-size:.81rem;font-weight:750;cursor:pointer}
+.identity :global(.account-session-review p){font-size:.81rem;color:#606c62;line-height:1.6;max-width:75ch;margin:8px 0}
+.identity :global(.account-session-review form){margin-top:14px}
+.identity :global(.account-session-review button){min-height:44px}
+.identity :global(.account-session-review summary:focus-visible){outline:2px solid #394e43;outline-offset:3px}
