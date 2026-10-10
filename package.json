@@ -7,7 +7,7 @@
     "build": "next build && node scripts/check-browser-config.mjs",
     "start": "next start",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "test": "node --experimental-strip-types --test tests/*.test.ts && node scripts/audit-f20-db-contract.mjs",
     "test:queue": "node --experimental-strip-types --test tests/queue.test.ts",
     "test:review": "node --experimental-strip-types --test tests/review.test.ts",
     "qualify:live": "node scripts/verify-live-deployment.mjs"

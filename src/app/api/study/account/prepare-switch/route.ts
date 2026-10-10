@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ok:false,error:"Invalid integration"},{status:400,headers:{"cache-control":"no-store"}});
   const supabase=await createClient();
   const {data:claims,error}=await supabase.auth.getClaims();
-  if(error||!claims?.claims?.sub)return NextResponse.json({ok:false,error:"Authentication required"},{status:401});
+  if(error||!claims?.claims?.sub||claims.claims.is_anonymous===true)return NextResponse.json({ok:false,error:"A permanent authenticated account is required"},{status:401});
   const userId=String(claims.claims.sub);
   const store=await cookies();
   store.set(`study_${service}_switch_intent`,userId,{
