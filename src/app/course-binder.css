@@ -1,7 +1,7 @@
 /* F07 — course-first binder on the F04 paper-and-ink contract. */
 /* Compact next-action callout beside the course files. */
-.binder-overview{background:#f7f7f5;border:1px solid #eeedea;border-radius:6px;margin:0;padding:20px;min-width:0}
-.binder-overview-head{display:block}.binder-overview-head .section-kicker{margin:0 0 4px}.binder-overview-head h2{font-size:18px;font-weight:600;margin:0 0 4px}.binder-overview-stage{font-size:12px;color:var(--academic-muted)}
+.binder-overview{background:#f5f7fc;border:1px solid #dce4f1;border-radius:9px;margin:0;padding:20px;min-width:0}
+.binder-overview-head{display:block}.binder-overview-head .section-kicker{margin:0 0 8px;color:var(--academic-accent);font-weight:600}.binder-overview-head h2{font-size:18px;font-weight:600;margin:0 0 4px}.binder-overview-stage{font-size:12px;color:var(--academic-muted)}
 .binder-overview-main{margin:16px 0 0;border:0}.binder-overview-next{padding:0}.binder-overview-next>span{font-size:12px;color:var(--academic-muted)}.binder-overview-next>strong{display:block;font:600 18px/1.4 var(--academic-font-body);margin:6px 0 8px;letter-spacing:-.3px}.binder-overview-next p{font-size:13px;color:var(--academic-muted);line-height:1.6;margin:0 0 16px}.binder-week-details{margin-top:16px;border-top:1px solid var(--academic-rule)}.binder-week-details>summary{min-height:44px;padding:12px 0 0;cursor:pointer;font-size:12px;color:var(--academic-muted)}
 .binder-overview-facts{margin:0;display:grid;align-content:center;padding:8px 0;max-width:640px}
 .binder-overview-facts>div{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:8px 0;border-bottom:1px solid var(--academic-rule)}

@@ -1,5 +1,6 @@
-type IconName="today"|"courses"|"study"|"assistant"|"progress"|"settings"|"account"|"book";
+type IconName="today"|"courses"|"study"|"assistant"|"progress"|"settings"|"account"|"book"|"clock";
 const paths:Record<IconName,string>={
+ clock:"M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0 M12 7v5l3 2",
  today:"M5 4h14v16H5z M8 2v4 M16 2v4 M5 9h14 M8 13h3 M8 16h6",
  courses:"M4 5h6l2 2h8v13H4z M4 5V3h6l2 2",
  study:"m9 4 11 8-11 8z",

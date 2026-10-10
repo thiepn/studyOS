@@ -2,6 +2,7 @@
 
 import {useMemo,useState} from "react";
 import Link from "next/link";
+import {WorkspaceIcon} from "@/components/workspace-icon";
 import {declaredAuthorityLabel,filterSourceIndex,sourceStatusLabel,verifiedSource,
   type SourceIndexItem,type SourceFilter} from "@/lib/study/resource-desk";
 
@@ -45,7 +46,7 @@ export function SourceIndex({resources,courseNames,weekNumbers={},initialWeek=nu
         <article className="source-index-record">
           <div className="source-index-record-main">
             <span className="source-index-category">{courseNames[item.course_id]??"Course"} · {item.resource_type.replaceAll("_"," ")}</span>
-            <h3>{item.title}</h3>
+            <h3 className="material-file-title"><WorkspaceIcon name="book"/><span>{item.title}</span></h3>
             <p className="source-index-authority">{declaredAuthorityLabel(item.source_authority)}{item.teaching_week_id&&weekNumbers[item.teaching_week_id]!=null?" · Week "+weekNumbers[item.teaching_week_id]:""}</p>
             <details className="source-index-fingerprint"><summary>Source authority details</summary><p>A declared source category is not a copyright license or independent certification.</p></details>
           </div>
