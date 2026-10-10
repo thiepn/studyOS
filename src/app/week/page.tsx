@@ -42,6 +42,10 @@ export default async function WeekPage(){
     return <main className="shell">
       <header className="header"><div><p className="eyebrow">Weekly plan</p><h1>This week</h1></div><Nav /></header>
 
+      <nav className="week-planning-navigation" aria-label="Week planning sections">
+        <Link href="/">Today command desk</Link><Link href="/scenarios">Compare scenarios</Link>
+        <a href="#week-commit-actions">Commit a week</a><Link href="/outlook">Outlook</Link>
+      </nav>
       <section className="panel week-hero">
         <div><p className="eyebrow">{envelope.today} → {envelope.periodEndsOn}</p><h2>No weekly commitment yet</h2></div>
         <p>Scenarios are exploratory. Committing one turns it into the operational plan that Today follows for the rest of this calendar week.</p>
@@ -61,7 +65,7 @@ export default async function WeekPage(){
         {preview.allocations.length?<div className="week-preview-list">{preview.allocations.map(row=><div key={row.courseId}><strong>{row.shortName??row.displayName}</strong><span>{fmt(row.allocatedMinutes)}</span></div>)}</div>:null}
       </section>
 
-      <section className="panel">
+      <section id="week-commit-actions" className="panel">
         <div className="section-heading"><div><p className="eyebrow">Commit scenario</p><h2>Lock the remainder of this week</h2></div></div>
         <p className="muted">The capacity field cannot exceed the currently feasible remainder of the week. Course-floor shortfalls may be committed deliberately; mandatory-work deficits may not.</p>
         <WeeklyPlanControls activePlanId={null} baselineCapacityMinutes={envelope.feasibleCapacityMinutes} defaultObjective="balanced" canRebalance={false}/>
@@ -78,7 +82,10 @@ export default async function WeekPage(){
 
   return <main className="shell">
     <header className="header"><div><p className="eyebrow">Weekly plan</p><h1>This week</h1></div><Nav /></header>
-
+    <nav className="week-planning-navigation" aria-label="Week planning sections">
+      <Link href="/">Today command desk</Link><a href="#week-courses">Course allocations</a>
+      <a href="#week-rebalance">Review adjustments</a><Link href="/outlook">Outlook</Link>
+    </nav>
     <section className="panel week-hero">
       <div className="week-hero-head">
         <div><p className="eyebrow">{runtime.plan.period_starts_on} → {runtime.plan.period_ends_on}</p><h2>{OBJECTIVE_LABELS[objective]}</h2></div>
@@ -97,7 +104,7 @@ export default async function WeekPage(){
 
     <CalibrationSummary profile={calibration}/>
 
-    <section className="week-course-list">
+    <section id="week-courses" className="week-course-list">
       {progress.courses.map(row=>{
         const evidence=completionMap.get(row.courseId);
         const proposed=proposalMap.get(row.courseId);
@@ -121,7 +128,7 @@ export default async function WeekPage(){
       })}
     </section>
 
-    <section className={"panel week-rebalance "+(proposal?.material?"material":"stable")}>
+    <section id="week-rebalance" className={"panel week-rebalance "+(proposal?.material?"material":"stable")}>
       <div className="section-heading"><div><p className="eyebrow">Rolling reallocation</p><h2>{proposal?.material?"Rebalance recommended":"Committed envelopes still fit"}</h2></div><span>{proposal?.reason.replace("_"," ")??"stable"}</span></div>
       <p>{proposal?.reasonText}</p>
       {proposal?.material?<div className="week-rebalance-metrics">

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Nav } from "@/components/nav";
 import { DailyPlan } from "@/components/daily-plan";
 import { TodayOverview } from "@/components/today-overview";
+import { PlanningCommandOverview } from "@/components/planning-command-overview";
 import { buildTodayOverview } from "@/lib/study/today-overview";
 import { CapacityControls } from "@/components/capacity-controls";
 import { CommitmentsPanel } from "@/components/commitments-panel";
@@ -92,6 +93,7 @@ export default async function TodayPage() {
       </header>
 
       <TodayOverview data={overview} mode={capacity.mode} weekPercent={weekRuntime?.progress.completionPercent??null}/>
+      <PlanningCommandOverview commitments={commitments} capacity={capacity} calendar={calendar} hasWeeklyCommitment={Boolean(weekRuntime)} now={new Date()}/>
 
       {!orchestration.bootstrapCertified ? <section className="workflow-notice workflow-notice-required">
         <div><span className="notice-label">Setup required</span><strong>Finish the semester setup before StudyOS schedules normal course work.</strong><p>Your real deadlines remain visible; generated discretionary study work stays paused until the curriculum is anchored.</p></div>
