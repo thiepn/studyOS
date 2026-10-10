@@ -4,6 +4,26 @@ export type OfflineReceiptRequest =
   |{kind:"attempt";recordId:string;questionId:string}
   |{kind:"session_start";recordId:string;startedAt:string;sessionType:string;courseId:string|null;plannedMinutes:number}
   |{kind:"session_finish";recordId:string;endedAt:string;note:string|null};
+export function parseOfflineReceiptRequest(value:unknown):OfflineReceiptRequest|null{
+  if(!value||typeof value!=="object"||Array.isArray(value))return null;
+  const row=value as Record<string,unknown>;
+  const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  if(typeof row.recordId!=="string"||!UUID.test(row.recordId))return null;
+  if(row.kind==="attempt"&&typeof row.questionId==="string"&&UUID.test(row.questionId))
+    return {kind:"attempt",recordId:row.recordId,questionId:row.questionId};
+  if(row.kind==="session_start"&&typeof row.startedAt==="string"
+    &&Number.isFinite(Date.parse(row.startedAt))
+    &&["review","coursework","checkpoint","exam_simulation","relearning"].includes(String(row.sessionType))
+    &&(row.courseId==null||(typeof row.courseId==="string"&&UUID.test(row.courseId)))
+    &&Number.isInteger(row.plannedMinutes)&&Number(row.plannedMinutes)>=1&&Number(row.plannedMinutes)<=600)
+    return {kind:"session_start",recordId:row.recordId,startedAt:row.startedAt,
+      sessionType:String(row.sessionType),courseId:row.courseId==null?null:String(row.courseId),plannedMinutes:Number(row.plannedMinutes)};
+  if(row.kind==="session_finish"&&typeof row.endedAt==="string"&&Number.isFinite(Date.parse(row.endedAt))
+    &&(row.note==null||(typeof row.note==="string"&&row.note.length<=4000)))
+    return {kind:"session_finish",recordId:row.recordId,endedAt:row.endedAt,note:row.note==null?null:String(row.note)};
+  return null;
+}
+
 export type ReceiptRow={
   request_id?:unknown;question_id?:unknown;response?:unknown;
   id?:unknown;started_at?:unknown;session_type?:unknown;course_id?:unknown;
