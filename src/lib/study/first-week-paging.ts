@@ -2,7 +2,8 @@
  * Never silently truncate at Supabase/PostgREST's 1000 row default. */
 export type PagedIndependentAttempt={id:string;question_id:string;course_id:string;independence:string};
 export class FirstWeekPagingError extends Error{
-  constructor(readonly code:string,message:string){super(message);this.name="FirstWeekPagingError";}
+  readonly code:string;
+  constructor(code:string,message:string){super(message);this.name="FirstWeekPagingError";this.code=code;}
 }
 export const PROOF_PAGE_SIZE=500;
 export const PROOF_ID_BATCH=40;
