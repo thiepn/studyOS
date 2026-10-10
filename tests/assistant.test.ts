@@ -67,7 +67,7 @@ test("assistant sends bounded owner-approved context to shared Luna only", async
 });
 
 test("assistant handles budget and rate failures without exposing internals", async () => {
-  for (const [code, status] of [["BUDGET", 503], ["RATE", 429], ["UPSTREAM", 502]] as const) {
+  for (const [code, status] of [["CONFIG", 503], ["BUDGET", 503], ["RATE", 429], ["UPSTREAM", 502]] as const) {
     const result = await handleAssistantRequest(question, {
       getOwner: async () => owner, getCourseContext: async () => null,
       enabled: true, now: () => 2_000_000,
