@@ -63,7 +63,7 @@ jobs:
           echo "sha=$EXPECTED_SHA" >> "$GITHUB_OUTPUT"
 
   stage:
-    if: ${{ inputs.operation }} == 'stage'
+    if: inputs.operation == 'stage'
     needs: preflight
     runs-on: ubuntu-latest
     environment: thiepn-vercel-production
@@ -108,7 +108,7 @@ jobs:
           echo "Production domains are not assigned by this job."
 
   promote:
-    if: ${{ inputs.operation }} == 'promote'
+    if: inputs.operation == 'promote'
     needs: preflight
     runs-on: ubuntu-latest
     environment: thiepn-vercel-production
