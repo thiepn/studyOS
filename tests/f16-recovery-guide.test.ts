@@ -23,3 +23,10 @@ test("accessible source-recovery guide retains local-only user confirmation boun
   assert.match(style,/@media\(forced-colors:active\)/);
   assert.match(style,/@media\(max-width:620px\)/);
 });
+
+test("F16 exact-browser regression explicitly rejects authentication endpoint as return destination",()=>{
+  const browser=read("../scripts/browser-visual-acceptance.mjs");
+  assert.match(browser,/desktop-blocked-auth-return-1440/);
+  assert.match(browser,/login\\?next=%2Fauth%2Fsignout/);
+  assert.match(browser,/desktop disallowed recovery destination/);
+});
