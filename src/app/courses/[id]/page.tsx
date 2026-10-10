@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Nav } from "@/components/nav";
 import { CourseConfigForm } from "@/components/course-config-form";
 import { WeekWorkflowPanel } from "@/components/week-workflow-panel";
+import { CourseBinderOverview } from "@/components/course-binder-overview";
 import { CourseMasterMap } from "@/components/course-master-map";
 import { getCourseWorkflow } from "@/lib/study/workflow";
 import { getCourseExamIntelligence } from "@/lib/study/exams";
@@ -35,6 +36,8 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
         <Nav courseName={c.display_name} />
       </header>
 
+      <CourseBinderOverview courseId={c.course_id} weeks={data.weeks} resources={data.resources} />
+
       <div className="button-row course-back-row">
         <Link className="secondary-button" href="/courses">← All courses</Link>
         <Link className="primary-button" href={nextHref}>{nextWeek?`Continue week ${nextWeek.week_no} · ${actionLabel(nextWeek.next_action)}`:"Add first course material"}</Link>
@@ -44,7 +47,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
         {c.course_kind === "retake" ? <Link className="secondary-button" href={"/diagnostics/" + c.course_id}>Baseline diagnostic</Link> : null}
       </div>
 
-      <section className="workflow-heading">
+      <section id="course-weeks" className="workflow-heading">
         <div><p className="eyebrow">Current coursework</p><h2>Teaching weeks</h2></div>
         <p>Continue the first unfinished week. The binder keeps the sources, independent work, solution checking and repair together.</p>
       </section>
@@ -58,11 +61,11 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
         weekPractice={data.weekPractice}
       />
 
-      <CourseMasterMap topics={data.masterMap} />
+      <div id="course-master-map"><CourseMasterMap topics={data.masterMap} /></div>
 
-      <ExamIntelligence papers={exam.papers} blueprint={exam.blueprint} strategy={exam.strategy} />
+      <section id="course-exam-intelligence" aria-label="Exam preparation"><ExamIntelligence papers={exam.papers} blueprint={exam.blueprint} strategy={exam.strategy} /></section>
 
-      <details className="course-settings-drawer">
+      <details id="course-settings" className="course-settings-drawer">
         <summary>
           <span><strong>Course settings</strong><small>Identity, exam information, weekly release pattern</small></span>
           <b>{c.short_name ?? c.stable_key}</b>

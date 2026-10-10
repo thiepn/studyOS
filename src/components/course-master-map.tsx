@@ -13,7 +13,7 @@ export type MasterMapTopic = {
 
 export function CourseMasterMap({ topics }: { topics: MasterMapTopic[] }) {
   if (!topics.length) return (
-    <section className="panel master-map-panel">
+    <section className="panel master-map-panel" aria-label="Course knowledge map">
       <div className="section-heading"><div><p className="eyebrow">Knowledge model</p><h2>Course Master Map</h2></div><span>0</span></div>
       <p className="muted">No verified topic/skill map exists yet. It will grow from accepted source-grounded processing candidates.</p>
     </section>
