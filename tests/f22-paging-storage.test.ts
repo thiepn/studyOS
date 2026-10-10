@@ -8,7 +8,7 @@ const owner="550e8400-e29b-41d4-a716-446655440000",other="550e8400-e29b-41d4-a71
 const raw=(a:unknown[]=[],b:unknown[]=[],c:unknown[]=[]):OfflineQueueRaw=>({
   [OFFLINE_QUEUE_KEYS[0]]:JSON.stringify(a),[OFFLINE_QUEUE_KEYS[1]]:JSON.stringify(b),[OFFLINE_QUEUE_KEYS[2]]:JSON.stringify(c)
 });
-type Attempt={id:string;question_id:string;course_id:string;independence:string};
+type Attempt={id:string;user_id:string;question_id:string;course_id:string;independence:string};
 function mockDb(rows:Attempt[],opts:{fail?:boolean;malformed?:boolean}={}){
  const events:{table:string;eq:[string,unknown][];groups:[string,unknown[]][];order:string;range:[number,number]}[]=[];
  return {events,from(table:string){
@@ -29,7 +29,7 @@ function mockDb(rows:Attempt[],opts:{fail?:boolean;malformed?:boolean}={}){
  }};
 }
 function rows(count:number,question="q1"):Attempt[]{
- return Array.from({length:count},(_,i)=>({id:String(i).padStart(8,"0"),question_id:question,
+ return Array.from({length:count},(_,i)=>({id:String(i).padStart(8,"0"),user_id:owner,question_id:question,
    course_id:"courseA",independence:"independent"}));
 }
 test("real Week-1 proof fetches a stable >1000 attempt history without dropping late evidence",async()=>{
