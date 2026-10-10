@@ -25,3 +25,15 @@ test("account recovery and auto-sync observe cross-tab storage changes",()=>{
     const s=read(p);assert.match(s,/addEventListener\("storage"/);assert.match(s,/removeEventListener\("storage"/);
   }
 });
+
+test("F15 prior-state rehearsal is mounted only on the verified account recovery route",()=>{
+  const page=read("../src/app/account/recovery/page.tsx");
+  const ui=read("../src/components/prior-state-rehearsal.tsx");
+  const css=read("../src/app/account/recovery/recovery.css");
+  assert.match(page,/PriorStateRehearsal verifiedOwnerId=\{workspace\.userId\}/);
+  assert.match(ui,/currentPendingOwner\(\)/);
+  assert.match(ui,/No automatic restore, overwrite, purge or release/);
+  assert.match(ui,/aria-live="polite"/);
+  assert.match(css,/\.account-prior-state button:focus-visible/);
+  assert.match(css,/@media\(forced-colors:active\)/);
+});
