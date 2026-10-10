@@ -3,14 +3,14 @@ import { listGoogleCalendarEvents, refreshCalendarAccessToken } from "./client";
 import { zonedDateTimeToUtc } from "@/lib/study/calendar-scheduler";
 import { isStudyOwnedCalendarEvent } from "./event-policy";
 
-function classify(summary:string,courses:Array<{id:string;display_name:string;short_name:string|null;stable_key:string}>){
+function classify(summary:string,courses:Array<{id:string;display_name:string;short_name:string|null;stable_key:string}>,studyOwned:boolean){
   const s=summary.toLocaleLowerCase("de-DE");
   const course=courses.find(c=>{
     const names=[c.display_name,c.short_name,c.stable_key].filter(Boolean).map(x=>String(x).toLocaleLowerCase("de-DE"));
     return names.some(name=>name.length>=3&&s.includes(name));
   })??null;
   let role:"busy"|"lecture"|"exercise"|"exam"|"deadline"|"study_block"|"other"="busy";
-  if(/studyos/.test(s))role="study_block"; else if(/klausur|exam|prüfung/.test(s))role="exam"; else if(/übung|exercise|tutorial/.test(s))role="exercise"; else if(/vorlesung|lecture|\bvl\b/.test(s))role="lecture"; else if(/deadline|abgabe|due/.test(s))role="deadline";
+  if(studyOwned)role="study_block"; else if(/klausur|exam|prüfung/.test(s))role="exam"; else if(/übung|exercise|tutorial/.test(s))role="exercise"; else if(/vorlesung|lecture|\bvl\b/.test(s))role="lecture"; else if(/deadline|abgabe|due/.test(s))role="deadline";
   return {courseId:course?.id??null,role};
 }
 function eventBounds(event:any,timezone:string){
@@ -44,8 +44,13 @@ export async function syncStudyCalendar(userId:string){
   const courses=semesterCourses??[];
   let count=0;
   try{
-    for(const source of sourcesResult.data??[]){
-      const events=await listGoogleCalendarEvents(token,String(source.calendar_id),timeMin,timeMax); const ids:string[]=[];
+    // Complete every selected Google snapshot before mutating the local ledger.
+    // If one source or a later Google page fails, no source is partially replaced.
+    const feeds=await Promise.all((sourcesResult.data??[]).map(async source=>({
+      source,events:await listGoogleCalendarEvents(token,String(source.calendar_id),timeMin,timeMax),
+    })));
+    for(const {source,events} of feeds){
+      const ids:string[]=[];
       const rows=[];
       for(const event of events){
         // Deleted recurring instances may not contain start/end dates. Always
@@ -66,7 +71,7 @@ export async function syncStudyCalendar(userId:string){
         }
         const timezone=String(source.timezone??connectionResult.data.timezone??semesterResult.data?.timezone??"Europe/Berlin");
         const bounds=eventBounds(event,timezone); if(!bounds)continue;
-        ids.push(event.id); const c=classify(event.summary??"",courses);
+        ids.push(event.id); const c=classify(event.summary??"",courses,isStudyOwnedCalendarEvent(event));
         rows.push({user_id:userId,calendar_id:source.calendar_id,event_id:event.id,course_id:c.courseId,summary:event.summary??null,start_at:bounds.startAt,end_at:bounds.endAt,all_day:bounds.allDay,status:event.status??null,transparency:event.transparency??null,
           event_type:event.eventType??null,event_role:c.role,location:event.location??null,event_url:event.htmlLink??null,recurring_event_id:event.recurringEventId??null,study_owned:isStudyOwnedCalendarEvent(event),
           source_updated_at:event.updated??null,synced_at:new Date().toISOString(),updated_at:new Date().toISOString()});

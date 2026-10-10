@@ -34,6 +34,19 @@ export default async function SetupPage(){
       <div className="activation-hero-stats"><span><strong>{snapshot.course_count}</strong> courses</span><span><strong>{snapshot.majors_with_timetable}/{snapshot.major_course_count}</strong> major timetables</span><span><strong>{snapshot.retake_baselines_completed}/{snapshot.retake_course_count}</strong> retake baselines</span></div>
     </section>
 
+    <section className="panel first-week-proof" aria-labelledby="real-first-use-heading">
+      <div className="section-heading"><div><p className="eyebrow">F18 · real-use acceptance</p><h2 id="real-first-use-heading">Prove one complete study session</h2></div><span>Manual acceptance pending</span></div>
+      <p>Use your own authorized account and real university material. This checklist is guidance, not a certification or an attestation.</p>
+      <ol>
+        <li><Link href="/semester/bootstrap">Confirm your actual semester and course roster</Link> (no sample courses).</li>
+        <li><Link href="/resources">Connect the intended Study Drive and approve a real Week-1 source</Link>.</li>
+        <li><Link href="/practice">Answer a source-linked question independently</Link> and confirm it appears in the review history.</li>
+        <li><Link href="/">Sync the selected Study Calendar, review free time and today's next action</Link>.</li>
+        <li>Repeat the flow on a second device; independently verify account isolation and offline replay before production acceptance.</li>
+      </ol>
+      <p className="muted">Only actual source, attempt and integration records determine readiness. No button on this checklist grants release or recovery authorization.</p>
+    </section>
+
     <section className="activation-gates">
       <Gate title="1 · Platform certification" percent={evaluation.platformPercent} ready={evaluation.platformReady} blockers={evaluation.platformBlockers}/>
       <p className="muted"><Link href="/setup/platform">Inspect detailed deployment and OAuth configuration</Link></p>
