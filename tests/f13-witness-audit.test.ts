@@ -22,7 +22,7 @@ async function scenario(fn:(args:{packet:any;root:any;dir:string})=>Promise<void
   const root={status:"trusted",keyId:packet.keyId,witnessId:packet.witnessId,publicKeyPem:publicKey.export({format:"pem",type:"spki"}).toString(),revokedKeyIds:[]};
   const signPacket=()=>{const unsigned={...packet};delete unsigned.signature;packet.signature=sign(null,Buffer.from(JSON.stringify(unsigned)),privateKey).toString("base64");};
   signPacket();
-  try{await fn({packet,root,dir});}
+  try{await fn({packet,root,dir,resign:signPacket} as any);}
   finally{await rm(dir,{recursive:true,force:true});}
 }
 const audit=(packet:any,root:any,dir:string)=>auditF13Packet({packet,trustRoot:root,artifactDirectory:dir,expectedHead:head,now:new Date("2026-10-10T14:20:00Z")});
@@ -56,4 +56,18 @@ test("wrong exact head or old evidence cannot qualify",()=>scenario(async({packe
   assert.equal((await auditF13Packet({packet,trustRoot:root,artifactDirectory:dir,expectedHead:"b".repeat(40)})).reasons[0],"commit_mismatch");
   const old=await auditF13Packet({packet,trustRoot:root,artifactDirectory:dir,expectedHead:head,now:new Date("2027-01-01T00:00:00Z")});
   assert.equal(old.reasons[0],"stale_or_invalid_issuance");
+}));
+
+test("a properly signed traversal, missing file or independently rotated signer still fails",()=>scenario(async({packet,root,dir,resign}:any)=>{
+  packet.artifacts[0].path="../outside.png";
+  packet.cases=packet.cases.map((x:any)=>({...x,artifact:"../outside.png"}));
+  resign();
+  assert.equal((await audit(packet,root,dir)).reasons[0],"artifact_path_or_digest_invalid");
+  packet.artifacts[0].path="missing.png";
+  packet.cases=packet.cases.map((x:any)=>({...x,artifact:"missing.png"}));
+  resign();
+  assert.equal((await audit(packet,root,dir)).reasons[0],"artifact_unavailable_or_untrusted_path");
+  packet.witnessId="rotated-external-witness";
+  resign();
+  assert.equal((await audit(packet,root,dir)).reasons[0],"external_trust_root_required");
 }));
