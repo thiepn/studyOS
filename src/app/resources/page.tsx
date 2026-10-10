@@ -7,6 +7,7 @@ import { DriveControls } from "@/components/drive-controls";
 import { ProcessingCandidateForm } from "@/components/processing-candidate-form";
 import { getResourcesData } from "@/lib/study/resources";
 import { SourceIndex } from "@/components/source-index";
+import { DriveIntakeIndex } from "@/components/drive-intake-index";
 import { resourceDeskSummary } from "@/lib/study/resource-desk";
 import type { Json } from "@/lib/supabase/database.types";
 
@@ -133,7 +134,7 @@ export default async function ResourcesPage({searchParams}:{searchParams:Promise
 
       <section id="source-intake" className="panel resource-library">
         <div className="section-heading"><div><p className="eyebrow">Drive discovery</p><h2>Intake queue</h2></div><span>{unresolvedIntake.length}</span></div>
-        {unresolvedIntake.length ? <div className="resource-list">{unresolvedIntake.map((item) => <article key={item.id}><div><strong>{item.title}</strong><span className="status-pill">{item.status.replace("_", " ")}</span></div><p>{item.course_id ? (courseById.get(item.course_id) ?? "Course") : "Course unresolved"} · {item.detected_resource_type ?? "type unresolved"}{item.detected_week_no ? ` · W${item.detected_week_no}` : ""}{item.classification_confidence != null ? ` · ${Math.round(item.classification_confidence * 100)}% filename classifier (not verified)` : ""}</p>{item.drive_url ? <a href={item.drive_url} target="_blank" rel="noreferrer">Open file</a> : null}{item.note ? <p className="muted">{item.note}</p> : null}</article>)}</div> : <p className="muted">No unresolved Drive files.</p>}
+        <DriveIntakeIndex items={unresolvedIntake} courseNames={courseNames} />
       </section>
 
       <section id="source-library" className="panel resource-library">
