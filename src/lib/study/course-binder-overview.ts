@@ -1,6 +1,6 @@
 import type {WeekActionRow,WeekResource} from "./workflow";
-import {featuredTeachingWeek} from "./week-focus";
-import {actionLabel} from "./workflow-state";
+import {featuredTeachingWeek} from "./week-focus.ts";
+import {actionLabel} from "./workflow-state.ts";
 
 export function sourceProcessingLabel(status:string):string {
   const labels:Record<string,string>={
