@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { env } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 import { handleAssistantRequest } from "@/lib/study/assistant";
+import { askStudyLuna } from "@/lib/ai/study-luna";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,9 +32,11 @@ export async function POST(request: Request) {
   catch { return NextResponse.json({ ok: false, error: "Invalid JSON request." }, { status: 400, headers: { "cache-control": "no-store" } }); }
 
   const result = await handleAssistantRequest(body, {
-    apiKey: env.openaiApiKey,
-    model: env.studyOsAiModel,
     enabled: env.studyOsAiEnabled,
+    runAssistant: (input) => askStudyLuna(input, {
+      baseUrl: process.env.THIEPN_AI_BASE_URL,
+      appSecret: process.env.THIEPN_AI_APP_SECRET,
+    }),
     getOwner: async () => {
       const supabase = await createClient();
       const { data, error } = await supabase.auth.getUser();
