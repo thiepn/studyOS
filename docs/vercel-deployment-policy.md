@@ -31,3 +31,15 @@ Vercel account: `thiepn-project`; project: `studyos`; production hostname: `stud
 - Do not mix this change with redesigns, data migrations, custom-domain changes, or Vercel production-setting edits.
 
 Official reference: https://vercel.com/docs/project-configuration/git-configuration
+
+## V3 owner approval and Hobby rollback checklist (no live operation)
+- This PR's SHA256-pinned actionlint source QA and actual preflight acceptance/denial tests must pass at the final exact PR SHA. That does **not** establish an activated production release workflow.
+- Independently confirm enforceable protection of `main` (PR-only changes, exact-SHA required checks, no force pushes) and a **real**, main-only, required-human-reviewer GitHub environment named `thiepn-vercel-production`. The workflow's environment reference does not itself create reviewer protection.
+- Verify, without disclosing any credential, the necessary least-privilege environment-scoped `VERCEL_TOKEN`, a reviewed exact `VERCEL_CLI_VERSION`, and a disabled-by-default `THIEPN_RELEASES_ENABLED` variable. These must remain disabled/unconfigured during V3.
+- A later owner-authorized **merge** suppresses all automatic Git deployments; it does not authorize staging or promotion. When separately authorized, record the exact current `main` SHA and successful CI run, the *currently serving* Vercel production deployment ID, correct domain aliases, app health and rollback candidate. Do not use the project's latest deployment when it is a preview.
+- **Stage approval:** owner explicitly dispatches `stage` with exact main SHA and `STAGE <sha>` confirmation. Verify that the resulting prebuilt production candidate `--skip-domain` has no live aliases. Independently acceptance-test Next.js routes, sessions, auth, environment settings, protected endpoints and user-data compatibility.
+- **Promote approval (separate):** owner explicitly dispatches `promote` with the same main SHA, the exact staged production URL and `PROMOTE <sha>`; reverify source and Vercel project identity, watch live custom domain, logs and functional health. Never assume a green source-only QA authorizes promotion.
+- **Hobby rollback:** only the immediately preceding production deployment is eligible. With separate owner authorization and confirmed project scope, use `vercel rollback --scope thiepn-project`, then `vercel rollback status --scope thiepn-project`; verify live aliases and continuity. A code rollback does not undo Supabase/database migrations or user-data changes. Rollback temporarily disables automatic alias assignment; do not re-enable Git deployments as a workaround.
+- Stop on any missing environment protection, unverified prebuilt output, Vercel quota exhaustion or main-SHA drift; no repeated retries.
+
+Sources: https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments ; https://vercel.com/docs/cli/rollback
